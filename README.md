@@ -41,7 +41,11 @@ Core rule: **the LLM only understands language; the backend and database do all 
 
 ## Dataset
 
-_TBD._ Demo data will be **synthetic and self-generated** by `data/seed.ts`. No real customer data.
+All demo data is **synthetic and self-generated** — no real shop or customer data.
+
+- `data/products.json`: 25 generic grocery products (no brands) with Bangla/English names, Banglish aliases, cost and sell prices.
+- `data/seed.ts` (`npm run seed`): a simulated 60-day shop — weekday sales pattern, credit sales and repayments for 9 fictional customers, restock purchases, monthly rent/electricity and small expenses; 3 products deliberately end low on stock for the demo. Every row is written through the same `apply_transaction` DB function the app uses, and the script checks that the DB's stock and dues match its own simulation.
+- Re-running the seed deletes and rebuilds **only** the demo shop (`DEMO_SHOP_ID`).
 
 ## AI disclosure
 

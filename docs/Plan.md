@@ -42,10 +42,11 @@
 - **Done when:** live URL shows "আমার দোকান"; first commit pushed
 
 ## Phase 1 — Database + seed (21 Nov, ~2 h) · P0
-- [ ] Run `001_init.sql` (Schema v0.2: RLS, locked RPC, validation, Dhaka TZ, idempotency)
-- [ ] Quick SQL test: sale+due, duplicate key, due without customer, overpayment, anon access denied
-- [ ] `data/products.json`: ~25 grocery products with aliases, cost, sell price, reorder level
-- [ ] `data/seed.ts`: 60 days synthetic sales (weekday pattern), 8–10 customers with dues, some purchases/expenses; make 2–3 products run low on purpose (for the demo)
+- [x] Run `001_init.sql` + `002_tighten_service_role.sql` (Schema v0.3: RLS, locked RPC, validation, Dhaka TZ, idempotency, least privilege)
+- [x] SQL tests (`supabase/tests/001_init_test.sql`, 10 checks): sale+due, duplicate key, due without customer, overpayment ×2, anon/authenticated denied ×3, trigram, least privilege — all PASS
+- [x] `data/products.json`: 25 grocery products with aliases, cost, sell price, reorder level (~3 days of demand)
+- [x] `data/seed.ts` (`npm run seed`): 60 days synthetic sales (weekday pattern), 9 customers with dues, purchases/expenses; soybean oil, sugar, lentils end low on purpose; self-check vs DB
+- [ ] **Re-run `npm run seed` on the morning of 24 Nov** so "today" and the last 60 days line up with the demo day
 - **Done when:** Supabase dashboard shows realistic data; `today_summary` returns numbers
 
 ## Phase 2 — AI extraction (21 Nov night, ~3 h) · P0 ⭐
