@@ -62,7 +62,10 @@ The browser **never** talks to Supabase directly.
 ```
 src/
 ├── app/
-│   ├── page.tsx                 # Dashboard (+ insight card)
+│   ├── page.tsx                 # Home: hero, weekly status, product lists
+│   ├── report/page.tsx          # Printable audit report (window.print → PDF)
+│   ├── products/page.tsx        # P2
+│   ├── products/[id]/page.tsx   # P2
 │   ├── entry/page.tsx
 │   ├── stock/page.tsx
 │   ├── dues/page.tsx
@@ -191,6 +194,13 @@ export const Extraction = z.object({
 4. Greedy: add `need × cost_price` while the budget allows; last item gets a partial qty (floor).
 5. Output per line: `{product, qty, cost, days_left, reason}` → reason like "২ দিনে শেষ হবে".
 Constants (`HORIZON_DAYS = 7`, `SAFETY_DAYS = 2`) at the top of the file.
+
+### Weekly status (`lib/logic/summary.ts`)
+- Week = Saturday 00:00 → Friday 23:59, Asia/Dhaka.
+- `weekly_profit = Σ over sale items of (unit_price − products.cost_price) × quantity`; change % vs previous week (guard divide-by-zero).
+- Actions (rules, not AI): `days_left ≤ 2` → জরুরি; customer due older than 7 days → খেয়াল; top-3 qty growth → পরামর্শ. Max 4.
+- Best/worst sellers: qty sold this week; worst list only products with stock > 0.
+- Known limitation: profit uses the current cost price, not the price at time of purchase.
 
 ### Insight (`lib/logic/summary.ts` → `lib/ai/insight.ts`)
 - `summary.ts` computes: today sales vs yesterday (%), top 3 products, due change, low-stock items.

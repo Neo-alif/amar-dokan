@@ -1,6 +1,8 @@
 # UIspec — Amar Dokan
 
-> v0.2 · Dekhte kemon hobe: color, font, component, layout.
+> v0.4 · Dekhte kemon hobe: color, font, component, layout.
+> v0.4: final approved mockup in `docs/mockup/*.dc.html` (open in a browser or read as HTML). **Build to match these files.**
+> v0.3: laptop-first, top bar instead of nav, hero, status boxes, product lists. Visual reference: Design canvas "Amar Dokan UI Mockup".
 > v0.2: sample-sentence chips, manual-fill state, badges; LanguageToggle = P2; chart = P2.
 > Design principle: **boro, shohoj, Bangla-first.** Karim bhai jeno chosma chhara o pore.
 
@@ -43,11 +45,34 @@ Next.js e `next/font/google` diye load. Bangla line-height 1.6 (juktakkhor er jo
 
 **Number format:** Bangla mode e Bangla digit (৳ ৪,২৫০), English e `৳ 4,250`. Helper: `formatTaka(n, lang)` using `Intl.NumberFormat('bn-BD')`.
 
-## 4. Layout
+## 3b. Final look (approved 21 Nov)
 
-- **Mobile (< 768px):** single column, bottom nav (5 icon), floating mic button (bottom-center, 72px).
-- **Laptop (≥ 1024px):** left sidebar (240px), content max-width 1100px, mic button dashboard e boro card hishebe.
-- Spacing scale: 4 / 8 / 12 / 16 / 24 / 32px. Card radius 16px, shadow subtle.
+| Element | Spec |
+|---|---|
+| Top bar | Navy `#1F3A5F`; logo box amber `#FBBF24` with navy shop icon; "আমার" white + "দোকান" amber; বাং/EN pill toggle (active amber); white search; ⋮ opens dropdown (হিসাব দিন, স্টক, বাকি খাতা, কেনাকাটা, লেনদেন, পণ্য, খরচ, মাসিক অডিট রিপোর্ট, ভাষা) |
+| Hero | Navy band, flat colorful line-art (amber khata, teal calculator, pink receipt, coins) at the edges; H1 "**আমার দোকানে** সব হিসাব" (first part amber), 60px; amber tag "আপনার দোকানের এআই হিসাবরক্ষক"; amber pill button হিসাব দিন; no example line |
+| Section headings | 52px tinted icon box + 32px bold title + 72×5px color bar + subtitle |
+| Status cards | 2px colored outline, 6px colored top strip, soft colored shadow, radius 20px: লাভ green, এখন যা করবেন orange, মাসিক অডিট রিপোর্ট purple (5 bullet points + PDF + পুরো রিপোর্ট) |
+| Menu tiles | Tinted background + matching 1.5px outline, white icon square |
+| Menu pages | Same top bar with back-to-home and page title; each page has its own accent color for all outlines: স্টক blue, বাকি খাতা red, কেনাকাটা green, লেনদেন purple, পণ্য amber-brown, খরচ slate, অডিট teal |
+
+No gradients anywhere (flat colors only).
+
+## 4. Layout (laptop-first)
+
+- **Laptop (≥ 1024px, primary, demo):** content `max-width: 1200px`, centered, 32px side padding. Section 2 = 3 status boxes in a row + 6 menu boxes in a row; Section 3 = 2 lists side by side.
+- **Tablet/mobile (< 1024px):** status boxes and lists stack to 1 column, menu boxes 3 per row, hero feature points 2×2.
+- **Top bar (no navbar):** logo + "আমার দোকান" left; search field (max ~460px) + ⋮ menu button right. White, 1px bottom border.
+- **Floating mic button:** 68px circle, `--accent`, bottom-right 32px, every page except `/entry`.
+- Spacing scale 4/8/12/16/24/32px. Card radius 16px, 1px `--border`, no heavy shadows. **No gradients** (unslop rule).
+
+### Home sections
+| Section | Spec |
+|---|---|
+| Hero | White band, faint (8% opacity) khata + calculator line art behind; purple pill tag; H1 52px/700 navy; 4 feature tiles (icon + label); accent pill button 20px/600 with mic icon |
+| Status boxes | 3 equal cards: profit (big number 40px, ▲ green / ▼ red pill with %), actions (colored chip জরুরি red · খেয়াল amber · পরামর্শ grey), audit (sparkle icon, AI text, PDF + full report buttons) |
+| Menu boxes | 6 tiles: 48px tinted icon square + label |
+| Product lists | Card with title + "সব দেখুন →"; inner scroll box 260px; row = rank · name · mini bar · qty |
 
 ## 5. Components
 
@@ -89,6 +114,12 @@ Next.js e `next/font/google` diye load. Bangla line-height 1.6 (juktakkhor er jo
 
 ### RestockItem
 - Rank number · product · qty · cost · reason (chhoto muted line)
+
+### StatusCard (profit / actions / audit)
+- See §4 Home sections
+
+### ProductRankList
+- Fixed-height scroll box, rows link to product detail
 
 ### InsightCard
 - ✨ icon, 2-4 line Bangla text, niche "শুধু যাচাই করা হিসাব থেকে" chhoto note

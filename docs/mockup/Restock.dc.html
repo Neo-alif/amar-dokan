@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<title>আমার দোকান — কেনাকাটা</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F8FAFC}
+a{color:#1F3A5F}a:hover{color:#6D28D9}
+</style>
+</helmet>
+<div style="font-family: 'Hind Siliguri', Inter, sans-serif; color: #0F172A; background: #F8FAFC; line-height: 1.6; min-height: 1050px">
+<header style="background: #1F3A5F; border-bottom: 1px solid #27466E">
+<div style="max-width: 1200px; margin: 0 auto; padding: 14px 32px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap">
+<a href="Main.dc.html" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: #FFFFFF">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg>
+<span style="font-size: 18px; font-weight: 600">আমার <span style="color: #FBBF24">দোকান</span></span>
+</a>
+<div style="display: flex; align-items: center; gap: 12px">
+<span style="width: 40px; height: 40px; border-radius: 12px; background: #F0FDF4; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="20" r="1.5"></circle><circle cx="18" cy="20" r="1.5"></circle><path d="M2 3h3l2.5 12h12l2-8H6"></path></svg></span>
+<h1 style="margin: 0; font-size: 26px; font-weight: 700; color: #FFFFFF">কেনাকাটা</h1>
+</div>
+<div style="display: flex; align-items: center; gap: 10px">
+<div role="group" aria-label="ভাষা" style="display: flex; padding: 4px; border-radius: 999px; background: #27466E; border: 1px solid #3B5C88">
+<button type="button" style="height: 34px; padding: 0 12px; border-radius: 999px; border: 0; font: inherit; font-size: 14px; font-weight: 700; background: #FBBF24; color: #1F3A5F">বাং</button>
+<button type="button" style="height: 34px; padding: 0 12px; border-radius: 999px; border: 0; font-family: Inter, sans-serif; font-size: 13px; font-weight: 700; background: transparent; color: #FFFFFF">EN</button>
+</div>
+<button type="button" aria-label="মেনু" style="width: 44px; height: 44px; border-radius: 12px; border: 1px solid #3B5C88; background: #27466E; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="#FFFFFF" aria-hidden="true"><circle cx="12" cy="5" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="12" cy="19" r="2"></circle></svg></button>
+</div>
+</div>
+</header>
+<main style="max-width: 1200px; margin: 0 auto; padding: 32px 32px 72px; display: flex; flex-direction: column; gap: 24px">
+<section style="background: #FFFFFF; border: 2px solid #16A34A; border-radius: 20px; box-shadow: 0 8px 22px rgba(15,23,42,0.07); padding: 24px; display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-end">
+<label style="flex: 1 1 320px; display: flex; flex-direction: column; gap: 8px"><span style="font-size: 16px; font-weight: 600">আপনার হাতে কত টাকা আছে?</span><span style="display: flex; align-items: center; gap: 8px; height: 56px; border: 1.5px solid #16A34A; border-radius: 14px; padding: 0 16px; background: #FFFFFF"><span style="font-size: 22px; font-weight: 700; color: #15803D">৳</span><input type="text" value="৫০০০" aria-label="বাজেট" style="flex: 1; border: 0; font: inherit; font-size: 24px; font-weight: 700; outline: none; background: transparent"></span></label>
+<button type="button" style="height: 44px; padding: 0 18px; border-radius: 12px; border: 1.5px solid #16A34A; background: #16A34A; color: #FFFFFF; font: inherit; font-size: 15px; font-weight: 600; white-space: nowrap">হিসাব করুন</button>
+</section>
+<section style="background: #FFFFFF; border: 2px solid #16A34A; border-radius: 20px; box-shadow: 0 8px 22px rgba(15,23,42,0.07); padding: 20px 24px; display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; justify-content: space-between; font-size: 16px"><strong>বাজেট ব্যবহার</strong><span><strong style="color: #15803D">৳ ৪,০৮০</strong> / ৳ ৫,০০০ · বাকি ৳ ৯২০</span></div>
+<div style="height: 14px; border-radius: 999px; background: #F1F5F9; overflow: hidden"><div style="width: 82%; height: 100%; background: #16A34A; border-radius: 999px"></div></div>
+</section>
+<section style="background: #FFFFFF; border: 2px solid #16A34A; border-radius: 20px; box-shadow: 0 8px 22px rgba(15,23,42,0.07); overflow: hidden"><div style="padding: 16px 20px; border-bottom: 2px solid #F0FDF4"><strong style="font-size: 18px">যা কিনবেন (জরুরি আগে)</strong></div><div style="display: grid; grid-template-columns: 52px 1fr 110px 110px; gap: 14px; align-items: center; padding: 16px 20px; border-bottom: 1px solid #F1F5F9"><span style="width: 40px; height: 40px; border-radius: 12px; background: #F0FDF4; color: #15803D; font-weight: 700; display: flex; align-items: center; justify-content: center">১</span><span style="display: flex; flex-direction: column"><strong style="font-size: 17px">সয়াবিন তেল (১ লি.)</strong><span style="font-size: 14px; color: #DC2626">২ দিনে শেষ হবে</span></span><span style="font-size: 16px">১০ টি</span><strong style="font-size: 17px; text-align: right">৳ ১,৬০০</strong></div><div style="display: grid; grid-template-columns: 52px 1fr 110px 110px; gap: 14px; align-items: center; padding: 16px 20px; border-bottom: 1px solid #F1F5F9"><span style="width: 40px; height: 40px; border-radius: 12px; background: #F0FDF4; color: #15803D; font-weight: 700; display: flex; align-items: center; justify-content: center">২</span><span style="display: flex; flex-direction: column"><strong style="font-size: 17px">চিনি (কেজি)</strong><span style="font-size: 14px; color: #B45309">৪ দিনে শেষ হবে</span></span><span style="font-size: 16px">১০ কেজি</span><strong style="font-size: 17px; text-align: right">৳ ১,২৫০</strong></div><div style="display: grid; grid-template-columns: 52px 1fr 110px 110px; gap: 14px; align-items: center; padding: 16px 20px; border-bottom: 1px solid #F1F5F9"><span style="width: 40px; height: 40px; border-radius: 12px; background: #F0FDF4; color: #15803D; font-weight: 700; display: flex; align-items: center; justify-content: center">৩</span><span style="display: flex; flex-direction: column"><strong style="font-size: 17px">মসুর ডাল (কেজি)</strong><span style="font-size: 14px; color: #B45309">৬ দিনে শেষ হবে</span></span><span style="font-size: 16px">৮ কেজি</span><strong style="font-size: 17px; text-align: right">৳ ৮৮০</strong></div><div style="display: grid; grid-template-columns: 52px 1fr 110px 110px; gap: 14px; align-items: center; padding: 16px 20px; border-bottom: 1px solid #F1F5F9"><span style="width: 40px; height: 40px; border-radius: 12px; background: #F0FDF4; color: #15803D; font-weight: 700; display: flex; align-items: center; justify-content: center">৪</span><span style="display: flex; flex-direction: column"><strong style="font-size: 17px">গুঁড়া দুধ</strong><span style="font-size: 14px; color: #475569">শেষ, চাহিদা কম</span></span><span style="font-size: 16px">১ টি</span><strong style="font-size: 17px; text-align: right">৳ ৩৫০</strong></div></section>
+<p style="margin: 0; font-size: 14px; color: #64748B">নিয়ম: যে পণ্য আগে শেষ হবে সেটা আগে; সমান হলে যেটাতে লাভ বেশি। পরিমাণ = ৭ দিনের চাহিদা + ২ দিনের বাড়তি − বর্তমান স্টক। নমুনা তথ্য।</p>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1050}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

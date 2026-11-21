@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<title>আমার দোকান — হিসাব দিন</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F8FAFC}
+a{color:#1F3A5F}a:hover{color:#6D28D9}
+</style>
+</helmet>
+<div style="font-family: 'Hind Siliguri', Inter, sans-serif; color: #0F172A; background: #F8FAFC; line-height: 1.6">
+
+<header style="background: #1F3A5F; border-bottom: 1px solid #27466E">
+<div style="max-width: 1200px; margin: 0 auto; padding: 14px 32px; display: flex; align-items: center; justify-content: space-between; gap: 16px">
+<a href="Main.dc.html" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: #FFFFFF">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg>
+<span style="font-size: 18px; font-weight: 600">হোমে ফিরুন</span>
+</a>
+<span style="font-size: 22px; font-weight: 700; color: #FBBF24">হিসাব দিন</span>
+<span style="width: 120px"></span>
+</div>
+</header>
+
+<main style="max-width: 1200px; margin: 0 auto; padding: 40px 32px 72px; display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-start">
+
+<section style="flex: 1 1 460px; min-width: 0; background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 20px; padding: 32px; display: flex; flex-direction: column; align-items: center; gap: 18px">
+<button type="button" aria-label="বলুন" style="width: 112px; height: 112px; border-radius: 999px; border: 0; background: #6D28D9; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 0 0 14px #F3EEFF, 0 0 0 28px #FAF7FF">
+<svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0"></path><path d="M12 18v3"></path></svg>
+</button>
+<span style="margin-top: 14px; font-size: 18px; font-weight: 600; color: #6D28D9">শুনছি…</span>
+
+<label style="width: 100%; display: flex; flex-direction: column; gap: 8px">
+<span style="font-size: 15px; font-weight: 600; color: #475569">অথবা লিখে দিন</span>
+<textarea rows="3" style="width: 100%; box-sizing: border-box; font: inherit; font-size: 17px; padding: 14px 16px; border: 1.5px solid #6D28D9; border-radius: 14px; resize: none; color: #0F172A">রহিম ভাইকে ২টা সয়াবিন তেল দিলাম, ৬৮০ টাকা, ১০০ টাকা বাকি</textarea>
+</label>
+
+<div style="width: 100%; display: flex; flex-direction: column; gap: 8px">
+<span style="font-size: 14px; color: #64748B">উদাহরণ (চাপলে লেখা বসবে, AI তারপর লাইভ বুঝবে)</span>
+<div style="display: flex; flex-wrap: wrap; gap: 8px">
+<button type="button" style="font: inherit; font-size: 14px; padding: 8px 14px; border-radius: 999px; border: 1px solid #E2E8F0; background: #F8FAFC; color: #1F3A5F; cursor: pointer">করিমকে ৩টা সাবান দিলাম</button>
+<button type="button" style="font: inherit; font-size: 14px; padding: 8px 14px; border-radius: 999px; border: 1px solid #E2E8F0; background: #F8FAFC; color: #1F3A5F; cursor: pointer">১০ কেজি ডাল কিনলাম ১২০০ টাকা</button>
+<button type="button" style="font: inherit; font-size: 14px; padding: 8px 14px; border-radius: 999px; border: 1px solid #E2E8F0; background: #F8FAFC; color: #1F3A5F; cursor: pointer">রহিম ভাই ৩০০ টাকা জমা দিল</button>
+</div>
+</div>
+
+<button type="button" style="width: 100%; height: 52px; border-radius: 14px; border: 0; background: #1F3A5F; color: #FFFFFF; font: inherit; font-size: 18px; font-weight: 600; cursor: pointer">পাঠান</button>
+</section>
+
+<section style="flex: 1 1 460px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+<div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 20px; padding: 28px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 12px 32px rgba(15,23,42,0.06)">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<span style="font-size: 15px; font-weight: 700; color: #15803D; background: #DCFCE7; padding: 4px 14px; border-radius: 999px">বিক্রি</span>
+<span style="font-size: 13px; color: #64748B">AI যা বুঝল · নিশ্চিত না করলে সেভ হবে না</span>
+</div>
+
+<dl style="margin: 0; display: grid; grid-template-columns: 120px 1fr; row-gap: 12px; column-gap: 16px; font-size: 17px">
+<dt style="color: #64748B">কাস্টমার</dt><dd style="margin: 0; font-weight: 600">রহিম ভাই</dd>
+<dt style="color: #64748B">পণ্য</dt><dd style="margin: 0; font-weight: 600">সয়াবিন তেল (১ লি.) × ২</dd>
+<dt style="color: #64748B">দাম</dt><dd style="margin: 0; font-weight: 600">৳ ৩৪০ × ২ = ৳ ৬৮০</dd>
+<dt style="color: #64748B">জমা</dt><dd style="margin: 0; font-weight: 600; color: #15803D">৳ ৫৮০</dd>
+<dt style="color: #64748B">বাকি</dt><dd style="margin: 0; font-weight: 700; color: #DC2626">৳ ১০০</dd>
+</dl>
+
+<div style="border-top: 1px dashed #E2E8F0; padding-top: 14px; display: flex; flex-direction: column; gap: 6px; font-size: 15px; color: #475569">
+<span>নিশ্চিত করলে যা বদলাবে:</span>
+<span>• আজকের বিক্রি +৳ ৬৮০ · • সয়াবিন তেলের স্টক ১০ → ৮ · • রহিম ভাইয়ের বাকি +৳ ১০০</span>
+</div>
+
+<button type="button" style="height: 54px; border-radius: 14px; border: 0; background: #16A34A; color: #FFFFFF; font: inherit; font-size: 18px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"></path></svg>
+নিশ্চিত করুন
+</button>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+<button type="button" style="height: 48px; border-radius: 12px; border: 1px solid #E2E8F0; background: #FFFFFF; color: #1F3A5F; font: inherit; font-size: 16px; font-weight: 600; cursor: pointer">ঠিক করুন</button>
+<button type="button" style="height: 48px; border-radius: 12px; border: 1px solid #FECACA; background: #FFFFFF; color: #DC2626; font: inherit; font-size: 16px; font-weight: 600; cursor: pointer">বাতিল</button>
+</div>
+</div>
+
+<div style="background: #FFFBEB; border: 1px solid #FDE68A; border-left-width: 1px; border-radius: 16px; padding: 18px 20px; display: flex; flex-direction: column; gap: 10px">
+<span style="font-size: 14px; font-weight: 700; color: #92400E">আরেকটা উদাহরণ: তথ্য কম থাকলে AI জিজ্ঞেস করে</span>
+<span style="font-size: 16px">“করিমকে ৩টা সাবান দিলাম” → <strong>কত টাকায় দিলেন?</strong></span>
+<label style="display: flex; gap: 8px">
+<input type="text" placeholder="যেমন: ১৫০ টাকা" aria-label="দাম" style="flex: 1; height: 44px; box-sizing: border-box; padding: 0 14px; border: 1px solid #E2E8F0; border-radius: 12px; font: inherit; font-size: 16px; background: #FFFFFF">
+<button type="button" style="height: 44px; padding: 0 18px; border-radius: 12px; border: 0; background: #1F3A5F; color: #FFFFFF; font: inherit; font-size: 15px; font-weight: 600; cursor: pointer">উত্তর দিন</button>
+</label>
+</div>
+</section>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":980}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

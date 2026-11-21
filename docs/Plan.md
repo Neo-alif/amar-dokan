@@ -59,7 +59,7 @@
 - [ ] Text entry + 3 sample-sentence chips
 - [ ] `ConfirmCard` (view / edit / cancel, "নতুন পণ্য/কাস্টমার" badges, idempotency key, button disabled while saving)
 - [ ] `/api/transactions` (Zod again → new items → `apply_transaction` → Bangla error map)
-- [ ] Dashboard: stat cards, low-stock strip, recent transactions
+- [ ] Home (UIspec v0.3): top bar, hero + হিসাব দিন, weekly profit box, এখন যা করবেন, menu boxes, floating mic
 - [ ] `/dues`: list, customer ledger, জমা নিন
 - [ ] `MicButton` voice (P1, but do it today if core is done by 6 PM)
 - [ ] Ask a friend for ~15 test sentences; reach 50+ cases
@@ -69,7 +69,9 @@
 - [ ] `forecast.ts` (14-day avg × weekday factor, cold start) + `/stock` with "X দিন চলবে"
 - [ ] MAPE vs naive baseline script → write the numbers in README
 - [ ] `restock.ts` + `/restock` (budget input → ranked list + reasons + budget bar)
-- [ ] `summary.ts` + `insight.ts` (number check) → dashboard InsightCard
+- [ ] `summary.ts` + `insight.ts` (number check) → অডিট রিপোর্ট box + `/report` print page (PDF)
+- [ ] Best/worst seller lists on home
+- [ ] Products page + detail (P2, only if time)
 - [ ] Clarification bubble for missing price/amount
 - [ ] `npm run test:logic`
 

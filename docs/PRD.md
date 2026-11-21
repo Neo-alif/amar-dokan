@@ -1,6 +1,6 @@
 # PRD — Amar Dokan (আমার দোকান)
 
-> Product Requirements Document · v0.2 · CoU AI Hackathon 2026
+> Product Requirements Document · v0.3 · CoU AI Hackathon 2026
 > Domain: **FinTech** (primary) · **Business and Industry** (secondary) · Solo team
 > Tagline: **Your Business, Understood by AI.**
 
@@ -59,6 +59,13 @@ Chhoto dokandar Bangla/Banglish e **bole ba likhe** dokan chalabe. AI kotha bujh
 | F10 | **Daily insight** | P1 | Dashboard card; LLM writes Bangla from verified numbers only |
 | F11 | **Bangla UI (default)** | P0 | Shob text dictionary diye; **English toggle = P2** |
 | F12 | **Clarification** | P1 | Info missing hole AI proshno kore ("কত টাকায় দিলেন?") |
+
+| F13 | **Home hero + entry button** | P0 | Compact hero, feature points, হিসাব দিন |
+| F14 | **Weekly profit box** | P0 | This week vs last week %, deterministic |
+| F15 | **এখন যা করবেন** | P0 | Rule-based action list (stock, dues, fast movers) |
+| F16 | **Best/worst sellers** | P1 | Two scroll lists on home |
+| F17 | **Audit report PDF** | P1 | Print-styled page → browser Save as PDF |
+| F18 | **Products page + product detail** | P2 | Full list, per-product forecast |
 
 Voice input (F1 mic part) is **P1**; text input is P0. Forecast/stock list are P1. Chart is P2.
 
