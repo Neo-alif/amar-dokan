@@ -8,7 +8,7 @@ A Bangla-first AI business assistant for small retailers in Bangladesh. The shop
 
 - **Domain:** FinTech (primary) · Business and Industry (secondary)
 - Repository created 21 Nov 2026, 01:12 Dhaka time (UTC+6) (GitHub displays UTC: 20 Nov, 19:12).
-- **Live link:** _TBD_
+- **Live link (backup):** https://amar-dokan-iota.vercel.app/ — the demo runs locally (`npm run build && npm start`)
 - **Demo video:** _TBD_
 
 ## Team
@@ -67,7 +67,13 @@ git clone https://github.com/Neo-alif/amar-dokan.git
 cd amar-dokan
 npm install
 cp .env.example .env.local   # then fill in the keys
-npm run dev                  # http://localhost:3000
+npm run dev                  # http://localhost:3000 (development)
+```
+
+Demo / production run (how the prototype is shown):
+
+```bash
+npm run build && npm start   # http://localhost:3000
 ```
 
 ## Docs
