@@ -1,6 +1,7 @@
 # AppFlow — Amar Dokan
 
-> v0.4 · User kon screen theke kon screen e jay, ar prottek action e ki hoy.
+> v0.5 · User kon screen theke kon screen e jay, ar prottek action e ki hoy.
+> v0.5: priorities follow Plan v0.4 (voice, forecast, low-stock, restock, insight/report P0; English pill, Products/Transactions/Expenses pages, charts optional). Profit box weekly, audit report monthly.
 > v0.4: approved mockup screens in `docs/mockup/`: Main (home), Entry, Stock, Dues, Restock, Transactions, Products, Expenses, Report.
 > v0.3: new home layout (hero + weekly status + product lists), no navbar (logo · search · ⋮), floating mic, products pages, audit PDF.
 > v0.2: /insight page cut (insight lives on the dashboard), return type cut, new product/customer path, double-tap guard, AI-down path.
@@ -18,7 +19,7 @@
 │            [হিসাব দিন] amber pill (center bottom) → /entry  │
 │                                                          │
 │ SECTION 2  এই সপ্তাহের অবস্থা                              │
-│   [সাপ্তাহিক লাভ ▲%] [এখন যা করবেন] [অডিট রিপোর্ট + PDF]   │
+│   [সাপ্তাহিক লাভ ▲%] [এখন যা করবেন] [মাসিক অডিট রিপোর্ট + PDF] │
 │   [স্টক] [বাকি খাতা] [কেনাকাটা] [লেনদেন] [পণ্য] [খরচ]      │
 │                                                          │
 │ SECTION 3  পণ্যের বিক্রি                                    │
@@ -27,8 +28,9 @@
 └ Floating 🎤 button (every page, bottom-right) → /entry ──┘
 ```
 
-Routes: `/` (home) · `/entry` · `/stock` · `/dues` · `/restock` · `/transactions` · `/products` · `/products/[id]` · `/expenses` (P2) · `/report` (printable audit, P1)
-⋮ menu: হিসাব দিন, the menu-box links, মাসিক অডিট রিপোর্ট, ভাষা (P1, same switch as the top-bar pill).
+Routes (P0): `/` (home) · `/entry` · `/stock` · `/dues` · `/restock` · `/report` (monthly audit, printable)
+Routes (optional): `/transactions` · `/products` · `/products/[id]` · `/expenses`
+⋮ menu: হিসাব দিন, the menu-box links, মাসিক অডিট রিপোর্ট, ভাষা (optional, same switch as the top-bar pill).
 **Source of truth for look and copy:** the mockup and UIspec §3b win over any other text in these docs.
 Visual mockup: `docs/mockup/` (Main → `/`, Entry → `/entry`, Stock → `/stock`, Dues → `/dues`, Restock → `/restock`, Transactions → `/transactions`, Products → `/products`, Expenses → `/expenses`, Report → `/report`). Numbers in the mockup are sample data only.
 
@@ -109,20 +111,21 @@ Ek sentence e onek item thakte pare: "2 ta sabun ar 1 kg chini" → ekta transac
 |---|---|---|
 | সাপ্তাহিক লাভ | This week's gross profit, ▲/▼ % vs last week, 7 small daily bars | `summary.ts` (deterministic) |
 | এখন যা করবেন | 2–4 ranked actions: জরুরি (stock ≤ 2 days) · খেয়াল (due > 7 days) · পরামর্শ (fast movers) | rules in `summary.ts`, not AI |
-| অডিট রিপোর্ট | 2–3 line Bangla AI summary from verified numbers + **PDF ডাউনলোড** + পুরো রিপোর্ট | `insight.ts` (+ number check) |
+| মাসিক অডিট রিপোর্ট | **This calendar month** (Asia/Dhaka) vs last month: 5 Bangla AI bullet points from verified numbers + **PDF ডাউনলোড** + পুরো রিপোর্ট (`/report`) | numbers: `summary.ts`; words: `insight.ts` (+ number check) |
 - Week = Saturday–Friday, Asia/Dhaka (BD shop week).
 - Profit = Σ sale items (unit_price − product cost_price) × qty. Uses **current** cost price (MVP limitation; say so if asked).
-- Menu boxes (icons): স্টক · বাকি খাতা · কেনাকাটা · লেনদেন · পণ্য · খরচ (P2)
+- Profit box = **weekly**; audit box = **monthly** (as in the mockup).
+- Menu boxes (icons): স্টক · বাকি খাতা · কেনাকাটা (P0) · লেনদেন · পণ্য · খরচ (optional pages)
 
 **Section 3: পণ্যের বিক্রি**
 - Two scroll boxes (fixed height, ~6 rows visible): বেশি বিক্রি (top 10 by qty this week), কম বিক্রি (bottom 10, products with stock > 0)
 - "সব দেখুন" → `/products` (full sortable list); row → `/products/[id]` (stock, days left, 7-day forecast, this week's sales)
 
-**Audit PDF:** `/report` is a print-styled page; the button calls `window.print()` → browser "Save as PDF". No PDF library.
+**Monthly audit report (`/report`, P0):** month totals (মোট বিক্রি, লাভ, খরচ, মোট বাকি), মূল কথা (5 AI bullets, number-checked), সেরা ৫ পণ্য, as in `docs/mockup/Report.dc.html`. It is a print-styled page; the button calls `window.print()` → browser "Save as PDF". No PDF library.
 
 ## 5. Stock (/stock)
 - Product list: naam, stock, unit, "koydin cholbe", status chip (ঠিক আছে / কম / শেষ)
-- Product e click → 7-day forecast (chart = P2)
+- Product e click → 7-day forecast (chart = optional)
 - < 14 din data → "শিখছি" (forecast nai, reorder level diye alert)
 
 ## 6. Baki (/dues)
@@ -146,7 +149,7 @@ Prottek line e "keno" (risk + profit) chhoto kore.
 - LLM er text e kono number summary te na thakle → template sentence dekhay
 - "Shobcheye beshi bikri", "baki barche", "kal ki kinben"
 
-## 9. Language toggle (P1)
+## 9. Language toggle (optional)
 - Default `bn`. **বাং/EN pill in the top bar** (and ভাষা in the ⋮ menu); toggle korle shob UI text English.
 - Rule: every new key in `src/i18n/dictionary.ts` gets its `en` text in the same change (the `Dict` type enforces it), so there is no separate translation phase.
 - Choice `localStorage` e mone rakhe (try/catch diye).

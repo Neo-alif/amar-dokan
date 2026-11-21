@@ -1,6 +1,7 @@
 # PRD — Amar Dokan (আমার দোকান)
 
-> Product Requirements Document · v0.3 · CoU AI Hackathon 2026
+> Product Requirements Document · v0.4 · CoU AI Hackathon 2026
+> v0.4: priorities follow Plan v0.4 (organizer update). The **7 prototype features** in the submitted idea document (`docs/idea/AmarDokan_Idea_Document.docx` §5) are all **P0** and must run locally before 24 Nov.
 > Domain: **FinTech** (primary) · **Business and Industry** (secondary) · Solo team
 > Tagline: **Your Business, Understood by AI.**
 
@@ -47,27 +48,29 @@ Chhoto dokandar Bangla/Banglish e **bole ba likhe** dokan chalabe. AI kotha bujh
 
 | # | Feature | Priority | Description |
 |---|---|---|---|
-| F1 | **Bole/likhe entry** | P0 | Mic button (bn-BD) ba text box. Banglish o cholbe |
+| F1 | **Bole/likhe entry** | P0 | Mic button (bn-BD) **and** text box, both P0. Banglish o cholbe |
 | F2 | **AI extraction** | P0 | Sentence → structured transaction (type, product, qty, price, customer, paid, due) |
 | F3 | **Confirm card** | P0 | AI ja bujhlo dekhay; dokandar confirm/edit kore. Confirm chhara kichu save hoy na |
 | F4 | **Auto update** | P0 | Confirm er por stock, bikri, baki update (deterministic backend) |
 | F5 | **Dashboard** | P0 | Ajker bikri, khoroch, mot baki, stock list |
 | F6 | **Baki khata** | P0 | Customer-wise baki, joma (payment) entry |
-| F7 | **Low-stock alert** | P1 | Reorder level er niche gele alert |
-| F8 | **7-day forecast** | P1 | Exponential smoothing + weekday adjustment; "koydin cholbe" |
-| F9 | **Restock plan** | P1 | Budget input → ranked buy list |
-| F10 | **Daily insight** | P1 | Dashboard card; LLM writes Bangla from verified numbers only |
-| F11 | **Bangla UI (default)** | P0 | Shob text dictionary diye; **বাং/EN pill in top bar = P1** (en text added with every key) |
+| F7 | **Low-stock alert** | P0 | Reorder level er niche gele alert |
+| F8 | **7-day forecast** | P0 | Exponential smoothing + weekday adjustment; "koydin cholbe" |
+| F9 | **Restock plan** | P0 | Budget input → ranked buy list |
+| F10 | **Daily insight** | P0 | LLM writes Bangla from verified numbers only (idea document feature 7) |
+| F11 | **Bangla UI (default)** | P0 | Shob text dictionary diye; **বাং/EN pill in top bar = optional** (en text still added with every key) |
 | F12 | **Clarification** | P1 | Info missing hole AI proshno kore ("কত টাকায় দিলেন?") |
 
 | F13 | **Home hero + entry button** | P0 | Compact hero, feature points, হিসাব দিন |
-| F14 | **Weekly profit box** | P0 | This week vs last week %, deterministic |
+| F14 | **Weekly profit box** | P0 | Home: this week (Sat–Fri) vs last week %, deterministic |
 | F15 | **এখন যা করবেন** | P0 | Rule-based action list (stock, dues, fast movers) |
 | F16 | **Best/worst sellers** | P1 | Two scroll lists on home |
-| F17 | **Audit report PDF** | P1 | Print-styled page → browser Save as PDF |
-| F18 | **Products page + product detail** | P2 | Full list, per-product forecast |
+| F17 | **Monthly audit report + PDF** | P0 | Home box + `/report`: this calendar month (Asia/Dhaka) vs last month; AI summary from verified numbers; print → Save as PDF |
+| F18 | **Products page + product detail** | optional | Full list, per-product forecast |
+| F19 | **Transactions page** | optional | Full transaction list |
+| F20 | **Expenses page** | optional | Expense list by category |
 
-Voice input (F1 mic part) is **P1**; text input is P0. Forecast/stock list are P1. Chart is P2.
+Voice and text input are both **P0**. Forecast, low-stock, restock and insight/report are **P0**. Clarification (F12) and best/worst sellers (F16) are **P1**. English pill, Products / Transactions / Expenses pages and charts are **optional**.
 
 ## 7. User stories
 

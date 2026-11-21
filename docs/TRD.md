@@ -1,6 +1,7 @@
 # TRD — Amar Dokan
 
-> Technical Requirements Document · v0.3
+> Technical Requirements Document · v0.4
+> v0.4: priorities follow Plan v0.4; weekly profit box + monthly audit report; products pages and charts optional.
 > Golden rule: **LLM bujhe (language), backend hishab kore (math).** LLM kokhono taka ba stock calculate korbe na.
 > v0.2: rulebook compliance (real AI only, public repo, README), Gemini free-tier safeguards with a **real** Groq fallback, server-side re-validation, resolve step, simpler forecast/restock, cuts (auth, PWA, return).
 
@@ -32,7 +33,7 @@
 | LLM (primary) | **Gemini** (free tier), structured output | Free, Bangla bhalo |
 | LLM (fallback) | **Groq** (free tier, e.g. a Llama model) | Real AI fallback when Gemini rate-limits |
 | Voice | Web Speech API (`bn-BD`), Chrome | Free, no server |
-| Charts | Recharts (P2) | Product chart |
+| Charts | Recharts (optional) | Product chart |
 | Hosting | Vercel Hobby | Push = deploy |
 
 Model names are config (`.env`), not hard-coded, so swapping is one line.
@@ -64,8 +65,8 @@ src/
 ├── app/
 │   ├── page.tsx                 # Home: hero, weekly status, product lists
 │   ├── report/page.tsx          # Printable audit report (window.print → PDF)
-│   ├── products/page.tsx        # P2
-│   ├── products/[id]/page.tsx   # P2
+│   ├── products/page.tsx        # optional
+│   ├── products/[id]/page.tsx   # optional
 │   ├── entry/page.tsx
 │   ├── stock/page.tsx
 │   ├── dues/page.tsx
@@ -201,6 +202,11 @@ Constants (`HORIZON_DAYS = 7`, `SAFETY_DAYS = 2`) at the top of the file.
 - Actions (rules, not AI): `days_left ≤ 2` → জরুরি; customer due older than 7 days → খেয়াল; top-3 qty growth → পরামর্শ. Max 4.
 - Best/worst sellers: qty sold this week; worst list only products with stock > 0.
 - Known limitation: profit uses the current cost price, not the price at time of purchase.
+
+### Monthly audit (`lib/logic/summary.ts` → `lib/ai/insight.ts`, home box + `/report`)
+- Month = calendar month, Asia/Dhaka; compared with the previous month.
+- Numbers (deterministic): total sales, profit (same formula as weekly), expenses (purchase + expense), total due, top 5 products (sales + profit), products that hit zero stock this month.
+- LLM gets only that JSON → 5 short Bangla bullet points (মূল কথা). Same number check as the insight below; on failure, show deterministic template bullets (clearly not AI).
 
 ### Insight (`lib/logic/summary.ts` → `lib/ai/insight.ts`)
 - `summary.ts` computes: today sales vs yesterday (%), top 3 products, due change, low-stock items.

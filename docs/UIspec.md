@@ -1,7 +1,8 @@
 # UIspec — Amar Dokan
 
 > v0.4 · Dekhte kemon hobe: color, font, component, layout.
-> v0.4: final approved mockup in `docs/mockup/*.dc.html` (open in a browser or read as HTML). **Build to match these files.** If any line below disagrees, the mockup and §3b win. LanguageToggle is now P1.
+> v0.4: final approved mockup in `docs/mockup/*.dc.html` (open in a browser or read as HTML). **Build to match these files.** If any line below disagrees, the mockup and §3b win.
+> v0.5: priorities follow Plan v0.4: LanguageToggle and charts are optional. Profit card = weekly, audit card = monthly.
 > v0.3: laptop-first, top bar instead of nav, hero, status boxes, product lists. Visual reference: Design canvas "Amar Dokan UI Mockup".
 > v0.2: sample-sentence chips, manual-fill state, badges; LanguageToggle = P2; chart = P2.
 > Design principle: **boro, shohoj, Bangla-first.** Karim bhai jeno chosma chhara o pore.
@@ -70,7 +71,7 @@ No gradients anywhere (flat colors only).
 | Section | Spec |
 |---|---|
 | Hero | As in §3b: navy band, line art at the edges; amber tag above the title; H1 60px/700 white with "আমার দোকানে" amber; subline 21px; 4 feature tiles (icon + label); amber pill button হিসাব দিন 20px; no example line |
-| Status boxes | 3 equal cards: profit (big number 40px, ▲ green / ▼ red pill with %), actions (colored chip জরুরি red · খেয়াল amber · পরামর্শ grey), audit (sparkle icon, AI text, PDF + full report buttons) |
+| Status boxes | 3 equal cards: **weekly** profit (big number 40px, ▲ green / ▼ red pill with %), actions (colored chip জরুরি red · খেয়াল amber · পরামর্শ grey), **monthly** audit (sparkle icon, 5 AI bullet points, PDF + full report buttons) |
 | Menu boxes | 6 tiles: 48px tinted icon square + label |
 | Product lists | Card with title + "সব দেখুন →"; inner scroll box 260px; row = rank · name · mini bar · qty |
 
@@ -125,7 +126,7 @@ No gradients anywhere (flat colors only).
 - ✨ icon, 2-4 line Bangla text, niche "শুধু যাচাই করা হিসাব থেকে" chhoto note
 - Template fallback hole ✨ icon dekhabe na (AI claim na)
 
-### LanguageToggle (P1)
+### LanguageToggle (optional)
 - Pill switch `বাং | EN` in the top bar, active side amber (§3b); same switch as ভাষা in the ⋮ menu
 
 ### Toast
