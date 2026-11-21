@@ -1,7 +1,7 @@
 # AppFlow — Amar Dokan
 
 > v0.5 · User kon screen theke kon screen e jay, ar prottek action e ki hoy.
-> v0.5: priorities follow Plan v0.4 (voice, forecast, low-stock, restock, insight/report P0; English pill, Products/Transactions/Expenses pages, charts optional). Profit box weekly, audit report monthly.
+> v0.5: priorities follow Plan v0.4 (voice, forecast, low-stock, restock, insight/report P0; English pill, Products/Transactions/Expenses pages, charts optional). Profit box weekly, audit report monthly. 4-box stat strip on home; daily insight = first line of the audit card.
 > v0.4: approved mockup screens in `docs/mockup/`: Main (home), Entry, Stock, Dues, Restock, Transactions, Products, Expenses, Report.
 > v0.3: new home layout (hero + weekly status + product lists), no navbar (logo · search · ⋮), floating mic, products pages, audit PDF.
 > v0.2: /insight page cut (insight lives on the dashboard), return type cut, new product/customer path, double-tap guard, AI-down path.
@@ -19,6 +19,7 @@
 │            [হিসাব দিন] amber pill (center bottom) → /entry  │
 │                                                          │
 │ SECTION 2  এই সপ্তাহের অবস্থা                              │
+│   [আজকের বিক্রি] [আজকের খরচ] [মোট বাকি] [স্টক কম]   ← stat strip │
 │   [সাপ্তাহিক লাভ ▲%] [এখন যা করবেন] [মাসিক অডিট রিপোর্ট + PDF] │
 │   [স্টক] [বাকি খাতা] [কেনাকাটা] [লেনদেন] [পণ্য] [খরচ]      │
 │                                                          │
@@ -107,11 +108,21 @@ Ek sentence e onek item thakte pare: "2 ta sabun ar 1 kg chini" → ekta transac
 - Big button **হিসাব দিন** → `/entry`; no example sentence
 
 **Section 2: এই সপ্তাহের অবস্থা**
+
+Stat strip (4 boxes, above the status cards; added 21 Nov, not in the mockup; covers idea-document feature 4 "dashboard for sales, expenses, dues and inventory"):
+| Box | Content | Source |
+|---|---|---|
+| আজকের বিক্রি | Today's sales total (Asia/Dhaka) | `today_summary.sales` |
+| আজকের খরচ | Today's purchase + expense total | `today_summary.spend` |
+| মোট বাকি | Sum of all customers' due | `Σ customers.due_balance` |
+| স্টক কম | Number of products with `stock_qty ≤ reorder_level` → tap opens `/stock` | `products` |
+
+Status cards:
 | Box | Content | Source |
 |---|---|---|
 | সাপ্তাহিক লাভ | This week's gross profit, ▲/▼ % vs last week, 7 small daily bars | `summary.ts` (deterministic) |
 | এখন যা করবেন | 2–4 ranked actions: জরুরি (stock ≤ 2 days) · খেয়াল (due > 7 days) · পরামর্শ (fast movers) | rules in `summary.ts`, not AI |
-| মাসিক অডিট রিপোর্ট | **This calendar month** (Asia/Dhaka) vs last month: 5 Bangla AI bullet points from verified numbers + **PDF ডাউনলোড** + পুরো রিপোর্ট (`/report`) | numbers: `summary.ts`; words: `insight.ts` (+ number check) |
+| মাসিক অডিট রিপোর্ট | Top line **আজকের সারাংশ**: one Bangla AI sentence about today (daily insight, §8). Then **this calendar month** (Asia/Dhaka) vs last month: 5 Bangla AI bullet points from verified numbers + **PDF ডাউনলোড** + পুরো রিপোর্ট (`/report`) | numbers: `summary.ts`; words: `insight.ts` (+ number check) |
 - Week = Saturday–Friday, Asia/Dhaka (BD shop week).
 - Profit = Σ sale items (unit_price − product cost_price) × qty. Uses **current** cost price (MVP limitation; say so if asked).
 - Profit box = **weekly**; audit box = **monthly** (as in the mockup).
@@ -144,10 +155,10 @@ Ek sentence e onek item thakte pare: "2 ta sabun ar 1 kg chini" → ekta transac
 ```
 Prottek line e "keno" (risk + profit) chhoto kore.
 
-## 8. Insight (dashboard card)
-- Dashboard e 2-3 line Bangla summary (LLM, shudhu verified number theke)
-- LLM er text e kono number summary te na thakle → template sentence dekhay
-- "Shobcheye beshi bikri", "baki barche", "kal ki kinben"
+## 8. Daily insight (আজকের সারাংশ, P0)
+- Lives as the **first line of the মাসিক অডিট রিপোর্ট card** on home (no separate card or page).
+- One Bangla sentence about today (LLM, shudhu verified number theke), e.g. "shobcheye beshi bikri", "baki barche", "kal ki kinben".
+- LLM er text e kono number summary te na thakle → template sentence dekhay (✨ icon chhara, AI claim na).
 
 ## 9. Language toggle (optional)
 - Default `bn`. **বাং/EN pill in the top bar** (and ভাষা in the ⋮ menu); toggle korle shob UI text English.

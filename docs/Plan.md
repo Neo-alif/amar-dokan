@@ -61,18 +61,18 @@
 - [ ] Text entry + 3 sample-sentence chips
 - [ ] `ConfirmCard` (view / edit / cancel, "নতুন পণ্য/কাস্টমার" badges, idempotency key, button disabled while saving)
 - [ ] `/api/transactions` (Zod again → new items → `apply_transaction` → Bangla error map)
-- [ ] Home (match `docs/mockup/Main.dc.html` + UIspec §3b): navy top bar with বাং/EN pill (optional), hero + হিসাব দিন, weekly profit box, এখন যা করবেন, menu boxes, floating mic
+- [ ] Home (match `docs/mockup/Main.dc.html` + UIspec §3b): navy top bar with বাং/EN pill (optional), hero + হিসাব দিন, 4-box stat strip (আজকের বিক্রি · আজকের খরচ · মোট বাকি · স্টক কম), weekly profit box, এখন যা করবেন, menu boxes, floating mic
 - [ ] `/dues`: list, customer ledger, জমা নিন
 - [ ] `MicButton` voice (**P0**, Web Speech `bn-BD`; text stays an equal option)
 - [ ] Ask a friend for ~15 test sentences; reach 50+ cases
 - **Done when:** "Rahim vai ke 2 ta soyabin tel dilam, 680 taka, 100 taka baki" (typed and spoken) → confirm → sales, stock and Rahim's due all update **locally** with `npm run build && npm start` ✅ (Vercel backup checked too)
 
 ## Phase 4 — Intelligence (23 Nov morning, ~4 h) · P0
-- [ ] `forecast.ts` (14-day avg × weekday factor, cold start) + `/stock` with "X দিন চলবে" (**P0**)
+- [ ] `forecast.ts` (SES α = 0.3 × weekday factor, cold start) + `/stock` with "X দিন চলবে" (**P0**)
 - [ ] Low-stock alert: জরুরি item in এখন যা করবেন + stock status chips (**P0**)
 - [ ] MAPE vs naive baseline script → write the numbers in README
 - [ ] `restock.ts` + `/restock` (budget input → ranked list + reasons + budget bar) (**P0**)
-- [ ] `summary.ts` + `insight.ts` (number check) → অডিট রিপোর্ট box + `/report` print page (PDF) (**P0**)
+- [ ] `summary.ts` + `insight.ts` (number check) → মাসিক অডিট রিপোর্ট box (first line আজকের সারাংশ) + `/report` print page (PDF) (**P0**)
 - [ ] Best/worst seller lists on home (P1)
 - [ ] Clarification bubble for missing price/amount (P1)
 - [ ] `npm run test:logic`

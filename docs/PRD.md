@@ -52,12 +52,12 @@ Chhoto dokandar Bangla/Banglish e **bole ba likhe** dokan chalabe. AI kotha bujh
 | F2 | **AI extraction** | P0 | Sentence → structured transaction (type, product, qty, price, customer, paid, due) |
 | F3 | **Confirm card** | P0 | AI ja bujhlo dekhay; dokandar confirm/edit kore. Confirm chhara kichu save hoy na |
 | F4 | **Auto update** | P0 | Confirm er por stock, bikri, baki update (deterministic backend) |
-| F5 | **Dashboard** | P0 | Ajker bikri, khoroch, mot baki, stock list |
+| F5 | **Dashboard** | P0 | Home stat strip: আজকের বিক্রি, আজকের খরচ, মোট বাকি, স্টক কম (+ weekly profit and monthly audit cards) |
 | F6 | **Baki khata** | P0 | Customer-wise baki, joma (payment) entry |
 | F7 | **Low-stock alert** | P0 | Reorder level er niche gele alert |
-| F8 | **7-day forecast** | P0 | Exponential smoothing + weekday adjustment; "koydin cholbe" |
+| F8 | **7-day forecast** | P0 | Simple exponential smoothing (α = 0.3) × weekday factor; "koydin cholbe" |
 | F9 | **Restock plan** | P0 | Budget input → ranked buy list |
-| F10 | **Daily insight** | P0 | LLM writes Bangla from verified numbers only (idea document feature 7) |
+| F10 | **Daily insight** | P0 | "আজকের সারাংশ": one Bangla sentence at the top of the monthly audit card; LLM writes it from verified numbers only (idea document feature 7) |
 | F11 | **Bangla UI (default)** | P0 | Shob text dictionary diye; **বাং/EN pill in top bar = optional** (en text still added with every key) |
 | F12 | **Clarification** | P1 | Info missing hole AI proshno kore ("কত টাকায় দিলেন?") |
 

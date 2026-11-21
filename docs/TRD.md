@@ -179,13 +179,16 @@ export const Extraction = z.object({
 ## 6. Business intelligence (deterministic)
 
 ### Forecast (`lib/logic/forecast.ts`)
-- Daily series per product from `daily_product_sales` (missing days = 0).
-- `base = average of last 14 days`
-- `weekday_factor[d] = avg sales on weekday d ÷ overall avg` (last 8 weeks; clamp 0.5–2.0)
-- `forecast[day] = base × weekday_factor[weekday(day)]`, next 7 days
-- `days_left = stock_qty / (sum(next 7) / 7)`
+Method (as in the idea document): **simple exponential smoothing (SES) × weekday factor**.
+- Daily series per product from `daily_product_sales` (missing days = 0), Asia/Dhaka days.
+- `weekday_factor[d] = avg sales on weekday d ÷ overall avg` (last 8 weeks; clamp 0.5–2.0; overall avg 0 → all factors 1)
+- Deseasonalise: `x[t] = sales[t] ÷ weekday_factor[weekday(t)]`
+- SES level: `L[0] = mean(x[first 7 days])`, then `L[t] = α · x[t] + (1 − α) · L[t−1]` with **`ALPHA = 0.3`** (constant at the top of the file)
+- `forecast[day] = L[last] × weekday_factor[weekday(day)]`, next 7 days
+- `days_left = stock_qty / (sum(next 7) / 7)` (forecast 0 → "∞ / বিক্রি নেই", no divide-by-zero)
 - **Cold start:** < 14 days of data → no forecast, show "শিখছি" and use `reorder_level` only.
-- **Evaluation:** hold out the last 7 days; report MAPE for this method **and** for a naive baseline (last 7-day average). Pitch: "X% lower error than the naive baseline, on synthetic data."
+- **Evaluation:** hold out the last 7 days; report MAPE for this method **and** for a naive baseline (last 7-day average), MAPE over days with actual sales > 0. Pitch: "X% lower error than the naive baseline, on synthetic data."
+- Why SES: works with little data, one tunable number (α), easy to explain ("recent days count more"), no training or GPU.
 - Known limitation (say it in Q&A): stockout days hide true demand.
 
 ### Restock (`lib/logic/restock.ts`)
@@ -208,9 +211,13 @@ Constants (`HORIZON_DAYS = 7`, `SAFETY_DAYS = 2`) at the top of the file.
 - Numbers (deterministic): total sales, profit (same formula as weekly), expenses (purchase + expense), total due, top 5 products (sales + profit), products that hit zero stock this month.
 - LLM gets only that JSON → 5 short Bangla bullet points (মূল কথা). Same number check as the insight below; on failure, show deterministic template bullets (clearly not AI).
 
-### Insight (`lib/logic/summary.ts` → `lib/ai/insight.ts`)
+### Home stat strip (`lib/logic/summary.ts`, deterministic)
+- আজকের বিক্রি = `today_summary.sales`; আজকের খরচ = `today_summary.spend` (purchase + expense); মোট বাকি = `Σ customers.due_balance`; স্টক কম = count of products with `stock_qty ≤ reorder_level`. All "today" in Asia/Dhaka.
+
+### Daily insight — আজকের সারাংশ (`lib/logic/summary.ts` → `lib/ai/insight.ts`)
+- Shown as the **first line of the monthly audit card**.
 - `summary.ts` computes: today sales vs yesterday (%), top 3 products, due change, low-stock items.
-- LLM gets only that JSON: "write 2–3 Bangla sentences, use only these numbers."
+- LLM gets only that JSON: "write **one** short Bangla sentence, use only these numbers."
 - **Number check:** every number in the LLM text must exist in the summary JSON; otherwise show a deterministic template sentence instead (still from real data, clearly not AI).
 
 ## 7. Security
@@ -263,5 +270,5 @@ DEMO_SHOP_ID=
 - `provider.ts`: calls Gemini, falls back to Groq, returns raw JSON.
 - `extract.ts`: turns a sentence into a validated draft transaction, never saves.
 - `apply_transaction`: the only place money and stock change, all-or-nothing.
-- `forecast.ts`: 14-day average adjusted by weekday.
+- `forecast.ts`: exponential smoothing (α = 0.3, recent days count more) adjusted by weekday.
 - `restock.ts`: most urgent first, fill the budget.
