@@ -1,6 +1,7 @@
 # Schema — Amar Dokan
 
-> v0.2 · Supabase PostgreSQL. File: `supabase/migrations/001_init.sql`
+> v0.3 · Supabase PostgreSQL. **Source of truth:** `supabase/migrations/001_init.sql` + `002_tighten_service_role.sql` (applied 21 Nov). Tests: `supabase/tests/001_init_test.sql`.
+> v0.3 changes (review, all approved): optional `occurred_at` in the payload (seed history goes through the same function; API never passes it from the browser) · customer must belong to the shop · idempotency race handled with `on conflict` · items only read for sale/purchase · money rounded to 2 decimals, total = Σ rounded line totals · `daily_product_sales` has `shop_id` · `sign` → `v_sign` · `pg_trgm` in the `extensions` schema · explicit grants for `service_role` only (§3b), extra privileges removed in 002.
 > Principle: **stock ar baki "ledger" theke ashe.** Prottek change ekta row, tai history kokhono hariye jay na, ar forecast er jonno data thake.
 > v0.2 changes: RLS + RPC lock, money validation inside the DB, Dhaka timezone, idempotency key, `pending` removed from logs flow, `return` type cut.
 
@@ -32,7 +33,7 @@ ai_logs *──1 transactions (nullable)
 
 ```sql
 -- 001_init.sql
-create extension if not exists pg_trgm;
+create extension if not exists pg_trgm with schema extensions;   -- Supabase keeps extensions here
 
 create table shops (
   id uuid primary key default gen_random_uuid(),
@@ -54,7 +55,7 @@ create table products (
   reorder_level numeric(10,2) not null default 5,
   created_at timestamptz default now()
 );
-create index products_name_trgm on products using gin (name_bn gin_trgm_ops);
+create index products_name_trgm on products using gin (name_bn extensions.gin_trgm_ops);
 
 create table customers (
   id uuid primary key default gen_random_uuid(),
@@ -147,14 +148,32 @@ alter table customer_ledger   enable row level security;
 alter table ai_logs           enable row level security;
 ```
 
-Function ar view er permission section 4-5 er shesh e.
+## 3b. Privileges ("Grant API access to new tables automatically" = OFF)
+
+Auto API grants OFF, tai kono role automatically table access pay na. `service_role` RLS bypass kore, kintu **GRANT chhara** table e hat dite pare na. So every privilege is explicit:
+
+```sql
+-- 001: nobody but service_role
+revoke all on all tables in schema public from anon, authenticated;   -- includes views
+revoke all on function public.apply_transaction(jsonb) from public, anon, authenticated;
+grant usage on schema public to service_role;
+grant select, insert, update, delete on <the 8 tables> to service_role;
+grant select on public.daily_product_sales, public.today_summary to service_role;
+grant execute on function public.apply_transaction(jsonb) to service_role;
+
+-- 002: Supabase default privileges had also given service_role REFERENCES, TRIGGER, TRUNCATE
+revoke references, trigger, truncate on all tables in schema public from service_role;
+alter default privileges in schema public revoke references, trigger, truncate on tables from service_role;
+```
+
+**Rule for every new migration:** grant `select, insert, update, delete` (and `execute` for functions) to `service_role` explicitly, and nothing to `anon`/`authenticated`. Test 7 in `001_init_test.sql` checks least privilege.
 
 ## 4. Atomic apply function (with validation)
 
 Confirm er por API ei ekta function call kore. **Shob money check DB er bhetore**, client er number trust kora hoy na. Kono check fail hole puro transaction rollback.
 
 ```sql
-create or replace function apply_transaction(p jsonb)
+create or replace function public.apply_transaction(p jsonb)
 returns uuid
 language plpgsql
 security definer
@@ -162,40 +181,49 @@ set search_path = public
 as $$
 declare
   t_id     uuid;
+  v_key    uuid := (p->>'idempotency_key')::uuid;
   v_shop   uuid := (p->>'shop_id')::uuid;
   v_type   txn_type := (p->>'type')::txn_type;
   v_cust   uuid := nullif(p->>'customer_id','')::uuid;
-  v_paid   numeric := coalesce((p->>'paid')::numeric, 0);
+  v_paid   numeric := round(coalesce((p->>'paid')::numeric, 0), 2);
+  -- Review fix: optional timestamp so the seed can create history through this same function.
+  -- The API route must NOT pass it from the browser (server sets it, or it defaults to now()).
+  v_at     timestamptz := coalesce((p->>'occurred_at')::timestamptz, now());
   v_total  numeric := 0;
   v_due    numeric;
   v_bal    numeric;
   item     jsonb;
   v_qty    numeric;
   v_price  numeric;
-  sign     int;
+  v_sign   int;
 begin
-  -- idempotency: same key abar ashle ager id ferot dey, kichu notun likhe na
-  select id into t_id from transactions
-   where idempotency_key = (p->>'idempotency_key')::uuid;
+  -- idempotency: same key again → return the earlier id, write nothing
+  select id into t_id from transactions where idempotency_key = v_key;
   if t_id is not null then return t_id; end if;
 
-  -- total = Σ qty × unit_price (backend recompute, client er total ignore)
+  -- Review fix: a given customer must belong to this shop (checked once, for every type)
+  if v_cust is not null and not exists
+     (select 1 from customers where id = v_cust and shop_id = v_shop) then
+    raise exception 'CUSTOMER_NOT_FOUND';
+  end if;
+
+  -- total = Σ qty × unit_price (backend recompute, client total ignored)
   if v_type in ('sale','purchase') then
     if jsonb_array_length(coalesce(p->'items','[]'::jsonb)) = 0 then
       raise exception 'ITEMS_REQUIRED';
     end if;
-    select coalesce(sum((i->>'quantity')::numeric * (i->>'unit_price')::numeric), 0)
+    -- sum of per-line rounded totals, so it always equals Σ transaction_items.line_total
+    select coalesce(sum(round((i->>'quantity')::numeric * (i->>'unit_price')::numeric, 2)), 0)
       into v_total
       from jsonb_array_elements(p->'items') i;
   elsif v_type = 'expense' then
-    v_total := coalesce((p->>'total')::numeric, 0);
+    v_total := round(coalesce((p->>'total')::numeric, 0), 2);
     if v_total <= 0 then raise exception 'AMOUNT_REQUIRED'; end if;
     v_paid := v_total;
   elsif v_type = 'payment' then
     if v_cust is null then raise exception 'CUSTOMER_REQUIRED'; end if;
     if v_paid <= 0 then raise exception 'AMOUNT_REQUIRED'; end if;
     select due_balance into v_bal from customers where id = v_cust and shop_id = v_shop for update;
-    if v_bal is null then raise exception 'CUSTOMER_NOT_FOUND'; end if;
     if v_paid > v_bal then raise exception 'PAYMENT_EXCEEDS_DUE'; end if;
     v_total := v_paid;
   end if;
@@ -210,38 +238,45 @@ begin
   if v_due > 0 and v_type <> 'sale' then raise exception 'DUE_ONLY_ON_SALE'; end if;
   if v_due > 0 and v_cust is null then raise exception 'CUSTOMER_REQUIRED_FOR_DUE'; end if;
 
+  -- Review fix: two simultaneous requests with the same key → the loser returns the winner's id
+  -- instead of failing on the unique constraint.
   insert into transactions (shop_id, idempotency_key, type, customer_id, total, paid, due,
-                            expense_category, note, raw_text)
-  values (v_shop, (p->>'idempotency_key')::uuid, v_type, v_cust, v_total, v_paid, v_due,
-          p->>'expense_category', p->>'note', p->>'raw_text')
+                            expense_category, note, raw_text, occurred_at)
+  values (v_shop, v_key, v_type, v_cust, v_total, v_paid, v_due,
+          p->>'expense_category', p->>'note', p->>'raw_text', v_at)
+  on conflict (idempotency_key) do nothing
   returning id into t_id;
+  if t_id is null then
+    select id into t_id from transactions where idempotency_key = v_key;
+    return t_id;
+  end if;
 
-  sign := case v_type when 'sale' then -1 when 'purchase' then 1 else 0 end;
+  -- Review fix: items are only read for sale/purchase (expense/payment items are ignored,
+  -- so no item rows can disagree with the total).
+  if v_type in ('sale','purchase') then
+    v_sign := case v_type when 'sale' then -1 else 1 end;
+    for item in select * from jsonb_array_elements(p->'items') loop
+      v_qty   := (item->>'quantity')::numeric;
+      v_price := (item->>'unit_price')::numeric;
+      insert into transaction_items (transaction_id, product_id, quantity, unit_price, line_total)
+      values (t_id, (item->>'product_id')::uuid, v_qty, v_price, round(v_qty * v_price, 2));
 
-  for item in select * from jsonb_array_elements(coalesce(p->'items','[]'::jsonb)) loop
-    v_qty   := (item->>'quantity')::numeric;
-    v_price := (item->>'unit_price')::numeric;
-    insert into transaction_items (transaction_id, product_id, quantity, unit_price, line_total)
-    values (t_id, (item->>'product_id')::uuid, v_qty, v_price, v_qty * v_price);
-
-    if sign <> 0 then
-      insert into stock_movements (shop_id, product_id, transaction_id, change, reason)
-      values (v_shop, (item->>'product_id')::uuid, t_id, sign * v_qty, v_type::text);
-      update products set stock_qty = stock_qty + sign * v_qty
+      insert into stock_movements (shop_id, product_id, transaction_id, change, reason, occurred_at)
+      values (v_shop, (item->>'product_id')::uuid, t_id, v_sign * v_qty, v_type::text, v_at);
+      update products set stock_qty = stock_qty + v_sign * v_qty
        where id = (item->>'product_id')::uuid and shop_id = v_shop;
       if not found then raise exception 'PRODUCT_NOT_FOUND'; end if;
-    end if;
-  end loop;
+    end loop;
+  end if;
 
   if v_type = 'sale' and v_due > 0 then
-    insert into customer_ledger (shop_id, customer_id, transaction_id, change)
-    values (v_shop, v_cust, t_id, v_due);
+    insert into customer_ledger (shop_id, customer_id, transaction_id, change, occurred_at)
+    values (v_shop, v_cust, t_id, v_due, v_at);
     update customers set due_balance = due_balance + v_due where id = v_cust and shop_id = v_shop;
-    if not found then raise exception 'CUSTOMER_NOT_FOUND'; end if;
   elsif v_type = 'payment' then
-    insert into customer_ledger (shop_id, customer_id, transaction_id, change)
-    values (v_shop, v_cust, t_id, -v_paid);
-    update customers set due_balance = due_balance - v_paid where id = v_cust;
+    insert into customer_ledger (shop_id, customer_id, transaction_id, change, occurred_at)
+    values (v_shop, v_cust, t_id, -v_paid, v_at);
+    update customers set due_balance = due_balance - v_paid where id = v_cust and shop_id = v_shop;
   end if;
 
   return t_id;
@@ -267,14 +302,15 @@ grant  execute on function apply_transaction(jsonb) to service_role;
 Supabase server UTC te chole. Tai "aj" ar "din" shob shomoy `Asia/Dhaka` e convert kore.
 
 ```sql
-create view daily_product_sales
+create view public.daily_product_sales
 with (security_invoker = true) as
-select product_id,
+select shop_id,
+       product_id,
        (occurred_at at time zone 'Asia/Dhaka')::date as day,
        sum(-change) as qty_sold
-from stock_movements
+from public.stock_movements
 where reason = 'sale'
-group by product_id, day;
+group by shop_id, product_id, day;
 
 create view today_summary
 with (security_invoker = true) as
@@ -288,7 +324,7 @@ where (occurred_at at time zone 'Asia/Dhaka')::date
     = (now() at time zone 'Asia/Dhaka')::date
 group by shop_id;
 
-revoke all on daily_product_sales, today_summary from anon, authenticated;
+-- privileges for both views: see §3b (anon/authenticated revoked, service_role select)
 ```
 
 `security_invoker = true` mane view RLS mene chole, tai anon diye view diyeo data ber kora jabe na.
@@ -313,5 +349,7 @@ Step 2-4 fail hole notun product row thakleo ok (harmless), transaction kokhono 
 - **Money logic DB te:** LLM ba client je number i pathak, total ar due DB nije hishab kore, rule venge kichu save hoy na.
 - **Idempotency key:** network slow hole ba double-tap korle o ekta transaction e hoy.
 - **RLS + revoke:** public anon key diye keu data dekhte ba bodlate parbe na.
+- **Least privilege:** server key (service_role) shudhu CRUD + function call korte pare; TRUNCATE/TRIGGER/REFERENCES nei, tai leak holeo puro ledger muche fela jay na.
+- **Seed uses `apply_transaction` too** (with `occurred_at`): demo data follows exactly the same money rules as real entries.
 - **`ai_logs`:** AI accuracy, edit rate, kon provider use holo, measure kora jay.
 - **Dhaka timezone:** raat 12-6 tar moddhe o "aj" er hishab thik.
