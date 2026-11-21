@@ -7,6 +7,7 @@ A Bangla-first AI business assistant for small retailers in Bangladesh. The shop
 > 🚧 Work in progress — built for **CoU AI Hackathon 2026** (pre-build 21–23 Nov, final 24 Nov 2026).
 
 - **Domain:** FinTech (primary) · Business and Industry (secondary)
+- Repository created 21 Nov 2026, 01:12 BST (GitHub displays UTC: 20 Nov, 19:12).
 - **Live link:** _TBD_
 - **Demo video:** _TBD_
 

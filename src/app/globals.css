@@ -1,26 +1,38 @@
 @import "tailwindcss";
 
+/* Colour tokens from docs/UIspec.md §2. Dark mode is cut. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --primary: #1f3a5f;
+  --accent: #6d28d9;
+  --success: #16a34a;
+  --warning: #d97706;
+  --danger: #dc2626;
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --text: #0f172a;
+  --muted: #64748b;
+  --border: #e2e8f0;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-primary: var(--primary);
+  --color-accent: var(--accent);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  /* Inter first: it has no Bengali glyphs, so Bangla text falls back to Hind Siliguri
+     while Latin letters and digits use Inter (UIspec §3). */
+  --font-sans: var(--font-inter), var(--font-bangla), sans-serif;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  line-height: 1.6; /* room for Bangla conjuncts (juktakkhor) */
 }
