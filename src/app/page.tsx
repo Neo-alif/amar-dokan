@@ -7,8 +7,8 @@ export default function Home() {
 
   return (
     <main className="flex flex-1 flex-col items-center justify-center gap-3 px-4 text-center">
-      <h1 className="text-4xl font-semibold text-primary">{t.appName}</h1>
-      <p className="text-lg text-muted">{t.tagline}</p>
+      <p className="text-lg text-muted">{t.heroTag}</p>
+      <h1 className="text-4xl font-semibold text-primary">{t.heroTitle}</h1>
     </main>
   );
 }

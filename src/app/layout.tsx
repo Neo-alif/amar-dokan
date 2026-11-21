@@ -20,7 +20,7 @@ const t = dictionary[DEFAULT_LANG];
 
 export const metadata: Metadata = {
   title: t.appName,
-  description: t.tagline,
+  description: t.heroTag,
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

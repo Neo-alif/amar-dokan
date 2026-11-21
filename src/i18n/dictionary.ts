@@ -3,14 +3,17 @@
 
 const bn = {
   appName: "আমার দোকান",
-  tagline: "আপনার ব্যবসা, এখন AI বোঝে।",
+  // Hero copy from the approved mockup (docs/mockup/Main.dc.html)
+  heroTag: "আপনার দোকানের এআই হিসাবরক্ষক",
+  heroTitle: "আমার দোকানে সব হিসাব",
 };
 
 type Dict = typeof bn;
 
 const en: Dict = {
   appName: "Amar Dokan",
-  tagline: "Your Business, Understood by AI.",
+  heroTag: "Your shop's AI bookkeeper",
+  heroTitle: "Every account of your shop, in one place",
 };
 
 export const dictionary = { bn, en };
