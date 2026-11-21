@@ -28,7 +28,8 @@ Read before any work: `docs/PRD.md`, `docs/AppFlow.md`, `docs/UIspec.md`, `docs/
 - Browser never talks to Supabase directly; all DB access via server API routes with the service-role key. RLS on, RPC locked (Schema §3–4).
 - Validate every external input with Zod on the server (including the confirmed payload).
 - Keep `lib/ai/` (provider/prompts) separate from `lib/logic/` (pure, deterministic functions) and from UI.
-- All UI text through `src/i18n/dictionary.ts` (Bangla default).
+- All UI text through `src/i18n/dictionary.ts` (Bangla default). Add the `en` text in the same change as every new key (বাং/EN pill is P1).
+- Look and copy: `docs/mockup/*.dc.html` and UIspec §3b win over any other doc text.
 - Dhaka timezone (`Asia/Dhaka`) for any "today"/daily logic.
 - No new libraries without explaining why. No unused code, no fake functionality. Handle loading, error and empty states.
 

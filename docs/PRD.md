@@ -57,7 +57,7 @@ Chhoto dokandar Bangla/Banglish e **bole ba likhe** dokan chalabe. AI kotha bujh
 | F8 | **7-day forecast** | P1 | Exponential smoothing + weekday adjustment; "koydin cholbe" |
 | F9 | **Restock plan** | P1 | Budget input → ranked buy list |
 | F10 | **Daily insight** | P1 | Dashboard card; LLM writes Bangla from verified numbers only |
-| F11 | **Bangla UI (default)** | P0 | Shob text dictionary diye; **English toggle = P2** |
+| F11 | **Bangla UI (default)** | P0 | Shob text dictionary diye; **বাং/EN pill in top bar = P1** (en text added with every key) |
 | F12 | **Clarification** | P1 | Info missing hole AI proshno kore ("কত টাকায় দিলেন?") |
 
 | F13 | **Home hero + entry button** | P0 | Compact hero, feature points, হিসাব দিন |

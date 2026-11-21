@@ -10,11 +10,12 @@
 ## 1. Screen map (v0.3, laptop-first)
 
 ```
-┌ Top bar: [লোগো আমার দোকান]           [🔍 খুঁজুন] [⋮ মেনু] ┐   ← no navbar
+┌ Top bar (navy): [লোগো আমার দোকান]  [বাং|EN] [🔍 খুঁজুন] [⋮ মেনু] ┐  ← no navbar
 │                                                          │
-│ SECTION 1  Hero: "হিসাব এখন মুখে মুখে" + 4 feature points  │
-│            background: khata + calculator line art       │
-│            [🎤 হিসাব দিন] (center bottom) → /entry         │
+│ SECTION 1  Hero (navy band): tag "আপনার দোকানের এআই হিসাবরক্ষক" │
+│            H1 "আমার দোকানে সব হিসাব" + subline + 4 feature tiles │
+│            line art (khata, calculator, receipt, coins) at edges │
+│            [হিসাব দিন] amber pill (center bottom) → /entry  │
 │                                                          │
 │ SECTION 2  এই সপ্তাহের অবস্থা                              │
 │   [সাপ্তাহিক লাভ ▲%] [এখন যা করবেন] [অডিট রিপোর্ট + PDF]   │
@@ -27,7 +28,8 @@
 ```
 
 Routes: `/` (home) · `/entry` · `/stock` · `/dues` · `/restock` · `/transactions` · `/products` · `/products/[id]` · `/expenses` (P2) · `/report` (printable audit, P1)
-⋮ menu: same links as the menu boxes + ভাষা (P2).
+⋮ menu: হিসাব দিন, the menu-box links, মাসিক অডিট রিপোর্ট, ভাষা (P1, same switch as the top-bar pill).
+**Source of truth for look and copy:** the mockup and UIspec §3b win over any other text in these docs.
 Visual mockup: `docs/mockup/` (Main → `/`, Entry → `/entry`, Stock → `/stock`, Dues → `/dues`, Restock → `/restock`, Transactions → `/transactions`, Products → `/products`, Expenses → `/expenses`, Report → `/report`). Numbers in the mockup are sample data only.
 
 ## 2. Main flow: Bole entry (core demo)
@@ -96,10 +98,11 @@ Ek sentence e onek item thakte pare: "2 ta sabun ar 1 kg chini" → ekta transac
 
 ## 4. Home (/)
 
-**Section 1: Hero (compact, ~420px tall)**
-- Title "হিসাব এখন মুখে মুখে", subline "বলুন বা লিখুন, বাকিটা আমার দোকান গুছিয়ে রাখবে।"
-- 4 feature points: বলে বা লিখে হিসাব · বাকির হিসাব · স্টক শেষের আগে সতর্কতা · বাজেট বুঝে কেনাকাটা
-- Big button **হিসাব দিন** → `/entry`; example sentence under it
+**Section 1: Hero (navy band, copy exactly as `docs/mockup/Main.dc.html`)**
+- Tag (above title) "আপনার দোকানের এআই হিসাবরক্ষক"
+- Title "**আমার দোকানে** সব হিসাব", subline "বিক্রি, বাকি, স্টক, সব এক জায়গায়। শুধু বলুন বা লিখুন।"
+- 4 feature tiles: বলে বা লিখে হিসাব · কাস্টমারের বাকির হিসাব · স্টক শেষ হওয়ার আগেই সতর্কতা · বাজেট বুঝে কেনাকাটার পরামর্শ
+- Big button **হিসাব দিন** → `/entry`; no example sentence
 
 **Section 2: এই সপ্তাহের অবস্থা**
 | Box | Content | Source |
@@ -143,8 +146,9 @@ Prottek line e "keno" (risk + profit) chhoto kore.
 - LLM er text e kono number summary te na thakle → template sentence dekhay
 - "Shobcheye beshi bikri", "baki barche", "kal ki kinben"
 
-## 9. Language toggle
-- Default `bn`. **P2:** toggle korle shob UI text English (dictionary ready thakle ~1 ghonta).
+## 9. Language toggle (P1)
+- Default `bn`. **বাং/EN pill in the top bar** (and ভাষা in the ⋮ menu); toggle korle shob UI text English.
+- Rule: every new key in `src/i18n/dictionary.ts` gets its `en` text in the same change (the `Dict` type enforces it), so there is no separate translation phase.
 - Choice `localStorage` e mone rakhe (try/catch diye).
 - AI reply o current language e ashe (prompt e `lang` pathano hoy).
 

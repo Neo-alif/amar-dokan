@@ -1,6 +1,6 @@
 # Plan — Amar Dokan
 
-> v0.2 · Solo build. Rule: **P0 100% shesh na hole P1 shuru na.**
+> v0.3 · Solo build. Rule: **P0 100% shesh na hole P1 shuru na.**
 > Prottek feature shesh e **commit + push** (Vercel auto-deploy). Repo **public**, created on/after 21 Nov. No force-push, no squash.
 
 ---
@@ -59,7 +59,7 @@
 - [ ] Text entry + 3 sample-sentence chips
 - [ ] `ConfirmCard` (view / edit / cancel, "নতুন পণ্য/কাস্টমার" badges, idempotency key, button disabled while saving)
 - [ ] `/api/transactions` (Zod again → new items → `apply_transaction` → Bangla error map)
-- [ ] Home (UIspec v0.3): top bar, hero + হিসাব দিন, weekly profit box, এখন যা করবেন, menu boxes, floating mic
+- [ ] Home (match `docs/mockup/Main.dc.html` + UIspec §3b): navy top bar with বাং/EN pill (P1), hero + হিসাব দিন, weekly profit box, এখন যা করবেন, menu boxes, floating mic
 - [ ] `/dues`: list, customer ledger, জমা নিন
 - [ ] `MicButton` voice (P1, but do it today if core is done by 6 PM)
 - [ ] Ask a friend for ~15 test sentences; reach 50+ cases
@@ -78,7 +78,7 @@
 ## Phase 5 — Polish, docs, freeze (23 Nov afternoon, ~3 h)
 - [ ] Empty / error states (AppFlow §10)
 - [ ] Mobile + laptop check
-- [ ] English toggle (P2, only if time)
+- [ ] English check (P1): switch the বাং/EN pill, every screen reads correctly (en text is added with each dictionary key, so no translation work here)
 - [ ] **README complete** (TRD §10 checklist)
 - [ ] Record demo video (≤3 min, real project) → link in README
 - [ ] Fresh clone on the laptop → `npm install && npm run dev` works
@@ -113,7 +113,7 @@
 All AI output in the demo is live. If Gemini is rate-limited, Groq answers (live too).
 
 ## Cut list (in this order if time runs out)
-1. English toggle
+1. বাং/EN pill (P1; en text stays in the dictionary either way)
 2. Product chart
 3. Voice (text + chips still demo the AI)
 4. Clarification (edit on the confirm card instead)

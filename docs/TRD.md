@@ -1,6 +1,6 @@
 # TRD — Amar Dokan
 
-> Technical Requirements Document · v0.2
+> Technical Requirements Document · v0.3
 > Golden rule: **LLM bujhe (language), backend hishab kore (math).** LLM kokhono taka ba stock calculate korbe na.
 > v0.2: rulebook compliance (real AI only, public repo, README), Gemini free-tier safeguards with a **real** Groq fallback, server-side re-validation, resolve step, simpler forecast/restock, cuts (auth, PWA, return).
 
@@ -250,7 +250,7 @@ DEMO_SHOP_ID=
 | Change forecast window/method | `lib/logic/forecast.ts` |
 | New unit / number word | `lib/schema.ts` + `lib/logic/normalize.ts` |
 | Different LLM | `lib/ai/provider.ts` + `.env` |
-| New UI text | `src/i18n/dictionary.ts` |
+| New UI text | `src/i18n/dictionary.ts` (add `bn` and `en` together; the `Dict` type enforces it) |
 | A failing sentence | add to `tests/banglish-cases.json` → fix prompt/normalize → rerun |
 
 **One-sentence explanations (for "understand your code"):**

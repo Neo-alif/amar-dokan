@@ -1,4 +1,5 @@
-// All UI text lives here. Bangla (bn) is the default; English (en) is the P2 toggle.
+// All UI text lives here. Bangla (bn) is the default; English (en) is the বাং/EN pill (P1).
+// Rule: add the en text in the same change as every new bn key.
 // `en` is typed as `Dict`, so TypeScript errors if a key exists in one language but not the other.
 
 const bn = {

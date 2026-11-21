@@ -1,7 +1,7 @@
 # UIspec — Amar Dokan
 
 > v0.4 · Dekhte kemon hobe: color, font, component, layout.
-> v0.4: final approved mockup in `docs/mockup/*.dc.html` (open in a browser or read as HTML). **Build to match these files.**
+> v0.4: final approved mockup in `docs/mockup/*.dc.html` (open in a browser or read as HTML). **Build to match these files.** If any line below disagrees, the mockup and §3b win. LanguageToggle is now P1.
 > v0.3: laptop-first, top bar instead of nav, hero, status boxes, product lists. Visual reference: Design canvas "Amar Dokan UI Mockup".
 > v0.2: sample-sentence chips, manual-fill state, badges; LanguageToggle = P2; chart = P2.
 > Design principle: **boro, shohoj, Bangla-first.** Karim bhai jeno chosma chhara o pore.
@@ -62,14 +62,14 @@ No gradients anywhere (flat colors only).
 
 - **Laptop (≥ 1024px, primary, demo):** content `max-width: 1200px`, centered, 32px side padding. Section 2 = 3 status boxes in a row + 6 menu boxes in a row; Section 3 = 2 lists side by side.
 - **Tablet/mobile (< 1024px):** status boxes and lists stack to 1 column, menu boxes 3 per row, hero feature points 2×2.
-- **Top bar (no navbar):** logo + "আমার দোকান" left; search field (max ~460px) + ⋮ menu button right. White, 1px bottom border.
+- **Top bar (no navbar):** navy, as in §3b: logo + "আমার দোকান" left; বাং/EN pill + search field (max ~460px) + ⋮ menu button right.
 - **Floating mic button:** 68px circle, `--accent`, bottom-right 32px, every page except `/entry`.
 - Spacing scale 4/8/12/16/24/32px. Card radius 16px, 1px `--border`, no heavy shadows. **No gradients** (unslop rule).
 
 ### Home sections
 | Section | Spec |
 |---|---|
-| Hero | White band, faint (8% opacity) khata + calculator line art behind; purple pill tag; H1 52px/700 navy; 4 feature tiles (icon + label); accent pill button 20px/600 with mic icon |
+| Hero | As in §3b: navy band, line art at the edges; amber tag above the title; H1 60px/700 white with "আমার দোকানে" amber; subline 21px; 4 feature tiles (icon + label); amber pill button হিসাব দিন 20px; no example line |
 | Status boxes | 3 equal cards: profit (big number 40px, ▲ green / ▼ red pill with %), actions (colored chip জরুরি red · খেয়াল amber · পরামর্শ grey), audit (sparkle icon, AI text, PDF + full report buttons) |
 | Menu boxes | 6 tiles: 48px tinted icon square + label |
 | Product lists | Card with title + "সব দেখুন →"; inner scroll box 260px; row = rank · name · mini bar · qty |
@@ -125,8 +125,8 @@ No gradients anywhere (flat colors only).
 - ✨ icon, 2-4 line Bangla text, niche "শুধু যাচাই করা হিসাব থেকে" chhoto note
 - Template fallback hole ✨ icon dekhabe na (AI claim na)
 
-### LanguageToggle (P2)
-- Pill switch: `বাংলা | EN`, active ta filled
+### LanguageToggle (P1)
+- Pill switch `বাং | EN` in the top bar, active side amber (§3b); same switch as ভাষা in the ⋮ menu
 
 ### Toast
 - Bottom, 3 sec: "✓ সেভ হয়েছে", "✕ সমস্যা হয়েছে"
@@ -136,6 +136,7 @@ No gradients anywhere (flat colors only).
 - Shohoj kothar Bangla, shadhu na. "নিশ্চিত করুন", "বাকি", "জমা".
 - Error e dosh user er upor na: "বুঝতে পারিনি" (na "ভুল ইনপুট").
 - Shob text `src/i18n/dictionary.ts` e, component e hardcode na.
+- Notun key add korle `bn` ar `en` dutoi eki change e (the `Dict` type enforces it). Alada translation phase nei.
 
 ## 7. Accessibility
 
