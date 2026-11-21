@@ -7,7 +7,7 @@ A Bangla-first AI business assistant for small retailers in Bangladesh. The shop
 > 🚧 Work in progress — built for **CoU AI Hackathon 2026** (pre-build 21–23 Nov, final 24 Nov 2026).
 
 - **Domain:** FinTech (primary) · Business and Industry (secondary)
-- Repository created 21 Nov 2026, 01:12 BST (GitHub displays UTC: 20 Nov, 19:12).
+- Repository created 21 Nov 2026, 01:12 Dhaka time (UTC+6) (GitHub displays UTC: 20 Nov, 19:12).
 - **Live link:** _TBD_
 - **Demo video:** _TBD_
 
@@ -50,6 +50,8 @@ _TBD._ Demo data will be **synthetic and self-generated** by `data/seed.ts`. No 
 | Claude Code (Anthropic, Claude Opus 5.5) | Planning, documentation and code assistance during development |
 | Google Gemini (model TBD) | Runtime: transaction extraction and daily insight (live inference) |
 | Groq-hosted model (TBD) | Runtime: live fallback when Gemini is unavailable |
+
+UI mockup designed with Claude (Design canvas).
 
 No AI output in this app is hard-coded, cached or pre-recorded. If both providers fail, the UI says AI is unavailable and the owner fills the card by hand.
 
