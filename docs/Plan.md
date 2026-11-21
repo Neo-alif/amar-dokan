@@ -37,7 +37,7 @@
 - [x] Folder structure (TRD §3), `docs/` with these 6 files
 - [x] `.env.example` + `.env.local` (gitignored); README skeleton
 - [x] i18n `dictionary.ts` + `LanguageContext` (default `bn`); fonts Hind Siliguri + Inter
-- [ ] Supabase project; Gemini key; Groq key (projects created; keys verified + models picked: pending)
+- [x] Supabase project (Singapore); Gemini key; Groq key: all verified live; models picked by live test (`gemini-3.1-flash-lite`, `qwen/qwen3.8-27b`)
 - [x] Vercel import → blank page live (`vercel.json` region `sin1` = Supabase Singapore)
 - **Done when:** live URL shows "আমার দোকান"; first commit pushed
 

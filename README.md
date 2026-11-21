@@ -36,7 +36,7 @@ Core rule: **the LLM only understands language; the backend and database do all 
 - Next.js 16 (App Router) + TypeScript, Tailwind CSS
 - Supabase (PostgreSQL)
 - Zod (validation)
-- Gemini (primary LLM), Groq (live fallback LLM) — _exact models TBD_
+- Gemini `gemini-3.1-flash-lite` (primary LLM), Groq `qwen/qwen3.8-27b` (live fallback LLM). Model names are config in `.env.local`.
 - Hosting: Vercel
 
 ## Dataset
@@ -48,8 +48,8 @@ _TBD._ Demo data will be **synthetic and self-generated** by `data/seed.ts`. No 
 | Tool / model | Used for |
 |---|---|
 | Claude Code (Anthropic, Claude Opus 5.5) | Planning, documentation and code assistance during development |
-| Google Gemini (model TBD) | Runtime: transaction extraction and daily insight (live inference) |
-| Groq-hosted model (TBD) | Runtime: live fallback when Gemini is unavailable |
+| Google Gemini `gemini-3.1-flash-lite` | Runtime: transaction extraction, daily insight and monthly audit summary (live inference) |
+| Groq-hosted `qwen/qwen3.8-27b` | Runtime: live fallback when Gemini is unavailable |
 
 UI mockup designed with Claude (Design canvas).
 
