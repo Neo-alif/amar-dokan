@@ -153,3 +153,38 @@ test("weeklyProfit: this week vs last week, daily bars", () => {
   assert.equal(w.todayIndex, 2);
   assert.equal(weeklyProfit([], now).changePct, null);
 });
+
+import { dailySeries, forecast, stockOutlook } from "../src/lib/logic/forecast.ts";
+
+test("dailySeries fills missing days with 0", () => {
+  assert.deepEqual(dailySeries([{ day: "2026-11-01", qty: 2 }, { day: "2026-11-03", qty: 5 }], "2026-11-01", "2026-11-04"), [2, 0, 5, 0]);
+});
+
+test("forecast: cold start under 14 days → null", () => {
+  assert.equal(forecast(new Array(13).fill(3), "2026-11-01"), null);
+});
+
+test("forecast: flat demand stays flat; weekday pattern is kept", () => {
+  const flat = forecast(new Array(28).fill(4), "2026-10-01");
+  assert.deepEqual([flat!.avg, ...new Set(flat!.daily)], [4, 4]);
+  // Fridays sell double: 2026-10-02 is a Friday, 28 days of history
+  const sales = Array.from({ length: 28 }, (_, t) => (t % 7 === 1 ? 8 : 4));
+  const f = forecast(sales, "2026-10-01")!;
+  // next day after the series (2026-10-29, Thu) ... index 1 = Fri 30 Oct is the peak
+  assert.equal(Math.max(...f.daily), f.daily[1]);
+  assert.ok(f.daily[1] > 1.5 * f.daily[0]);
+});
+
+test("forecast: recent rise pulls the level up (SES)", () => {
+  const f = forecast([...new Array(21).fill(2), ...new Array(7).fill(6)], "2026-10-01")!;
+  assert.ok(f.avg > 4 && f.avg < 6);
+});
+
+test("stockOutlook: days left and status", () => {
+  assert.deepEqual(stockOutlook(8, 15, 4), { daysLeft: 2, status: "low" });
+  assert.deepEqual(stockOutlook(100, 10, 5), { daysLeft: 20, status: "ok" });
+  assert.deepEqual(stockOutlook(30, 10, 5), { daysLeft: 6, status: "low" }); // under 7 days
+  assert.deepEqual(stockOutlook(0, 10, 5), { daysLeft: 0, status: "out" });
+  assert.deepEqual(stockOutlook(20, 5, null), { daysLeft: null, status: "ok" }); // learning, above reorder
+  assert.deepEqual(stockOutlook(4, 5, 0), { daysLeft: null, status: "low" });    // no sales, below reorder
+});

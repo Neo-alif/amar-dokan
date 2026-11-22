@@ -80,7 +80,7 @@ export default function EntryPage() {
 
   return (
     <div className="flex flex-1 flex-col">
-      <PageHeader title={e.title} />
+      <PageHeader section="entry" />
       <main className="mx-auto flex w-full max-w-[1200px] flex-wrap items-start gap-7 px-4 pt-10 pb-18 sm:px-8">
         <section className="flex min-w-0 flex-[1_1_460px] flex-col gap-4.5 rounded-[20px] border border-border bg-surface p-6 sm:p-8">
           <MicButton disabled={thinking} onError={setError} onText={(s) => { setText(s.slice(0, MAX_INPUT_CHARS)); setSaved(false); }} />

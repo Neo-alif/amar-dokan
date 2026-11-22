@@ -4,8 +4,11 @@ import Link from "next/link";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 // Navy bar used by every inner page (mockup: back-to-home + amber page title).
-export function PageHeader({ title }: { title: string }) {
+type Section = "entry" | "stock"; // dictionary sections that have a `title`
+
+export function PageHeader({ section }: { section: Section }) {
   const { t } = useLanguage();
+  const title = t[section].title;
   return (
     <header className="bg-primary border-b border-[#27466E]">
       <div className="mx-auto flex max-w-[1200px] items-center justify-between gap-4 px-4 py-3.5 sm:px-8">

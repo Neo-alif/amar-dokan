@@ -70,8 +70,8 @@
 - **Done when:** "Rahim vai ke 2 ta soyabin tel dilam, 680 taka, 100 taka baki" (typed and spoken) → confirm → sales, stock and Rahim's due all update **locally** with `npm run build && npm start` ✅ (Vercel backup checked too)
 
 ## Phase 4 — Intelligence (23 Nov morning, ~4 h) · P0
-- [ ] `forecast.ts` (SES α = 0.3 × weekday factor, cold start) + `/stock` with "X দিন চলবে" (**P0**)
-- [ ] Low-stock alert: জরুরি item in এখন যা করবেন + stock status chips (**P0**)
+- [x] `forecast.ts` (SES α = 0.3 × weekday factor, cold start) + `/stock` with "X দিন চলবে" (**P0**); কম = stock ≤ reorder level or < 7 days left (same count on home)
+- [~] Low-stock alert: stock status chips done; জরুরি item in এখন যা করবেন with the home card (**P0**)
 - [ ] MAPE vs naive baseline script → write the numbers in README
 - [ ] `restock.ts` + `/restock` (budget input → ranked list + reasons + budget bar) (**P0**)
 - [ ] `summary.ts` + `insight.ts` (number check) → মাসিক অডিট রিপোর্ট box (first line আজকের সারাংশ) + `/report` print page (PDF) (**P0**)

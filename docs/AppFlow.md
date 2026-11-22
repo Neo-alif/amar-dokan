@@ -115,7 +115,7 @@ Stat strip (4 boxes, above the status cards; added 21 Nov, not in the mockup; co
 | আজকের বিক্রি | Today's sales total (Asia/Dhaka) | `today_summary.sales` |
 | আজকের খরচ | Today's purchase + expense total | `today_summary.spend` |
 | মোট বাকি | Sum of all customers' due | `Σ customers.due_balance` |
-| স্টক কম | Number of products with `stock_qty ≤ reorder_level` → tap opens `/stock` | `products` |
+| স্টক কম | Number of products with status কম/শেষ (same rule as `/stock`: stock ≤ reorder level **or** lasts < 7 days by forecast) → tap opens `/stock` | `forecast.ts` |
 
 Status cards:
 | Box | Content | Source |
