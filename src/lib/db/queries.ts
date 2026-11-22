@@ -150,3 +150,45 @@ export async function loadStock(now = new Date()) {
   });
 }
 export type StockRow = Awaited<ReturnType<typeof loadStock>>[number];
+
+// /dues: customers with baki (biggest first), each with a short ledger, plus summary numbers.
+export async function loadDues(now = new Date()) {
+  const shop = shopId();
+  const [customers, ledger] = await Promise.all([
+    db().from("customers").select("id, name, due_balance").eq("shop_id", shop),
+    all((a, b) => db().from("customer_ledger")
+      .select("id, customer_id, change, occurred_at, transactions(type, transaction_items(quantity, products(name_bn, name_en, unit)))")
+      .eq("shop_id", shop).order("id").range(a, b), "ledger"),
+  ]);
+  if (customers.error) throw new Error(`customers: ${customers.error.message}`);
+
+  const weekStart = dhakaWeekStart(now).getTime();
+  const entries = ledger.map((e) => {
+    const tx = one(e.transactions);
+    return {
+      customer_id: e.customer_id, at: e.occurred_at, change: Number(e.change), type: tx?.type ?? null,
+      items: (tx?.transaction_items ?? []).map((i) => {
+        const p = one(i.products);
+        return { bn: p?.name_bn ?? "", en: p?.name_en ?? p?.name_bn ?? "", qty: Number(i.quantity), unit: p?.unit ?? "pcs" };
+      }),
+    };
+  });
+  const list = customers.data.filter((c) => Number(c.due_balance) > 0).map((c) => {
+    const mine = entries.filter((e) => e.customer_id === c.id).sort((a, b) => Date.parse(b.at) - Date.parse(a.at));
+    return {
+      id: c.id, name: c.name, due: Number(c.due_balance),
+      lastDays: mine[0] ? Math.floor((now.getTime() - Date.parse(mine[0].at)) / 864e5) : null,
+      oldestDays: oldestDueDays(mine.map((e) => ({ change: e.change, occurred_at: e.at })), now),
+      entries: mine.slice(0, 10).map((e) => ({ at: e.at, change: e.change, type: e.type, items: e.items })),
+    };
+  }).sort((a, b) => b.due - a.due);
+  const old = list.filter((c) => c.oldestDays !== null && c.oldestDays > 7);
+  return {
+    customers: list,
+    totalCustomers: customers.data.length,
+    totalDue: list.reduce((s, c) => s + c.due, 0),
+    oldTotal: old.reduce((s, c) => s + c.due, 0), oldCount: old.length,
+    paidThisWeek: -entries.filter((e) => e.change < 0 && Date.parse(e.at) >= weekStart).reduce((s, e) => s + e.change, 0),
+  };
+}
+export type DuesData = Awaited<ReturnType<typeof loadDues>>;
