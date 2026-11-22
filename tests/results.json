@@ -1,11 +1,12 @@
 {
-  "ran_at": "2026-11-22T08:42:43.182Z",
-  "correct": 30,
+  "ran_at": "2026-11-22T16:57:24.395Z",
+  "correct": 29,
   "answered": 30,
   "errors": 0,
-  "accuracy_pct": 100,
+  "accuracy_pct": 96.7,
   "providers": {
-    "gemini": 30
+    "gemini": 27,
+    "groq": 3
   },
   "results": [
     {
@@ -14,7 +15,7 @@
       "ok": true,
       "problems": [],
       "provider": "gemini",
-      "latency_ms": 3170,
+      "latency_ms": 1663,
       "draft": {
         "type": "sale",
         "items": [
@@ -25,11 +26,13 @@
             "unit_price": 130,
             "line_total": 260,
             "product_id": "a35130ff-6918-4538-8418-2653ba86b62b",
-            "is_new": false
+            "is_new": false,
+            "stock_before": 12
           }
         ],
         "customer": null,
         "customer_id": null,
+        "due_before": null,
         "customer_is_new": false,
         "total": 260,
         "paid": 260,
@@ -46,7 +49,7 @@
       "ok": true,
       "problems": [],
       "provider": "gemini",
-      "latency_ms": 3229,
+      "latency_ms": 7240,
       "draft": {
         "type": "sale",
         "items": [
@@ -57,11 +60,13 @@
             "unit_price": 30,
             "line_total": 30,
             "product_id": "723d3a9b-4d39-4cdc-8c2b-21bb5153ad27",
-            "is_new": false
+            "is_new": false,
+            "stock_before": 66
           }
         ],
         "customer": null,
         "customer_id": null,
+        "due_before": null,
         "customer_is_new": false,
         "total": 30,
         "paid": 30,
@@ -77,23 +82,25 @@
       "category": "simple sale",
       "ok": true,
       "problems": [],
-      "provider": "gemini",
-      "latency_ms": 2869,
+      "provider": "groq",
+      "latency_ms": 549,
       "draft": {
         "type": "sale",
         "items": [
           {
             "product": "নুডলস",
             "quantity": 3,
-            "unit": "pcs",
+            "unit": "packet",
             "unit_price": 22,
             "line_total": 66,
             "product_id": "31444627-cc74-4aa2-9d5d-9bb30a92c0ae",
-            "is_new": false
+            "is_new": false,
+            "stock_before": 66
           }
         ],
         "customer": null,
         "customer_id": null,
+        "due_before": null,
         "customer_is_new": false,
         "total": 66,
         "paid": 66,
@@ -110,7 +117,7 @@
       "ok": true,
       "problems": [],
       "provider": "gemini",
-      "latency_ms": 3000,
+      "latency_ms": 2721,
       "draft": {
         "type": "sale",
         "items": [
@@ -121,11 +128,13 @@
             "unit_price": 140,
             "line_total": 140,
             "product_id": "128d4943-d5d6-4720-b24f-7cdeb2807f3c",
-            "is_new": false
+            "is_new": false,
+            "stock_before": 62
           }
         ],
         "customer": null,
         "customer_id": null,
+        "due_before": null,
         "customer_is_new": false,
         "total": 140,
         "paid": 140,
@@ -142,7 +151,7 @@
       "ok": true,
       "problems": [],
       "provider": "gemini",
-      "latency_ms": 1609,
+      "latency_ms": 1116,
       "draft": {
         "type": "sale",
         "items": [
@@ -153,11 +162,13 @@
             "unit_price": 38,
             "line_total": 190,
             "product_id": "4c2f5df1-6fce-4ba5-b30e-5375e011d7fe",
-            "is_new": false
+            "is_new": false,
+            "stock_before": 111
           }
         ],
         "customer": "জসিম",
         "customer_id": "4f651ceb-3b42-4565-a29a-b199ada55370",
+        "due_before": 1170,
         "customer_is_new": false,
         "total": 190,
         "paid": 100,
@@ -174,7 +185,7 @@
       "ok": true,
       "problems": [],
       "provider": "gemini",
-      "latency_ms": 2300,
+      "latency_ms": 1743,
       "draft": {
         "type": "sale",
         "items": [
@@ -185,11 +196,13 @@
             "unit_price": 285,
             "line_total": 570,
             "product_id": "cd23c7b6-8d09-467b-9962-6b19656fd982",
-            "is_new": false
+            "is_new": false,
+            "stock_before": 22
           }
         ],
         "customer": "রফিক",
         "customer_id": "b0da7a75-8cd9-4aac-8b12-54d25c613b8e",
+        "due_before": 4500,
         "customer_is_new": false,
         "total": 570,
         "paid": 0,
@@ -206,7 +219,7 @@
       "ok": true,
       "problems": [],
       "provider": "gemini",
-      "latency_ms": 3987,
+      "latency_ms": 1233,
       "draft": {
         "type": "sale",
         "items": [
@@ -217,11 +230,13 @@
             "unit_price": 135,
             "line_total": 135,
             "product_id": "355ea6bf-11e4-47e6-abdd-1c88b540bbf1",
-            "is_new": false
+            "is_new": false,
+            "stock_before": 17
           }
         ],
         "customer": "শাহানা",
         "customer_id": "9d3a7efd-2c80-43e7-9b51-6e649bc6b843",
+        "due_before": 460,
         "customer_is_new": false,
         "total": 135,
         "paid": 100,
@@ -238,7 +253,7 @@
       "ok": true,
       "problems": [],
       "provider": "gemini",
-      "latency_ms": 2615,
+      "latency_ms": 2392,
       "draft": {
         "type": "sale",
         "items": [
@@ -249,11 +264,13 @@
             "unit_price": 135,
             "line_total": 270,
             "product_id": "7d04c95d-4c19-4795-b7c5-96706cd66e8a",
-            "is_new": false
+            "is_new": false,
+            "stock_before": 42
           }
         ],
         "customer": "বাবুল",
         "customer_id": "a172681e-f037-48f7-8523-91de887792e3",
+        "due_before": 1940,
         "customer_is_new": false,
         "total": 270,
         "paid": 200,
@@ -270,12 +287,13 @@
       "ok": true,
       "problems": [],
       "provider": "gemini",
-      "latency_ms": 2271,
+      "latency_ms": 1174,
       "draft": {
         "type": "payment",
         "items": [],
         "customer": "মিজান",
         "customer_id": "d26ac9bf-af68-45c3-9216-bb7263863518",
+        "due_before": 1600,
         "customer_is_new": false,
         "total": 500,
         "paid": 500,
@@ -292,12 +310,13 @@
       "ok": true,
       "problems": [],
       "provider": "gemini",
-      "latency_ms": 2099,
+      "latency_ms": 1052,
       "draft": {
         "type": "payment",
         "items": [],
         "customer": "করিম",
         "customer_id": "a542f61a-6d62-4f63-a503-03c96b2a80f2",
+        "due_before": 1930,
         "customer_is_new": false,
         "total": 200,
         "paid": 200,
@@ -313,13 +332,14 @@
       "category": "payment",
       "ok": true,
       "problems": [],
-      "provider": "gemini",
-      "latency_ms": 3357,
+      "provider": "groq",
+      "latency_ms": 608,
       "draft": {
         "type": "payment",
         "items": [],
         "customer": "সালমা আপা",
         "customer_id": "b6956aaa-5100-4cd3-a108-828179ddc2fa",
+        "due_before": 2480,
         "customer_is_new": false,
         "total": 1000,
         "paid": 1000,
@@ -336,7 +356,7 @@
       "ok": true,
       "problems": [],
       "provider": "gemini",
-      "latency_ms": 1674,
+      "latency_ms": 2405,
       "draft": {
         "type": "purchase",
         "items": [
@@ -347,11 +367,13 @@
             "unit_price": 68,
             "line_total": 1360,
             "product_id": "c7697b9a-04c4-4b81-b652-bd0a31ad053d",
-            "is_new": false
+            "is_new": false,
+            "stock_before": 250
           }
         ],
         "customer": null,
         "customer_id": null,
+        "due_before": null,
         "customer_is_new": false,
         "total": 1360,
         "paid": 1360,
@@ -368,7 +390,7 @@
       "ok": true,
       "problems": [],
       "provider": "gemini",
-      "latency_ms": 2259,
+      "latency_ms": 2107,
       "draft": {
         "type": "purchase",
         "items": [
@@ -379,11 +401,13 @@
             "unit_price": 25,
             "line_total": 1250,
             "product_id": "723d3a9b-4d39-4cdc-8c2b-21bb5153ad27",
-            "is_new": false
+            "is_new": false,
+            "stock_before": 66
           }
         ],
         "customer": null,
         "customer_id": null,
+        "due_before": null,
         "customer_is_new": false,
         "total": 1250,
         "paid": 1250,
@@ -400,7 +424,7 @@
       "ok": true,
       "problems": [],
       "provider": "gemini",
-      "latency_ms": 1322,
+      "latency_ms": 1282,
       "draft": {
         "type": "purchase",
         "items": [
@@ -411,11 +435,13 @@
             "unit_price": 310,
             "line_total": 3720,
             "product_id": "b009c031-51e2-4a90-9da8-0d2ea6cf4417",
-            "is_new": false
+            "is_new": false,
+            "stock_before": 10
           }
         ],
         "customer": null,
         "customer_id": null,
+        "due_before": null,
         "customer_is_new": false,
         "total": 3720,
         "paid": 3720,
@@ -432,12 +458,13 @@
       "ok": true,
       "problems": [],
       "provider": "gemini",
-      "latency_ms": 1966,
+      "latency_ms": 1120,
       "draft": {
         "type": "expense",
         "items": [],
         "customer": null,
         "customer_id": null,
+        "due_before": null,
         "customer_is_new": false,
         "total": 5000,
         "paid": 5000,
@@ -454,12 +481,13 @@
       "ok": true,
       "problems": [],
       "provider": "gemini",
-      "latency_ms": 2524,
+      "latency_ms": 2059,
       "draft": {
         "type": "expense",
         "items": [],
         "customer": null,
         "customer_id": null,
+        "due_before": null,
         "customer_is_new": false,
         "total": 1400,
         "paid": 1400,
@@ -476,12 +504,13 @@
       "ok": true,
       "problems": [],
       "provider": "gemini",
-      "latency_ms": 4961,
+      "latency_ms": 1633,
       "draft": {
         "type": "expense",
         "items": [],
         "customer": null,
         "customer_id": null,
+        "due_before": null,
         "customer_is_new": false,
         "total": 200,
         "paid": 200,
@@ -498,7 +527,7 @@
       "ok": true,
       "problems": [],
       "provider": "gemini",
-      "latency_ms": 3781,
+      "latency_ms": 2412,
       "draft": {
         "type": "sale",
         "items": [
@@ -509,7 +538,8 @@
             "unit_price": 65,
             "line_total": 130,
             "product_id": "4c5bcf7a-94d4-4216-9c28-45e71f963d45",
-            "is_new": false
+            "is_new": false,
+            "stock_before": 33
           },
           {
             "product": "চিনি",
@@ -518,11 +548,13 @@
             "unit_price": 130,
             "line_total": 130,
             "product_id": "a35130ff-6918-4538-8418-2653ba86b62b",
-            "is_new": false
+            "is_new": false,
+            "stock_before": 12
           }
         ],
         "customer": null,
         "customer_id": null,
+        "due_before": null,
         "customer_is_new": false,
         "total": 260,
         "paid": 260,
@@ -539,7 +571,7 @@
       "ok": true,
       "problems": [],
       "provider": "gemini",
-      "latency_ms": 3226,
+      "latency_ms": 1326,
       "draft": {
         "type": "sale",
         "items": [
@@ -550,7 +582,8 @@
             "unit_price": 85,
             "line_total": 85,
             "product_id": "5cdf483c-3c17-46bf-9b8b-3fe87e94b859",
-            "is_new": false
+            "is_new": false,
+            "stock_before": 87
           },
           {
             "product": "রসুন",
@@ -559,11 +592,13 @@
             "unit_price": 220,
             "line_total": 220,
             "product_id": "a00597b3-c8b0-4158-82c9-5700a1235aa2",
-            "is_new": false
+            "is_new": false,
+            "stock_before": 19
           }
         ],
         "customer": null,
         "customer_id": null,
+        "due_before": null,
         "customer_is_new": false,
         "total": 305,
         "paid": 305,
@@ -580,7 +615,7 @@
       "ok": true,
       "problems": [],
       "provider": "gemini",
-      "latency_ms": 2230,
+      "latency_ms": 1720,
       "draft": {
         "type": "sale",
         "items": [
@@ -591,7 +626,8 @@
             "unit_price": 25,
             "line_total": 75,
             "product_id": "bb977d3c-fb31-46d0-9c63-c9da892e73db",
-            "is_new": false
+            "is_new": false,
+            "stock_before": 69
           },
           {
             "product": "বিস্কুট",
@@ -600,11 +636,13 @@
             "unit_price": 30,
             "line_total": 60,
             "product_id": "723d3a9b-4d39-4cdc-8c2b-21bb5153ad27",
-            "is_new": false
+            "is_new": false,
+            "stock_before": 66
           }
         ],
         "customer": null,
         "customer_id": null,
+        "due_before": null,
         "customer_is_new": false,
         "total": 135,
         "paid": 135,
@@ -621,7 +659,7 @@
       "ok": true,
       "problems": [],
       "provider": "gemini",
-      "latency_ms": 2698,
+      "latency_ms": 2001,
       "draft": {
         "type": "sale",
         "items": [
@@ -632,7 +670,8 @@
             "unit_price": 130,
             "line_total": 260,
             "product_id": "a35130ff-6918-4538-8418-2653ba86b62b",
-            "is_new": false
+            "is_new": false,
+            "stock_before": 12
           },
           {
             "product": "টুথপেস্ট",
@@ -641,11 +680,13 @@
             "unit_price": 110,
             "line_total": 110,
             "product_id": "522abc57-52db-4a2f-973c-3b1537a3b4fc",
-            "is_new": false
+            "is_new": false,
+            "stock_before": 14
           }
         ],
         "customer": "নাসির",
         "customer_id": "831f8195-5b09-436f-9664-29f5c021eb1e",
+        "due_before": 80,
         "customer_is_new": false,
         "total": 370,
         "paid": 0,
@@ -662,7 +703,7 @@
       "ok": true,
       "problems": [],
       "provider": "gemini",
-      "latency_ms": 2633,
+      "latency_ms": 2791,
       "draft": {
         "type": "sale",
         "items": [
@@ -673,11 +714,13 @@
             "unit_price": 38,
             "line_total": 114,
             "product_id": "4c2f5df1-6fce-4ba5-b30e-5375e011d7fe",
-            "is_new": false
+            "is_new": false,
+            "stock_before": 111
           }
         ],
         "customer": null,
         "customer_id": null,
+        "due_before": null,
         "customer_is_new": false,
         "total": 114,
         "paid": 114,
@@ -694,7 +737,7 @@
       "ok": true,
       "problems": [],
       "provider": "gemini",
-      "latency_ms": 2773,
+      "latency_ms": 2858,
       "draft": {
         "type": "sale",
         "items": [
@@ -705,11 +748,13 @@
             "unit_price": 230,
             "line_total": 230,
             "product_id": "0ae6ab21-b645-403f-b847-1f2bfa911697",
-            "is_new": false
+            "is_new": false,
+            "stock_before": 9
           }
         ],
         "customer": "রহিম ভাই",
         "customer_id": "f31bbdf1-a5d0-4f40-a3e8-e7f580c913d4",
+        "due_before": 40,
         "customer_is_new": false,
         "total": 230,
         "paid": 130,
@@ -726,7 +771,7 @@
       "ok": true,
       "problems": [],
       "provider": "gemini",
-      "latency_ms": 3084,
+      "latency_ms": 2789,
       "draft": {
         "type": "sale",
         "items": [
@@ -737,11 +782,13 @@
             "unit_price": 45,
             "line_total": 90,
             "product_id": "29a7eaf7-633d-4a5f-886f-e67eb0652b09",
-            "is_new": false
+            "is_new": false,
+            "stock_before": 27
           }
         ],
         "customer": null,
         "customer_id": null,
+        "due_before": null,
         "customer_is_new": false,
         "total": 90,
         "paid": 90,
@@ -758,7 +805,7 @@
       "ok": true,
       "problems": [],
       "provider": "gemini",
-      "latency_ms": 2032,
+      "latency_ms": 1670,
       "draft": {
         "type": "sale",
         "items": [
@@ -769,11 +816,13 @@
             "unit_price": null,
             "line_total": null,
             "product_id": "c7697b9a-04c4-4b81-b652-bd0a31ad053d",
-            "is_new": false
+            "is_new": false,
+            "stock_before": 250
           }
         ],
         "customer": "বাবুল",
         "customer_id": "a172681e-f037-48f7-8523-91de887792e3",
+        "due_before": 1940,
         "customer_is_new": false,
         "total": null,
         "paid": null,
@@ -792,7 +841,7 @@
       "ok": true,
       "problems": [],
       "provider": "gemini",
-      "latency_ms": 3429,
+      "latency_ms": 2119,
       "draft": {
         "type": "sale",
         "items": [
@@ -803,11 +852,13 @@
             "unit_price": null,
             "line_total": null,
             "product_id": "ea8e8d20-5bae-4da0-be6f-c69468761761",
-            "is_new": false
+            "is_new": false,
+            "stock_before": 25
           }
         ],
         "customer": null,
         "customer_id": null,
+        "due_before": null,
         "customer_is_new": false,
         "total": null,
         "paid": null,
@@ -823,22 +874,27 @@
     {
       "id": 27,
       "category": "missing amount",
-      "ok": true,
-      "problems": [],
-      "provider": "gemini",
-      "latency_ms": 4235,
+      "ok": false,
+      "problems": [
+        "type unknown≠payment",
+        "missing [\"type\",\"items\"]≠[\"amount\"]"
+      ],
+      "provider": "groq",
+      "latency_ms": 530,
       "draft": {
-        "type": "payment",
+        "type": "unknown",
         "items": [],
         "customer": "রহিম ভাই",
         "customer_id": "f31bbdf1-a5d0-4f40-a3e8-e7f580c913d4",
+        "due_before": 40,
         "customer_is_new": false,
         "total": null,
         "paid": null,
         "due": 0,
         "expense_category": null,
         "missing": [
-          "amount"
+          "type",
+          "items"
         ],
         "warnings": [],
         "clarify_question": "কত টাকা দিলেন?"
@@ -850,7 +906,7 @@
       "ok": true,
       "problems": [],
       "provider": "gemini",
-      "latency_ms": 2683,
+      "latency_ms": 2293,
       "draft": {
         "type": "sale",
         "items": [
@@ -861,11 +917,13 @@
             "unit_price": 40,
             "line_total": 40,
             "product_id": null,
-            "is_new": true
+            "is_new": true,
+            "stock_before": null
           }
         ],
         "customer": null,
         "customer_id": null,
+        "due_before": null,
         "customer_is_new": false,
         "total": 40,
         "paid": 40,
@@ -882,7 +940,7 @@
       "ok": true,
       "problems": [],
       "provider": "gemini",
-      "latency_ms": 1538,
+      "latency_ms": 1261,
       "draft": {
         "type": "sale",
         "items": [
@@ -893,11 +951,13 @@
             "unit_price": 170,
             "line_total": 680,
             "product_id": "63f55be9-6c4e-48a3-b77f-2d584d40e9fe",
-            "is_new": false
+            "is_new": false,
+            "stock_before": 21
           }
         ],
         "customer": null,
         "customer_id": null,
+        "due_before": null,
         "customer_is_new": false,
         "total": 680,
         "paid": 680,
@@ -914,7 +974,7 @@
       "ok": true,
       "problems": [],
       "provider": "gemini",
-      "latency_ms": 2324,
+      "latency_ms": 4210,
       "draft": {
         "type": "sale",
         "items": [
@@ -925,11 +985,13 @@
             "unit_price": 30,
             "line_total": 60,
             "product_id": "bbfc218c-c773-4a71-b8b0-d54fd1599d83",
-            "is_new": false
+            "is_new": false,
+            "stock_before": 28
           }
         ],
         "customer": null,
         "customer_id": null,
+        "due_before": null,
         "customer_is_new": false,
         "total": 60,
         "paid": 60,

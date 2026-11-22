@@ -1,0 +1,179 @@
+{
+  "ran_at": "2026-11-22T16:53:35.827Z",
+  "correct": 3,
+  "answered": 5,
+  "errors": 0,
+  "accuracy_pct": 60,
+  "providers": {
+    "groq": 5
+  },
+  "results": [
+    {
+      "id": 6,
+      "category": "sale + due",
+      "ok": true,
+      "problems": [],
+      "provider": "groq",
+      "latency_ms": 601,
+      "draft": {
+        "type": "sale",
+        "items": [
+          {
+            "product": "সরিষার তেল",
+            "quantity": 2,
+            "unit": "pcs",
+            "unit_price": 285,
+            "line_total": 570,
+            "product_id": "cd23c7b6-8d09-467b-9962-6b19656fd982",
+            "is_new": false
+          }
+        ],
+        "customer": "রফিক",
+        "customer_id": "b0da7a75-8cd9-4aac-8b12-54d25c613b8e",
+        "customer_is_new": false,
+        "total": 570,
+        "paid": 0,
+        "due": 570,
+        "expense_category": null,
+        "missing": [],
+        "warnings": [],
+        "clarify_question": null
+      }
+    },
+    {
+      "id": 15,
+      "category": "expense",
+      "ok": true,
+      "problems": [],
+      "provider": "groq",
+      "latency_ms": 453,
+      "draft": {
+        "type": "expense",
+        "items": [],
+        "customer": null,
+        "customer_id": null,
+        "customer_is_new": false,
+        "total": 5000,
+        "paid": 5000,
+        "due": 0,
+        "expense_category": "দোকান ভাড়া",
+        "missing": [],
+        "warnings": [],
+        "clarify_question": null
+      }
+    },
+    {
+      "id": 18,
+      "category": "multi-item",
+      "ok": true,
+      "problems": [],
+      "provider": "groq",
+      "latency_ms": 685,
+      "draft": {
+        "type": "sale",
+        "items": [
+          {
+            "product": "গায়ে মাখা সাবান",
+            "quantity": 2,
+            "unit": "pcs",
+            "unit_price": 65,
+            "line_total": 130,
+            "product_id": "4c5bcf7a-94d4-4216-9c28-45e71f963d45",
+            "is_new": false
+          },
+          {
+            "product": "চিনি",
+            "quantity": 1,
+            "unit": "kg",
+            "unit_price": 130,
+            "line_total": 130,
+            "product_id": "a35130ff-6918-4538-8418-2653ba86b62b",
+            "is_new": false
+          }
+        ],
+        "customer": null,
+        "customer_id": null,
+        "customer_is_new": false,
+        "total": 260,
+        "paid": 260,
+        "due": 0,
+        "expense_category": null,
+        "missing": [],
+        "warnings": [],
+        "clarify_question": null
+      }
+    },
+    {
+      "id": 21,
+      "category": "multi-item + due",
+      "ok": false,
+      "problems": [
+        "paid 370≠0",
+        "due 0≠370"
+      ],
+      "provider": "groq",
+      "latency_ms": 958,
+      "draft": {
+        "type": "sale",
+        "items": [
+          {
+            "product": "চিনি",
+            "quantity": 2,
+            "unit": "kg",
+            "unit_price": 130,
+            "line_total": 260,
+            "product_id": "a35130ff-6918-4538-8418-2653ba86b62b",
+            "is_new": false
+          },
+          {
+            "product": "টুথপেস্ট",
+            "quantity": 1,
+            "unit": "pcs",
+            "unit_price": 110,
+            "line_total": 110,
+            "product_id": "522abc57-52db-4a2f-973c-3b1537a3b4fc",
+            "is_new": false
+          }
+        ],
+        "customer": "নাসির",
+        "customer_id": "831f8195-5b09-436f-9664-29f5c021eb1e",
+        "customer_is_new": false,
+        "total": 370,
+        "paid": 370,
+        "due": 0,
+        "expense_category": null,
+        "missing": [],
+        "warnings": [],
+        "clarify_question": null
+      }
+    },
+    {
+      "id": 27,
+      "category": "missing amount",
+      "ok": false,
+      "problems": [
+        "type unknown≠payment",
+        "missing [\"type\",\"items\"]≠[\"amount\"]"
+      ],
+      "provider": "groq",
+      "latency_ms": 547,
+      "draft": {
+        "type": "unknown",
+        "items": [],
+        "customer": "রহিম ভাই",
+        "customer_id": "f31bbdf1-a5d0-4f40-a3e8-e7f580c913d4",
+        "customer_is_new": false,
+        "total": null,
+        "paid": null,
+        "due": 0,
+        "expense_category": null,
+        "missing": [
+          "type",
+          "items"
+        ],
+        "warnings": [],
+        "clarify_question": "কত টাকা দিলেন?"
+      }
+    }
+  ]
+}

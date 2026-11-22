@@ -47,7 +47,9 @@ const PROVIDERS: Provider[] = [
           temperature: 0,
           response_format: { type: "json_object" },
           messages: [
-            { role: "system", content: `${req.system}\n\nReturn only JSON matching this JSON Schema:\n${JSON.stringify(req.jsonSchema)}` },
+            // No schema text here: the prompt's examples show the exact JSON shape and Zod validates the reply.
+            // Saves ~600 of Groq's free 8000 input tokens/min.
+            { role: "system", content: `${req.system}\n\nReturn only one JSON object, same keys as the examples.` },
             { role: "user", content: req.user },
           ],
         },

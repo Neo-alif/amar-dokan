@@ -12,7 +12,9 @@ type Case = {
   expect: { type: string; customer: string | null; items: ExpectItem[]; total: number | null; paid?: number; due?: number; missing?: string[] };
 };
 
-const THROTTLE_MS = 4000; // ≈15 calls/min, well under free-tier limits
+// Default ≈15 calls/min suits Gemini. Groq free tier allows ~8000 input tokens/min and one call is
+// ~2,300 tokens, so a Groq-only run needs THROTTLE_MS=22000.
+const THROTTLE_MS = Number(process.env.THROTTLE_MS ?? 4000);
 const cases: Case[] = JSON.parse(readFileSync(new URL("./banglish-cases.json", import.meta.url), "utf8"));
 const only = process.argv.slice(2).map(Number);
 const selected = only.length ? cases.filter((c) => only.includes(c.id)) : cases;
