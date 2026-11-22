@@ -7,8 +7,8 @@ import { extractionSystemPrompt } from "./prompts.ts";
 import { callLLM } from "./provider.ts";
 
 export type ShopContext = {
-  products: { id: string; name_bn: string; name_en: string | null; aliases: string[]; unit: string; sell_price: number }[];
-  customers: { id: string; name: string }[];
+  products: { id: string; name_bn: string; name_en: string | null; aliases: string[]; unit: string; sell_price: number; stock_qty: number }[];
+  customers: { id: string; name: string; due_balance: number }[];
   lang: "bn" | "en";
 };
 
@@ -32,10 +32,20 @@ export async function extract(text: string, ctx: ShopContext) {
     type: x.type,
     items: amounts.items.map((it) => {
       const product_id = matchProduct(it.product, productCandidates);
-      return { ...it, product_id, is_new: product_id === null };
+      const product = ctx.products.find((p) => p.id === product_id);
+      // matched → use the shop's own name and unit; stock_before feeds the "what will change" preview
+      return {
+        ...it,
+        product: product?.name_bn ?? it.product,
+        unit: it.unit ?? product?.unit ?? null,
+        product_id,
+        is_new: product_id === null,
+        stock_before: product ? Number(product.stock_qty) : null,
+      };
     }),
-    customer: x.customer,
+    customer: customerId ? ctx.customers.find((c) => c.id === customerId)!.name : x.customer,
     customer_id: customerId,
+    due_before: customerId ? Number(ctx.customers.find((c) => c.id === customerId)!.due_balance) : null,
     customer_is_new: Boolean(x.customer) && customerId === null,
     total: amounts.total,
     paid: amounts.paid,

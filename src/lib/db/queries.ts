@@ -4,12 +4,20 @@ import type { ShopContext } from "../ai/extract.ts";
 export async function loadShopContext(lang: ShopContext["lang"]): Promise<ShopContext> {
   const shop = shopId();
   const [products, customers] = await Promise.all([
-    db().from("products").select("id, name_bn, name_en, aliases, unit, sell_price").eq("shop_id", shop),
-    db().from("customers").select("id, name").eq("shop_id", shop),
+    db().from("products").select("id, name_bn, name_en, aliases, unit, sell_price, stock_qty").eq("shop_id", shop),
+    db().from("customers").select("id, name, due_balance").eq("shop_id", shop),
   ]);
   if (products.error) throw new Error(`load products: ${products.error.message}`);
   if (customers.error) throw new Error(`load customers: ${customers.error.message}`);
   return { products: products.data, customers: customers.data, lang };
+}
+
+export async function updateAiLog(
+  id: string,
+  patch: { status: "confirmed" | "edited" | "rejected"; final?: unknown; transaction_id?: string },
+): Promise<void> {
+  const { error } = await db().from("ai_logs").update(patch).eq("id", id).eq("shop_id", shopId());
+  if (error) console.error("ai_logs update failed:", error.message); // never block the save over a log row
 }
 
 export async function logAi(row: {

@@ -2,7 +2,7 @@
 import { z } from "zod";
 import { extract } from "@/lib/ai/extract";
 import { AllProvidersFailed } from "@/lib/ai/provider";
-import { loadShopContext, logAi } from "@/lib/db/queries";
+import { loadShopContext, logAi, updateAiLog } from "@/lib/db/queries";
 import { MAX_INPUT_CHARS } from "@/lib/logic/normalize";
 
 const Body = z.object({
@@ -46,4 +46,12 @@ export async function POST(req: Request) {
     console.error("extract failed:", e);
     return Response.json({ error: "SERVER_ERROR" }, { status: 500 });
   }
+}
+
+// PATCH /api/extract { log_id } — the owner pressed বাতিল: mark the AI draft rejected (for the edit/reject rate).
+export async function PATCH(req: Request) {
+  const body = z.object({ log_id: z.uuid() }).safeParse(await req.json().catch(() => null));
+  if (!body.success) return Response.json({ error: "INVALID_INPUT" }, { status: 400 });
+  await updateAiLog(body.data.log_id, { status: "rejected" });
+  return Response.json({ ok: true });
 }

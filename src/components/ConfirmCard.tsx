@@ -1,0 +1,229 @@
+"use client";
+
+import { useState } from "react";
+import { useLanguage } from "@/i18n/LanguageContext";
+import type { ErrorCode } from "@/i18n/dictionary";
+import { cardProblems, cardTotals, type Card, type CardType } from "@/lib/logic/card";
+import { formatNumber, formatTaka } from "@/lib/format";
+
+export type CardMeta = { log_id: string | null; raw_text: string | null; manual: boolean; clarify_question: string | null };
+
+const BADGE: Record<CardType, string> = {
+  sale: "bg-green-100 text-green-700",
+  purchase: "bg-blue-100 text-blue-700",
+  expense: "bg-amber-100 text-amber-800",
+  payment: "bg-purple-100 text-purple-700",
+  unknown: "bg-slate-100 text-slate-600",
+};
+const TYPES: CardType[] = ["sale", "purchase", "expense", "payment"];
+const num = (v: string) => (v.trim() === "" || Number.isNaN(Number(v)) ? null : Number(v));
+const input = "w-full min-h-11 rounded-xl border border-border bg-white px-3 text-base";
+
+export function ConfirmCard({ initial, meta, onDone }: { initial: Card; meta: CardMeta; onDone: (saved: boolean) => void }) {
+  const { t, lang } = useLanguage();
+  const c = t.card;
+  const [card, setCard] = useState(initial);
+  const [editing, setEditing] = useState(meta.manual || cardProblems(initial).length > 0);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<ErrorCode | null>(null);
+  const [idempotencyKey] = useState(() => crypto.randomUUID()); // one key per card: double-taps save once
+
+  const { total, paid, due } = cardTotals(card);
+  const problems = cardProblems(card);
+  const taka = (n: number | null) => (n == null ? "—" : formatTaka(n, lang));
+  const set = (patch: Partial<Card>) => setCard((prev) => ({ ...prev, ...patch }));
+  const setItem = (i: number, patch: Partial<Card["items"][number]>) =>
+    set({ items: card.items.map((it, j) => (j === i ? { ...it, ...patch } : it)) });
+  const isItems = card.type === "sale" || card.type === "purchase";
+
+  async function save() {
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/transactions", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          idempotency_key: idempotencyKey,
+          log_id: meta.log_id,
+          edited: JSON.stringify(card) !== JSON.stringify(initial),
+          type: card.type,
+          customer_id: card.customer_id,
+          customer_name: card.customer_name.trim() || null,
+          items: isItems ? card.items.map((i) => ({ product_id: i.product_id, name: i.name.trim(), unit: i.unit, quantity: i.quantity, unit_price: i.unit_price })) : [],
+          paid,
+          total: card.type === "expense" ? card.amount : null,
+          expense_category: card.type === "expense" ? card.expense_category.trim() || null : null,
+          raw_text: meta.raw_text,
+        }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) { setError((body.error as ErrorCode) ?? "SERVER_ERROR"); return; }
+      onDone(true);
+    } catch {
+      setError("NETWORK");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function cancel() {
+    if (meta.log_id) fetch("/api/extract", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ log_id: meta.log_id }) }).catch(() => {});
+    onDone(false);
+  }
+
+  return (
+    <div className="flex flex-col gap-4 rounded-[20px] border border-border bg-surface p-6 shadow-[0_12px_32px_rgba(15,23,42,0.06)] sm:p-7">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        {editing ? (
+          <label className="flex items-center gap-2 text-sm text-muted">
+            {c.chooseType}
+            <select value={card.type} onChange={(e) => set({ type: e.target.value as CardType })} className="min-h-11 rounded-xl border border-border bg-white px-3 text-base text-text">
+              {card.type === "unknown" && <option value="unknown">{c.types.unknown}</option>}
+              {TYPES.map((ty) => <option key={ty} value={ty}>{c.types[ty]}</option>)}
+            </select>
+          </label>
+        ) : (
+          <span className={`rounded-full px-3.5 py-1 text-[15px] font-bold ${BADGE[card.type]}`}>{c.types[card.type]}</span>
+        )}
+        <span className={`text-[13px] ${meta.manual ? "font-semibold text-danger" : "text-muted"}`}>{meta.manual ? c.manualNote : c.aiNote}</span>
+      </div>
+
+      {meta.clarify_question && problems.length > 0 && (
+        <p className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 font-semibold text-amber-900">{meta.clarify_question}</p>
+      )}
+
+      <dl className="grid grid-cols-[110px_1fr] items-center gap-x-4 gap-y-3 text-[17px]">
+        {(card.type !== "expense") && (
+          <>
+            <dt className="text-muted">{c.customer}</dt>
+            <dd className="font-semibold">
+              {editing ? (
+                <input aria-label={c.customer} className={input} value={card.customer_name}
+                  onChange={(e) => set({ customer_name: e.target.value, customer_id: null, due_before: null })} />
+              ) : (
+                <>{card.customer_name || "—"} {card.customer_name && !card.customer_id && <New label={c.newBadge} />}</>
+              )}
+            </dd>
+          </>
+        )}
+
+        {isItems && card.items.map((it, i) => (
+          <div key={i} className="col-span-2 grid grid-cols-[110px_1fr] items-center gap-x-4 gap-y-2">
+            <dt className="text-muted">{c.product}</dt>
+            <dd className="font-semibold">
+              {editing ? (
+                <div className="grid grid-cols-[1fr_80px_100px_auto] gap-2">
+                  <input aria-label={c.product} className={input} value={it.name} onChange={(e) => setItem(i, { name: e.target.value, product_id: null, stock_before: null })} />
+                  <input aria-label={c.quantity} className={input} type="number" inputMode="decimal" min="0" value={it.quantity ?? ""} onChange={(e) => setItem(i, { quantity: num(e.target.value) })} />
+                  <input aria-label={c.unitPrice} placeholder={c.unitPrice} className={input} type="number" inputMode="decimal" min="0" value={it.unit_price ?? ""} onChange={(e) => setItem(i, { unit_price: num(e.target.value) })} />
+                  <button type="button" onClick={() => set({ items: card.items.filter((_, j) => j !== i) })} className="min-h-11 px-2 text-sm text-danger">{c.removeItem}</button>
+                </div>
+              ) : (
+                <>
+                  {it.name} × {it.quantity == null ? "—" : formatNumber(it.quantity, lang)} {!it.product_id && <New label={c.newBadge} />}
+                  <span className="block text-base font-normal text-muted">
+                    {it.unit_price == null ? `${c.price}: —` : `${taka(it.unit_price)} × ${formatNumber(it.quantity ?? 0, lang)} = ${taka((it.quantity ?? 0) * it.unit_price)}`}
+                  </span>
+                </>
+              )}
+              {card.type === "sale" && it.stock_before != null && it.quantity != null && it.quantity > it.stock_before && (
+                <span className="block text-sm font-normal text-warning">{c.stockWarn} {formatNumber(it.stock_before, lang)}</span>
+              )}
+            </dd>
+          </div>
+        ))}
+        {isItems && editing && (
+          <button type="button" className="col-span-2 min-h-11 justify-self-start text-primary underline"
+            onClick={() => set({ items: [...card.items, { product_id: null, name: "", unit: null, quantity: 1, unit_price: null, stock_before: null }] })}>
+            {c.addItem}
+          </button>
+        )}
+
+        {(card.type === "expense" || card.type === "payment") && (
+          <>
+            <dt className="text-muted">{c.amount}</dt>
+            <dd className="font-semibold">
+              {editing ? <input aria-label={c.amount} className={input} type="number" inputMode="decimal" min="0" value={card.amount ?? ""} onChange={(e) => set({ amount: num(e.target.value) })} /> : taka(card.amount)}
+            </dd>
+          </>
+        )}
+        {card.type === "expense" && (
+          <>
+            <dt className="text-muted">{c.category}</dt>
+            <dd className="font-semibold">
+              {editing ? <input aria-label={c.category} className={input} value={card.expense_category} onChange={(e) => set({ expense_category: e.target.value })} /> : card.expense_category || "—"}
+            </dd>
+          </>
+        )}
+
+        {isItems && (
+          <>
+            <dt className="text-muted">{c.total}</dt><dd className="font-semibold">{taka(total)}</dd>
+            <dt className="text-muted">{c.paid}</dt><dd className="font-semibold text-green-700">{taka(paid)}</dd>
+          </>
+        )}
+        {card.type === "sale" && (
+          <>
+            <dt className="text-muted">{c.due}</dt>
+            <dd className="font-bold text-danger">
+              {editing ? <input aria-label={c.due} className={input} type="number" inputMode="decimal" min="0" value={card.due} onChange={(e) => set({ due: num(e.target.value) ?? 0 })} /> : taka(due)}
+            </dd>
+          </>
+        )}
+      </dl>
+
+      {problems.length === 0 ? (
+        <Changes card={card} total={total} due={due} />
+      ) : (
+        <ul className="list-inside list-disc text-[15px] font-semibold text-danger" aria-live="polite">
+          {problems.map((p) => <li key={p}>{t.errors[p]}</li>)}
+        </ul>
+      )}
+      {error && <p role="alert" className="font-semibold text-danger">{t.errors[error]}</p>}
+
+      <button type="button" disabled={problems.length > 0 || saving} onClick={save}
+        className="flex h-[54px] items-center justify-center gap-2.5 rounded-[14px] bg-success text-lg font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10" /></svg>
+        {saving ? c.saving : c.confirm}
+      </button>
+      <div className="grid grid-cols-2 gap-2.5">
+        <button type="button" onClick={() => setEditing(!editing)} className="h-12 rounded-xl border border-border bg-white font-semibold text-primary">{editing ? c.doneEdit : c.edit}</button>
+        <button type="button" onClick={cancel} disabled={saving} className="h-12 rounded-xl border border-red-200 bg-white font-semibold text-danger">{c.cancel}</button>
+      </div>
+    </div>
+  );
+}
+
+function New({ label }: { label: string }) {
+  return <span className="ml-1 rounded-full bg-amber-100 px-2 py-0.5 align-middle text-xs font-bold text-amber-800">{label}</span>;
+}
+
+// "নিশ্চিত করলে যা বদলাবে" preview (mockup). Display only; the DB does the real update.
+function Changes({ card, total, due }: { card: Card; total: number | null; due: number }) {
+  const { t, lang } = useLanguage();
+  const c = t.card;
+  const lines: string[] = [];
+  const n = (v: number) => formatNumber(v, lang);
+  if (card.type === "sale" && total != null) lines.push(`${c.changeSales} +${formatTaka(total, lang)}`);
+  if ((card.type === "purchase" && total != null) || (card.type === "expense" && card.amount)) {
+    lines.push(`${c.changeSpend} +${formatTaka(card.type === "expense" ? card.amount! : total!, lang)}`);
+  }
+  if (card.type === "sale" || card.type === "purchase") {
+    const sign = card.type === "sale" ? -1 : 1;
+    for (const it of card.items) {
+      if (it.stock_before != null && it.quantity != null) lines.push(`${it.name} ${c.changeStock} ${n(it.stock_before)} → ${n(it.stock_before + sign * it.quantity)}`);
+    }
+  }
+  if (card.type === "sale" && due > 0) lines.push(`${card.customer_name} ${c.changeDue} +${formatTaka(due, lang)}`);
+  if (card.type === "payment" && card.due_before != null && card.amount) {
+    lines.push(`${card.customer_name} ${c.changeDue} ${formatTaka(card.due_before, lang)} → ${formatTaka(card.due_before - card.amount, lang)}`);
+  }
+  if (!lines.length) return null;
+  return (
+    <div className="flex flex-col gap-1.5 border-t border-dashed border-border pt-3.5 text-[15px] text-slate-600">
+      <span>{c.changesTitle}</span>
+      <span>{lines.map((l) => `• ${l}`).join(" · ")}</span>
+    </div>
+  );
+}

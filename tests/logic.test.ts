@@ -98,3 +98,31 @@ test("matchCustomer: honorifics ignored", () => {
   assert.equal(matchCustomer("করিম ভাই", customers), "karim");
   assert.equal(matchCustomer("জসিম", customers), null);
 });
+
+import { cardProblems, cardTotals, type Card } from "../src/lib/logic/card.ts";
+
+const card = (over: Partial<Card>): Card => ({
+  type: "sale", customer_id: null, customer_name: "", due_before: null, items: [], due: 0, amount: null, expense_category: "", ...over,
+});
+const line = (quantity: number | null, unit_price: number | null) =>
+  ({ product_id: "x", name: "তেল", unit: "pcs", quantity, unit_price, stock_before: 10 });
+
+test("card: demo sale totals and no problems", () => {
+  const c = card({ customer_name: "রহিম ভাই", items: [line(2, 340)], due: 100 });
+  assert.deepEqual(cardTotals(c), { total: 680, paid: 580, due: 100 });
+  assert.deepEqual(cardProblems(c), []);
+});
+
+test("card: missing price, due without customer, due above total are blocked", () => {
+  assert.deepEqual(cardProblems(card({ items: [line(2, null)] })), ["NEED_ITEM_DETAILS"]);
+  assert.deepEqual(cardProblems(card({ items: [line(1, 100)], due: 50 })), ["CUSTOMER_REQUIRED_FOR_DUE"]);
+  assert.deepEqual(cardProblems(card({ customer_name: "করিম", items: [line(1, 100)], due: 150 })), ["DUE_EXCEEDS_TOTAL"]);
+});
+
+test("card: purchase ignores due; payment needs customer and ≤ due; unknown needs a type", () => {
+  assert.deepEqual(cardTotals(card({ type: "purchase", items: [line(10, 120)], due: 99 })), { total: 1200, paid: 1200, due: 0 });
+  assert.deepEqual(cardProblems(card({ type: "payment", amount: 300 })), ["CUSTOMER_REQUIRED"]);
+  assert.deepEqual(cardProblems(card({ type: "payment", amount: 300, customer_name: "রহিম ভাই", due_before: 40 })), ["PAYMENT_EXCEEDS_DUE"]);
+  assert.deepEqual(cardProblems(card({ type: "unknown" })), ["NEED_TYPE"]);
+  assert.deepEqual(cardProblems(card({ type: "expense", amount: null })), ["AMOUNT_REQUIRED"]);
+});
