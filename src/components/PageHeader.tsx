@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 // Navy bar used by every inner page (mockup: back-to-home + amber page title).
-type Section = "entry" | "stock"; // dictionary sections that have a `title`
+type Section = "entry" | "stock" | "restock"; // dictionary sections that have a `title`
 
 export function PageHeader({ section }: { section: Section }) {
   const { t } = useLanguage();

@@ -195,7 +195,7 @@ Method (as in the idea document): **simple exponential smoothing (SES) × weekda
 1. Candidates: products with `days_left ≤ 7`.
 2. Sort by `days_left` ascending; tie-break by margin (`sell − cost`) descending.
 3. `need = ceil(forecast_7d + 2 × daily_forecast − stock_qty)`, min 0.
-4. Greedy: add `need × cost_price` while the budget allows; last item gets a partial qty (floor).
+4. Greedy in two passes (so one product can't eat the whole budget): pass 1 buys each candidate up to 3 days of stock (`FIRST_PASS_DAYS`), pass 2 tops up to the full `need` in the same order; an item that doesn't fit gets a partial qty (floor).
 5. Output per line: `{product, qty, cost, days_left, reason}` → reason like "২ দিনে শেষ হবে".
 Constants (`HORIZON_DAYS = 7`, `SAFETY_DAYS = 2`) at the top of the file.
 

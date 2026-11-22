@@ -188,3 +188,25 @@ test("stockOutlook: days left and status", () => {
   assert.deepEqual(stockOutlook(20, 5, null), { daysLeft: null, status: "ok" }); // learning, above reorder
   assert.deepEqual(stockOutlook(4, 5, 0), { daysLeft: null, status: "low" });    // no sales, below reorder
 });
+
+import { restock } from "../src/lib/logic/restock.ts";
+
+const rp = (id: string, stock: number, avg: number | null, cost: number, sell: number) =>
+  ({ id, stock, avg, daysLeft: avg ? stock / avg : null, cost_price: cost, sell_price: sell });
+
+test("restock: urgent first, need = 9 days of demand − stock, budget respected", () => {
+  const items = [rp("rice", 250, 13, 60, 70), rp("oil", 8, 4, 310, 340), rp("sugar", 12, 7, 118, 130)];
+  const r = restock(items, 5000);
+  // sugar (1.7 days) need ceil(63 − 12) = 51, oil (2 days) need ceil(36 − 8) = 28; rice lasts 19 days → not a candidate
+  // pass 1 (3 days each): sugar 9 (৳1,062), oil 4 (৳1,240) → left ৳2,698; pass 2: sugar +22 → left ৳102
+  assert.deepEqual(r.lines.map((l) => [l.id, l.qty, l.need, l.cost]), [["sugar", 31, 51, 3658], ["oil", 4, 28, 1240]]);
+  assert.equal(r.left, 102);
+  assert.deepEqual(r.skipped, []);
+});
+
+test("restock: tie on days left → bigger margin first; zero budget → nothing", () => {
+  const r = restock([rp("a", 4, 2, 10, 11), rp("b", 4, 2, 10, 20)], 1000);
+  assert.deepEqual(r.lines.map((l) => [l.id, l.qty, l.cost]), [["b", 14, 140], ["a", 14, 140]]);
+  assert.equal(r.spent, 280);
+  assert.deepEqual(restock([rp("a", 4, 2, 10, 11)], 0).lines, []);
+});

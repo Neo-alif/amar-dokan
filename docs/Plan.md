@@ -73,7 +73,7 @@
 - [x] `forecast.ts` (SES α = 0.3 × weekday factor, cold start) + `/stock` with "X দিন চলবে" (**P0**); কম = stock ≤ reorder level or < 7 days left (same count on home)
 - [~] Low-stock alert: stock status chips done; জরুরি item in এখন যা করবেন with the home card (**P0**)
 - [ ] MAPE vs naive baseline script → write the numbers in README
-- [ ] `restock.ts` + `/restock` (budget input → ranked list + reasons + budget bar) (**P0**)
+- [x] `restock.ts` + `/restock` (budget input → ranked list + reasons + budget bar) (**P0**); two-pass greedy so one item can't eat the budget
 - [ ] `summary.ts` + `insight.ts` (number check) → মাসিক অডিট রিপোর্ট box (first line আজকের সারাংশ) + `/report` print page (PDF) (**P0**)
 - [ ] Best/worst seller lists on home (P1)
 - [ ] Clarification bubble for missing price/amount (P1)

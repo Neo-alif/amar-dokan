@@ -56,6 +56,23 @@ const bn = {
     loadError: "স্টকের তথ্য আনা যায়নি। ইন্টারনেট দেখে পেজটা আবার খুলুন।",
   },
 
+  restock: {
+    title: "কেনাকাটা",
+    budgetLabel: "আপনার হাতে কত টাকা আছে?",
+    budget: "বাজেট",
+    calculate: "হিসাব করুন",
+    usage: "বাজেট ব্যবহার",
+    left: "বাকি",
+    listTitle: "যা কিনবেন (জরুরি আগে)",
+    outNow: "শেষ হয়ে গেছে",
+    today: "আজই শেষ হবে",
+    endsIn: (n: string) => `${n} দিনে শেষ হবে`,
+    partial: (n: string) => `বাজেটে ${n} পর্যন্ত`,
+    skipped: "বাজেটে কুলায়নি:",
+    nothing: "এই মুহূর্তে জরুরি কিছু কেনার নেই। সব পণ্য ৭ দিনের বেশি চলবে।",
+    rule: "নিয়ম: যে পণ্য আগে শেষ হবে সেটা আগে; সমান হলে যেটাতে লাভ বেশি। পরিমাণ = ৭ দিনের চাহিদা + ২ দিনের বাড়তি − বর্তমান স্টক। দাম কেনা দামে। নমুনা তথ্য।",
+  },
+
   backHome: "হোমে ফিরুন",
   entry: {
     title: "হিসাব দিন",
@@ -181,6 +198,23 @@ const en: Dict = {
     note: "“Days left” = current stock ÷ expected daily sales over the next 7 days (recent days weigh more, adjusted by weekday). Sample data.",
     empty: "No products yet",
     loadError: "Couldn't load stock. Check the internet and reopen the page.",
+  },
+
+  restock: {
+    title: "Restock",
+    budgetLabel: "How much money do you have?",
+    budget: "Budget",
+    calculate: "Calculate",
+    usage: "Budget used",
+    left: "left",
+    listTitle: "What to buy (urgent first)",
+    outNow: "Already out",
+    today: "Runs out today",
+    endsIn: (n: string) => `Runs out in ${n} days`,
+    partial: (n: string) => `budget covers ${n}`,
+    skipped: "Didn't fit the budget:",
+    nothing: "Nothing urgent to buy right now. Every product lasts more than 7 days.",
+    rule: "Rule: what runs out first comes first; on a tie, the bigger margin. Quantity = 7 days of demand + 2 days buffer − current stock. Prices at cost. Sample data.",
   },
 
   backHome: "Back to home",
