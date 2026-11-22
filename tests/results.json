@@ -1,0 +1,944 @@
+{
+  "ran_at": "2026-11-22T08:42:43.182Z",
+  "correct": 30,
+  "answered": 30,
+  "errors": 0,
+  "accuracy_pct": 100,
+  "providers": {
+    "gemini": 30
+  },
+  "results": [
+    {
+      "id": 1,
+      "category": "simple sale",
+      "ok": true,
+      "problems": [],
+      "provider": "gemini",
+      "latency_ms": 3170,
+      "draft": {
+        "type": "sale",
+        "items": [
+          {
+            "product": "চিনি",
+            "quantity": 2,
+            "unit": "kg",
+            "unit_price": 130,
+            "line_total": 260,
+            "product_id": "a35130ff-6918-4538-8418-2653ba86b62b",
+            "is_new": false
+          }
+        ],
+        "customer": null,
+        "customer_id": null,
+        "customer_is_new": false,
+        "total": 260,
+        "paid": 260,
+        "due": 0,
+        "expense_category": null,
+        "missing": [],
+        "warnings": [],
+        "clarify_question": null
+      }
+    },
+    {
+      "id": 2,
+      "category": "number word",
+      "ok": true,
+      "problems": [],
+      "provider": "gemini",
+      "latency_ms": 3229,
+      "draft": {
+        "type": "sale",
+        "items": [
+          {
+            "product": "বিস্কুট",
+            "quantity": 1,
+            "unit": "packet",
+            "unit_price": 30,
+            "line_total": 30,
+            "product_id": "723d3a9b-4d39-4cdc-8c2b-21bb5153ad27",
+            "is_new": false
+          }
+        ],
+        "customer": null,
+        "customer_id": null,
+        "customer_is_new": false,
+        "total": 30,
+        "paid": 30,
+        "due": 0,
+        "expense_category": null,
+        "missing": [],
+        "warnings": [],
+        "clarify_question": null
+      }
+    },
+    {
+      "id": 3,
+      "category": "simple sale",
+      "ok": true,
+      "problems": [],
+      "provider": "gemini",
+      "latency_ms": 2869,
+      "draft": {
+        "type": "sale",
+        "items": [
+          {
+            "product": "নুডলস",
+            "quantity": 3,
+            "unit": "pcs",
+            "unit_price": 22,
+            "line_total": 66,
+            "product_id": "31444627-cc74-4aa2-9d5d-9bb30a92c0ae",
+            "is_new": false
+          }
+        ],
+        "customer": null,
+        "customer_id": null,
+        "customer_is_new": false,
+        "total": 66,
+        "paid": 66,
+        "due": 0,
+        "expense_category": null,
+        "missing": [],
+        "warnings": [],
+        "clarify_question": null
+      }
+    },
+    {
+      "id": 4,
+      "category": "unit variation",
+      "ok": true,
+      "problems": [],
+      "provider": "gemini",
+      "latency_ms": 3000,
+      "draft": {
+        "type": "sale",
+        "items": [
+          {
+            "product": "ডিম",
+            "quantity": 1,
+            "unit": "dozen",
+            "unit_price": 140,
+            "line_total": 140,
+            "product_id": "128d4943-d5d6-4720-b24f-7cdeb2807f3c",
+            "is_new": false
+          }
+        ],
+        "customer": null,
+        "customer_id": null,
+        "customer_is_new": false,
+        "total": 140,
+        "paid": 140,
+        "due": 0,
+        "expense_category": null,
+        "missing": [],
+        "warnings": [],
+        "clarify_question": null
+      }
+    },
+    {
+      "id": 5,
+      "category": "sale + due",
+      "ok": true,
+      "problems": [],
+      "provider": "gemini",
+      "latency_ms": 1609,
+      "draft": {
+        "type": "sale",
+        "items": [
+          {
+            "product": "আলু",
+            "quantity": 5,
+            "unit": "kg",
+            "unit_price": 38,
+            "line_total": 190,
+            "product_id": "4c2f5df1-6fce-4ba5-b30e-5375e011d7fe",
+            "is_new": false
+          }
+        ],
+        "customer": "জসিম",
+        "customer_id": "4f651ceb-3b42-4565-a29a-b199ada55370",
+        "customer_is_new": false,
+        "total": 190,
+        "paid": 100,
+        "due": 90,
+        "expense_category": null,
+        "missing": [],
+        "warnings": [],
+        "clarify_question": null
+      }
+    },
+    {
+      "id": 6,
+      "category": "sale + due",
+      "ok": true,
+      "problems": [],
+      "provider": "gemini",
+      "latency_ms": 2300,
+      "draft": {
+        "type": "sale",
+        "items": [
+          {
+            "product": "সরিষার তেল",
+            "quantity": 2,
+            "unit": "pcs",
+            "unit_price": 285,
+            "line_total": 570,
+            "product_id": "cd23c7b6-8d09-467b-9962-6b19656fd982",
+            "is_new": false
+          }
+        ],
+        "customer": "রফিক",
+        "customer_id": "b0da7a75-8cd9-4aac-8b12-54d25c613b8e",
+        "customer_is_new": false,
+        "total": 570,
+        "paid": 0,
+        "due": 570,
+        "expense_category": null,
+        "missing": [],
+        "warnings": [],
+        "clarify_question": null
+      }
+    },
+    {
+      "id": 7,
+      "category": "sale + due",
+      "ok": true,
+      "problems": [],
+      "provider": "gemini",
+      "latency_ms": 3987,
+      "draft": {
+        "type": "sale",
+        "items": [
+          {
+            "product": "মসুর ডাল",
+            "quantity": 1,
+            "unit": "kg",
+            "unit_price": 135,
+            "line_total": 135,
+            "product_id": "355ea6bf-11e4-47e6-abdd-1c88b540bbf1",
+            "is_new": false
+          }
+        ],
+        "customer": "শাহানা",
+        "customer_id": "9d3a7efd-2c80-43e7-9b51-6e649bc6b843",
+        "customer_is_new": false,
+        "total": 135,
+        "paid": 100,
+        "due": 35,
+        "expense_category": null,
+        "missing": [],
+        "warnings": [],
+        "clarify_question": null
+      }
+    },
+    {
+      "id": 8,
+      "category": "sale + paid",
+      "ok": true,
+      "problems": [],
+      "provider": "gemini",
+      "latency_ms": 2615,
+      "draft": {
+        "type": "sale",
+        "items": [
+          {
+            "product": "আটা",
+            "quantity": 2,
+            "unit": "packet",
+            "unit_price": 135,
+            "line_total": 270,
+            "product_id": "7d04c95d-4c19-4795-b7c5-96706cd66e8a",
+            "is_new": false
+          }
+        ],
+        "customer": "বাবুল",
+        "customer_id": "a172681e-f037-48f7-8523-91de887792e3",
+        "customer_is_new": false,
+        "total": 270,
+        "paid": 200,
+        "due": 70,
+        "expense_category": null,
+        "missing": [],
+        "warnings": [],
+        "clarify_question": null
+      }
+    },
+    {
+      "id": 9,
+      "category": "payment",
+      "ok": true,
+      "problems": [],
+      "provider": "gemini",
+      "latency_ms": 2271,
+      "draft": {
+        "type": "payment",
+        "items": [],
+        "customer": "মিজান",
+        "customer_id": "d26ac9bf-af68-45c3-9216-bb7263863518",
+        "customer_is_new": false,
+        "total": 500,
+        "paid": 500,
+        "due": 0,
+        "expense_category": null,
+        "missing": [],
+        "warnings": [],
+        "clarify_question": null
+      }
+    },
+    {
+      "id": 10,
+      "category": "payment",
+      "ok": true,
+      "problems": [],
+      "provider": "gemini",
+      "latency_ms": 2099,
+      "draft": {
+        "type": "payment",
+        "items": [],
+        "customer": "করিম",
+        "customer_id": "a542f61a-6d62-4f63-a503-03c96b2a80f2",
+        "customer_is_new": false,
+        "total": 200,
+        "paid": 200,
+        "due": 0,
+        "expense_category": null,
+        "missing": [],
+        "warnings": [],
+        "clarify_question": null
+      }
+    },
+    {
+      "id": 11,
+      "category": "payment",
+      "ok": true,
+      "problems": [],
+      "provider": "gemini",
+      "latency_ms": 3357,
+      "draft": {
+        "type": "payment",
+        "items": [],
+        "customer": "সালমা আপা",
+        "customer_id": "b6956aaa-5100-4cd3-a108-828179ddc2fa",
+        "customer_is_new": false,
+        "total": 1000,
+        "paid": 1000,
+        "due": 0,
+        "expense_category": null,
+        "missing": [],
+        "warnings": [],
+        "clarify_question": null
+      }
+    },
+    {
+      "id": 12,
+      "category": "purchase",
+      "ok": true,
+      "problems": [],
+      "provider": "gemini",
+      "latency_ms": 1674,
+      "draft": {
+        "type": "purchase",
+        "items": [
+          {
+            "product": "মিনিকেট চাল",
+            "quantity": 20,
+            "unit": "kg",
+            "unit_price": 68,
+            "line_total": 1360,
+            "product_id": "c7697b9a-04c4-4b81-b652-bd0a31ad053d",
+            "is_new": false
+          }
+        ],
+        "customer": null,
+        "customer_id": null,
+        "customer_is_new": false,
+        "total": 1360,
+        "paid": 1360,
+        "due": 0,
+        "expense_category": null,
+        "missing": [],
+        "warnings": [],
+        "clarify_question": null
+      }
+    },
+    {
+      "id": 13,
+      "category": "purchase",
+      "ok": true,
+      "problems": [],
+      "provider": "gemini",
+      "latency_ms": 2259,
+      "draft": {
+        "type": "purchase",
+        "items": [
+          {
+            "product": "বিস্কুট",
+            "quantity": 50,
+            "unit": "packet",
+            "unit_price": 25,
+            "line_total": 1250,
+            "product_id": "723d3a9b-4d39-4cdc-8c2b-21bb5153ad27",
+            "is_new": false
+          }
+        ],
+        "customer": null,
+        "customer_id": null,
+        "customer_is_new": false,
+        "total": 1250,
+        "paid": 1250,
+        "due": 0,
+        "expense_category": null,
+        "missing": [],
+        "warnings": [],
+        "clarify_question": null
+      }
+    },
+    {
+      "id": 14,
+      "category": "purchase",
+      "ok": true,
+      "problems": [],
+      "provider": "gemini",
+      "latency_ms": 1322,
+      "draft": {
+        "type": "purchase",
+        "items": [
+          {
+            "product": "সয়াবিন তেল",
+            "quantity": 12,
+            "unit": "pcs",
+            "unit_price": 310,
+            "line_total": 3720,
+            "product_id": "b009c031-51e2-4a90-9da8-0d2ea6cf4417",
+            "is_new": false
+          }
+        ],
+        "customer": null,
+        "customer_id": null,
+        "customer_is_new": false,
+        "total": 3720,
+        "paid": 3720,
+        "due": 0,
+        "expense_category": null,
+        "missing": [],
+        "warnings": [],
+        "clarify_question": null
+      }
+    },
+    {
+      "id": 15,
+      "category": "expense",
+      "ok": true,
+      "problems": [],
+      "provider": "gemini",
+      "latency_ms": 1966,
+      "draft": {
+        "type": "expense",
+        "items": [],
+        "customer": null,
+        "customer_id": null,
+        "customer_is_new": false,
+        "total": 5000,
+        "paid": 5000,
+        "due": 0,
+        "expense_category": "দোকান ভাড়া",
+        "missing": [],
+        "warnings": [],
+        "clarify_question": null
+      }
+    },
+    {
+      "id": 16,
+      "category": "expense",
+      "ok": true,
+      "problems": [],
+      "provider": "gemini",
+      "latency_ms": 2524,
+      "draft": {
+        "type": "expense",
+        "items": [],
+        "customer": null,
+        "customer_id": null,
+        "customer_is_new": false,
+        "total": 1400,
+        "paid": 1400,
+        "due": 0,
+        "expense_category": "বিদ্যুৎ বিল",
+        "missing": [],
+        "warnings": [],
+        "clarify_question": null
+      }
+    },
+    {
+      "id": 17,
+      "category": "expense",
+      "ok": true,
+      "problems": [],
+      "provider": "gemini",
+      "latency_ms": 4961,
+      "draft": {
+        "type": "expense",
+        "items": [],
+        "customer": null,
+        "customer_id": null,
+        "customer_is_new": false,
+        "total": 200,
+        "paid": 200,
+        "due": 0,
+        "expense_category": "ভ্যান ভাড়া",
+        "missing": [],
+        "warnings": [],
+        "clarify_question": null
+      }
+    },
+    {
+      "id": 18,
+      "category": "multi-item",
+      "ok": true,
+      "problems": [],
+      "provider": "gemini",
+      "latency_ms": 3781,
+      "draft": {
+        "type": "sale",
+        "items": [
+          {
+            "product": "গায়ে মাখা সাবান",
+            "quantity": 2,
+            "unit": "pcs",
+            "unit_price": 65,
+            "line_total": 130,
+            "product_id": "4c5bcf7a-94d4-4216-9c28-45e71f963d45",
+            "is_new": false
+          },
+          {
+            "product": "চিনি",
+            "quantity": 1,
+            "unit": "kg",
+            "unit_price": 130,
+            "line_total": 130,
+            "product_id": "a35130ff-6918-4538-8418-2653ba86b62b",
+            "is_new": false
+          }
+        ],
+        "customer": null,
+        "customer_id": null,
+        "customer_is_new": false,
+        "total": 260,
+        "paid": 260,
+        "due": 0,
+        "expense_category": null,
+        "missing": [],
+        "warnings": [],
+        "clarify_question": null
+      }
+    },
+    {
+      "id": 19,
+      "category": "multi-item",
+      "ok": true,
+      "problems": [],
+      "provider": "gemini",
+      "latency_ms": 3226,
+      "draft": {
+        "type": "sale",
+        "items": [
+          {
+            "product": "পেঁয়াজ",
+            "quantity": 1,
+            "unit": "kg",
+            "unit_price": 85,
+            "line_total": 85,
+            "product_id": "5cdf483c-3c17-46bf-9b8b-3fe87e94b859",
+            "is_new": false
+          },
+          {
+            "product": "রসুন",
+            "quantity": 1,
+            "unit": "kg",
+            "unit_price": 220,
+            "line_total": 220,
+            "product_id": "a00597b3-c8b0-4158-82c9-5700a1235aa2",
+            "is_new": false
+          }
+        ],
+        "customer": null,
+        "customer_id": null,
+        "customer_is_new": false,
+        "total": 305,
+        "paid": 305,
+        "due": 0,
+        "expense_category": null,
+        "missing": [],
+        "warnings": [],
+        "clarify_question": null
+      }
+    },
+    {
+      "id": 20,
+      "category": "multi-item",
+      "ok": true,
+      "problems": [],
+      "provider": "gemini",
+      "latency_ms": 2230,
+      "draft": {
+        "type": "sale",
+        "items": [
+          {
+            "product": "চানাচুর",
+            "quantity": 3,
+            "unit": "packet",
+            "unit_price": 25,
+            "line_total": 75,
+            "product_id": "bb977d3c-fb31-46d0-9c63-c9da892e73db",
+            "is_new": false
+          },
+          {
+            "product": "বিস্কুট",
+            "quantity": 2,
+            "unit": "pcs",
+            "unit_price": 30,
+            "line_total": 60,
+            "product_id": "723d3a9b-4d39-4cdc-8c2b-21bb5153ad27",
+            "is_new": false
+          }
+        ],
+        "customer": null,
+        "customer_id": null,
+        "customer_is_new": false,
+        "total": 135,
+        "paid": 135,
+        "due": 0,
+        "expense_category": null,
+        "missing": [],
+        "warnings": [],
+        "clarify_question": null
+      }
+    },
+    {
+      "id": 21,
+      "category": "multi-item + due",
+      "ok": true,
+      "problems": [],
+      "provider": "gemini",
+      "latency_ms": 2698,
+      "draft": {
+        "type": "sale",
+        "items": [
+          {
+            "product": "চিনি",
+            "quantity": 2,
+            "unit": "kg",
+            "unit_price": 130,
+            "line_total": 260,
+            "product_id": "a35130ff-6918-4538-8418-2653ba86b62b",
+            "is_new": false
+          },
+          {
+            "product": "টুথপেস্ট",
+            "quantity": 1,
+            "unit": "pcs",
+            "unit_price": 110,
+            "line_total": 110,
+            "product_id": "522abc57-52db-4a2f-973c-3b1537a3b4fc",
+            "is_new": false
+          }
+        ],
+        "customer": "নাসির",
+        "customer_id": "831f8195-5b09-436f-9664-29f5c021eb1e",
+        "customer_is_new": false,
+        "total": 370,
+        "paid": 0,
+        "due": 370,
+        "expense_category": null,
+        "missing": [],
+        "warnings": [],
+        "clarify_question": null
+      }
+    },
+    {
+      "id": 22,
+      "category": "Bangla digits",
+      "ok": true,
+      "problems": [],
+      "provider": "gemini",
+      "latency_ms": 2633,
+      "draft": {
+        "type": "sale",
+        "items": [
+          {
+            "product": "আলু",
+            "quantity": 3,
+            "unit": "kg",
+            "unit_price": 38,
+            "line_total": 114,
+            "product_id": "4c2f5df1-6fce-4ba5-b30e-5375e011d7fe",
+            "is_new": false
+          }
+        ],
+        "customer": null,
+        "customer_id": null,
+        "customer_is_new": false,
+        "total": 114,
+        "paid": 114,
+        "due": 0,
+        "expense_category": null,
+        "missing": [],
+        "warnings": [],
+        "clarify_question": null
+      }
+    },
+    {
+      "id": 23,
+      "category": "Bangla digits + due",
+      "ok": true,
+      "problems": [],
+      "provider": "gemini",
+      "latency_ms": 2773,
+      "draft": {
+        "type": "sale",
+        "items": [
+          {
+            "product": "চা পাতা",
+            "quantity": 1,
+            "unit": "packet",
+            "unit_price": 230,
+            "line_total": 230,
+            "product_id": "0ae6ab21-b645-403f-b847-1f2bfa911697",
+            "is_new": false
+          }
+        ],
+        "customer": "রহিম ভাই",
+        "customer_id": "f31bbdf1-a5d0-4f40-a3e8-e7f580c913d4",
+        "customer_is_new": false,
+        "total": 230,
+        "paid": 130,
+        "due": 100,
+        "expense_category": null,
+        "missing": [],
+        "warnings": [],
+        "clarify_question": null
+      }
+    },
+    {
+      "id": 24,
+      "category": "Bangla number word",
+      "ok": true,
+      "problems": [],
+      "provider": "gemini",
+      "latency_ms": 3084,
+      "draft": {
+        "type": "sale",
+        "items": [
+          {
+            "product": "লবণ",
+            "quantity": 2,
+            "unit": "packet",
+            "unit_price": 45,
+            "line_total": 90,
+            "product_id": "29a7eaf7-633d-4a5f-886f-e67eb0652b09",
+            "is_new": false
+          }
+        ],
+        "customer": null,
+        "customer_id": null,
+        "customer_is_new": false,
+        "total": 90,
+        "paid": 90,
+        "due": 0,
+        "expense_category": null,
+        "missing": [],
+        "warnings": [],
+        "clarify_question": null
+      }
+    },
+    {
+      "id": 25,
+      "category": "missing price",
+      "ok": true,
+      "problems": [],
+      "provider": "gemini",
+      "latency_ms": 2032,
+      "draft": {
+        "type": "sale",
+        "items": [
+          {
+            "product": "মিনিকেট চাল",
+            "quantity": 2,
+            "unit": "kg",
+            "unit_price": null,
+            "line_total": null,
+            "product_id": "c7697b9a-04c4-4b81-b652-bd0a31ad053d",
+            "is_new": false
+          }
+        ],
+        "customer": "বাবুল",
+        "customer_id": "a172681e-f037-48f7-8523-91de887792e3",
+        "customer_is_new": false,
+        "total": null,
+        "paid": null,
+        "due": 0,
+        "expense_category": null,
+        "missing": [
+          "price"
+        ],
+        "warnings": [],
+        "clarify_question": "কত টাকায় দিলেন?"
+      }
+    },
+    {
+      "id": 26,
+      "category": "missing price",
+      "ok": true,
+      "problems": [],
+      "provider": "gemini",
+      "latency_ms": 3429,
+      "draft": {
+        "type": "sale",
+        "items": [
+          {
+            "product": "ডিটারজেন্ট",
+            "quantity": 2,
+            "unit": "packet",
+            "unit_price": null,
+            "line_total": null,
+            "product_id": "ea8e8d20-5bae-4da0-be6f-c69468761761",
+            "is_new": false
+          }
+        ],
+        "customer": null,
+        "customer_id": null,
+        "customer_is_new": false,
+        "total": null,
+        "paid": null,
+        "due": 0,
+        "expense_category": null,
+        "missing": [
+          "price"
+        ],
+        "warnings": [],
+        "clarify_question": "কত টাকায় দিলেন?"
+      }
+    },
+    {
+      "id": 27,
+      "category": "missing amount",
+      "ok": true,
+      "problems": [],
+      "provider": "gemini",
+      "latency_ms": 4235,
+      "draft": {
+        "type": "payment",
+        "items": [],
+        "customer": "রহিম ভাই",
+        "customer_id": "f31bbdf1-a5d0-4f40-a3e8-e7f580c913d4",
+        "customer_is_new": false,
+        "total": null,
+        "paid": null,
+        "due": 0,
+        "expense_category": null,
+        "missing": [
+          "amount"
+        ],
+        "warnings": [],
+        "clarify_question": "কত টাকা দিলেন?"
+      }
+    },
+    {
+      "id": 28,
+      "category": "unknown product",
+      "ok": true,
+      "problems": [],
+      "provider": "gemini",
+      "latency_ms": 2683,
+      "draft": {
+        "type": "sale",
+        "items": [
+          {
+            "product": "battery",
+            "quantity": 1,
+            "unit": "pcs",
+            "unit_price": 40,
+            "line_total": 40,
+            "product_id": null,
+            "is_new": true
+          }
+        ],
+        "customer": null,
+        "customer_id": null,
+        "customer_is_new": false,
+        "total": 40,
+        "paid": 40,
+        "due": 0,
+        "expense_category": null,
+        "missing": [],
+        "warnings": [],
+        "clarify_question": null
+      }
+    },
+    {
+      "id": 29,
+      "category": "unit price said",
+      "ok": true,
+      "problems": [],
+      "provider": "gemini",
+      "latency_ms": 1538,
+      "draft": {
+        "type": "sale",
+        "items": [
+          {
+            "product": "মুগ ডাল",
+            "quantity": 4,
+            "unit": "kg",
+            "unit_price": 170,
+            "line_total": 680,
+            "product_id": "63f55be9-6c4e-48a3-b77f-2d584d40e9fe",
+            "is_new": false
+          }
+        ],
+        "customer": null,
+        "customer_id": null,
+        "customer_is_new": false,
+        "total": 680,
+        "paid": 680,
+        "due": 0,
+        "expense_category": null,
+        "missing": [],
+        "warnings": [],
+        "clarify_question": null
+      }
+    },
+    {
+      "id": 30,
+      "category": "English",
+      "ok": true,
+      "problems": [],
+      "provider": "gemini",
+      "latency_ms": 2324,
+      "draft": {
+        "type": "sale",
+        "items": [
+          {
+            "product": "কাপড় কাচা সাবান",
+            "quantity": 2,
+            "unit": "pcs",
+            "unit_price": 30,
+            "line_total": 60,
+            "product_id": "bbfc218c-c773-4a71-b8b0-d54fd1599d83",
+            "is_new": false
+          }
+        ],
+        "customer": null,
+        "customer_id": null,
+        "customer_is_new": false,
+        "total": 60,
+        "paid": 60,
+        "due": 0,
+        "expense_category": null,
+        "missing": [],
+        "warnings": [],
+        "clarify_question": null
+      }
+    }
+  ]
+}
