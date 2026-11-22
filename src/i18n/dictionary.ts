@@ -32,7 +32,11 @@ const bn = {
   backHome: "হোমে ফিরুন",
   entry: {
     title: "হিসাব দিন",
-    typeLabel: "লিখে দিন",
+    typeLabel: "অথবা লিখে দিন",
+    mic: "বলুন",
+    micStop: "থামান",
+    micHint: "মাইক চেপে বলুন",
+    listening: "শুনছি…",
     placeholder: "যেমন: রহিম ভাইকে ২টা সয়াবিন তেল দিলাম, ৬৮০ টাকা, ১০০ টাকা বাকি",
     examplesHint: "উদাহরণ (চাপলে লেখা বসবে, AI তারপর লাইভ বুঝবে)",
     samples: ["করিমকে ৩টা সাবান দিলাম", "১০ কেজি ডাল কিনলাম ১২০০ টাকা", "রহিম ভাই ৩০০ টাকা জমা দিল"],
@@ -90,6 +94,10 @@ const bn = {
     AI_UNAVAILABLE: "এখন বুঝতে পারছি না। নিচে নিজে লিখে নিন।",
     SERVER_ERROR: "সমস্যা হয়েছে, আবার চেষ্টা করুন",
     NETWORK: "ইন্টারনেট নেই বা সংযোগ ধীর, আবার চেষ্টা করুন",
+    MIC_DENIED: "মাইক চালু করুন, অথবা লিখে দিন",
+    NO_SPEECH: "কিছু শুনতে পাইনি, আবার বলুন বা লিখে দিন",
+    VOICE_UNSUPPORTED: "এই ব্রাউজারে ভয়েস চলে না (Chrome খুলুন), লিখে দিন",
+    VOICE_FAILED: "ভয়েস কাজ করেনি, আবার বলুন বা লিখে দিন",
   },
 };
 
@@ -124,7 +132,11 @@ const en: Dict = {
   backHome: "Back to home",
   entry: {
     title: "Record a transaction",
-    typeLabel: "Type it",
+    typeLabel: "Or type it",
+    mic: "Speak",
+    micStop: "Stop",
+    micHint: "Tap the mic and speak",
+    listening: "Listening…",
     placeholder: "e.g. Gave Rahim bhai 2 soybean oil, 680 taka, 100 taka due",
     examplesHint: "Examples (tap to fill the box; the AI then reads it live)",
     samples: ["Gave Karim 3 soaps", "Bought 10 kg lentils for 1200 taka", "Rahim bhai paid 300 taka"],
@@ -181,6 +193,10 @@ const en: Dict = {
     AI_UNAVAILABLE: "Can't understand right now. Fill it in yourself below.",
     SERVER_ERROR: "Something went wrong, please try again",
     NETWORK: "No internet or a slow connection, please try again",
+    MIC_DENIED: "Allow the microphone, or type it",
+    NO_SPEECH: "Didn't hear anything, speak again or type it",
+    VOICE_UNSUPPORTED: "Voice doesn't work in this browser (use Chrome), type it",
+    VOICE_FAILED: "Voice didn't work, speak again or type it",
   },
 };
 

@@ -185,7 +185,13 @@ function ProfitCard({ week, taka }: { week: HomeData["week"]; taka: (n: number) 
 
 export function StatusFallback() {
   const { t } = useLanguage();
-  return <p className="mx-auto w-full max-w-[1200px] px-4 py-12 text-muted sm:px-8" aria-live="polite">{t.home.loading}</p>;
+  // Skeleton, not words: the server renders this before the saved language is known.
+  return (
+    <div className="mx-auto grid w-full max-w-[1200px] grid-cols-2 gap-4 px-4 py-12 sm:px-8 lg:grid-cols-4" role="status">
+      <span className="sr-only">{t.home.loading}</span>
+      {[0, 1, 2, 3].map((i) => <div key={i} className="h-24 animate-pulse rounded-2xl bg-border/60" />)}
+    </div>
+  );
 }
 
 export function FloatingMic() {
