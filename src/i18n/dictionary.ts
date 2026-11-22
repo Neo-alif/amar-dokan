@@ -11,6 +11,7 @@ const bn = {
   heroSubline: "বিক্রি, বাকি, স্টক, সব এক জায়গায়। শুধু বলুন বা লিখুন।",
   heroFeatures: ["বলে বা লিখে হিসাব", "কাস্টমারের বাকির হিসাব", "স্টক শেষ হওয়ার আগেই সতর্কতা", "বাজেট বুঝে কেনাকাটার পরামর্শ"],
   language: "ভাষা",
+  menu: "মেনু",
   home: {
     weekTitle: "এই সপ্তাহের অবস্থা",
     weekSubtitle: "লাভ, জরুরি কাজ আর মাসের হিসাব এক নজরে",
@@ -227,6 +228,7 @@ const en: Dict = {
   heroSubline: "Sales, dues, stock, all in one place. Just speak or type.",
   heroFeatures: ["Record by voice or text", "Customer due book", "Alerts before stock runs out", "Budget-aware buying advice"],
   language: "Language",
+  menu: "Menu",
   home: {
     weekTitle: "This week",
     weekSubtitle: "Profit, urgent tasks and the month at a glance",

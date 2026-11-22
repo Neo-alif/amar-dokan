@@ -63,7 +63,7 @@
 - [x] Text entry + 3 sample-sentence chips
 - [x] `ConfirmCard` (view / edit / cancel, "নতুন পণ্য/কাস্টমার" badges, idempotency key, button disabled while saving)
 - [x] `/api/transactions` (Zod again → new items → `apply_transaction` → Bangla error map)
-- [~] Home (done: top bar + pill, hero, stat strip, weekly profit, floating mic; to do: এখন যা করবেন + audit in Phase 4, menu tiles/⋮ menu with the pages) (match `docs/mockup/Main.dc.html` + UIspec §3b): navy top bar with বাং/EN pill (optional), hero + হিসাব দিন, 4-box stat strip (আজকের বিক্রি · আজকের খরচ · মোট বাকি · স্টক কম), weekly profit box, এখন যা করবেন, menu boxes, floating mic
+- [x] Home (top bar + pill + ⋮ menu, hero, stat strip, weekly profit, এখন যা করবেন, audit card, menu tiles for pages that exist, floating mic) (match `docs/mockup/Main.dc.html` + UIspec §3b): navy top bar with বাং/EN pill (optional), hero + হিসাব দিন, 4-box stat strip (আজকের বিক্রি · আজকের খরচ · মোট বাকি · স্টক কম), weekly profit box, এখন যা করবেন, menu boxes, floating mic
 - [x] `/dues`: list, customer ledger, জমা নিন (payment through apply_transaction; "মনে করিয়ে দিন" left out, no SMS service)
 - [x] `MicButton` voice (**P0**, Web Speech `bn-BD`, transcript fills the editable text box; text stays an equal option). Real-mic test of 10 sentences: Alif
 - [ ] Ask a friend for ~15 test sentences; reach 50+ cases

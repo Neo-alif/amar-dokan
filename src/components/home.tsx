@@ -1,6 +1,7 @@
 "use client";
 // Home page pieces, built to match docs/mockup/Main.dc.html.
 
+import { useState } from "react";
 import Link from "next/link";
 import { useLanguage } from "@/i18n/LanguageContext";
 import type { HomeData } from "@/lib/db/queries";
@@ -13,11 +14,41 @@ const MicIcon = ({ size, stroke }: { size: number; stroke: string }) => (
   </svg>
 );
 
+// Pages that exist (optional Products / Expenses / Transactions pages are not built, so not linked).
+const PAGES = [
+  { href: "/entry", key: "entry", stroke: "#6D28D9", tile: "", d: <><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0" /><path d="M12 18v3" /></> },
+  { href: "/stock", key: "stock", stroke: "#1D4ED8", tile: "bg-blue-50 border-blue-200", d: <><path d="M21 8l-9-5-9 5 9 5 9-5z" /><path d="M3 8v8l9 5 9-5V8" /><path d="M12 13v8" /></> },
+  { href: "/dues", key: "dues", stroke: "#DC2626", tile: "bg-red-50 border-red-200", d: <><path d="M4 4h12a4 4 0 0 1 4 4v12H8a4 4 0 0 1-4-4z" /><path d="M8 9h8" /><path d="M8 13h6" /></> },
+  { href: "/restock", key: "restock", stroke: "#16A34A", tile: "bg-green-50 border-green-200", d: <><circle cx="9" cy="20" r="1.5" /><circle cx="18" cy="20" r="1.5" /><path d="M2 3h3l2.5 12h12l2-8H6" /></> },
+  { href: "/report", key: "report", stroke: "#0F766E", tile: "", d: <><path d="M6 3h9l4 4v14H6z" /><path d="M9 12h7" /><path d="M9 16h5" /></> },
+] as const;
+type Page = (typeof PAGES)[number];
+
+const PageIcon = ({ page, size }: { page: Page; size: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={page.stroke} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{page.d}</svg>
+);
+
+// Menu boxes under the status cards (mockup: 48px icon square + label).
+export function MenuTiles() {
+  const { t } = useLanguage();
+  return (
+    <div className="mt-6 grid grid-cols-3 gap-4">
+      {PAGES.filter((p) => p.tile).map((p) => (
+        <Link key={p.href} href={p.href} className={`flex flex-col items-center gap-2.5 rounded-[20px] border-[1.5px] px-3 py-5 shadow-[0_4px_14px_rgba(15,23,42,0.05)] ${p.tile}`}>
+          <span className="flex size-12 items-center justify-center rounded-[14px] bg-white shadow-[0_2px_6px_rgba(15,23,42,0.08)]"><PageIcon page={p} size={24} /></span>
+          <span className="text-center font-semibold text-text">{t[p.key].title}</span>
+        </Link>
+      ))}
+    </div>
+  );
+}
+
 export function TopBar() {
   const { t, lang, setLang } = useLanguage();
+  const [menu, setMenu] = useState(false);
   const pill = (active: boolean) => `h-9 rounded-full px-3.5 text-[15px] font-bold ${active ? "bg-[#FBBF24] text-primary" : "text-white"}`;
   return (
-    <header className="border-b border-[#27466E] bg-primary">
+    <header className="relative border-b border-[#27466E] bg-primary">
       <div className="mx-auto flex max-w-[1200px] items-center justify-between gap-4 px-4 py-3.5 sm:px-8">
         <Link href="/" className="flex items-center gap-2.5 text-white">
           <span className="flex size-10 items-center justify-center rounded-xl bg-[#FBBF24]">
@@ -25,11 +56,34 @@ export function TopBar() {
           </span>
           <span className="text-[22px] font-bold">{lang === "bn" ? <>আমার <span className="text-[#FBBF24]">দোকান</span></> : <>Amar <span className="text-[#FBBF24]">Dokan</span></>}</span>
         </Link>
-        <div role="group" aria-label={t.language} className="flex rounded-full border border-[#3B5C88] bg-[#27466E] p-1">
-          <button type="button" aria-pressed={lang === "bn"} onClick={() => setLang("bn")} className={pill(lang === "bn")}>বাং</button>
-          <button type="button" aria-pressed={lang === "en"} onClick={() => setLang("en")} className={`${pill(lang === "en")} font-[family-name:var(--font-inter)] text-sm`}>EN</button>
+        <div className="flex items-center gap-3">
+          <div role="group" aria-label={t.language} className="flex rounded-full border border-[#3B5C88] bg-[#27466E] p-1">
+            <button type="button" aria-pressed={lang === "bn"} onClick={() => setLang("bn")} className={pill(lang === "bn")}>বাং</button>
+            <button type="button" aria-pressed={lang === "en"} onClick={() => setLang("en")} className={`${pill(lang === "en")} font-[family-name:var(--font-inter)] text-sm`}>EN</button>
+          </div>
+          <button type="button" aria-label={t.menu} aria-haspopup="menu" aria-expanded={menu} onClick={() => setMenu(!menu)}
+            className="flex size-11 items-center justify-center rounded-xl border border-[#3B5C88] bg-[#27466E]">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#FFFFFF" aria-hidden="true"><circle cx="12" cy="5" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="12" cy="19" r="2" /></svg>
+          </button>
         </div>
       </div>
+      {menu && (
+        <>
+          <button type="button" aria-label={t.menu} tabIndex={-1} className="fixed inset-0 z-10 cursor-default" onClick={() => setMenu(false)} />
+          <nav aria-label={t.menu} onKeyDown={(e) => e.key === "Escape" && setMenu(false)}
+            className="absolute top-[70px] right-4 z-20 flex w-[260px] flex-col gap-0.5 rounded-[18px] border-[1.5px] border-border bg-white p-2 shadow-[0_18px_40px_rgba(15,23,42,0.18)] sm:right-8">
+            {PAGES.map((p) => (
+              <Link key={p.href} href={p.href} onClick={() => setMenu(false)} className="flex min-h-11 items-center gap-3 rounded-xl px-3 font-medium text-text hover:bg-bg">
+                <PageIcon page={p} size={20} />{t[p.key].title}
+              </Link>
+            ))}
+            <div className="mx-1 my-1.5 h-px bg-border" />
+            <button type="button" onClick={() => setLang(lang === "bn" ? "en" : "bn")} className="flex min-h-11 items-center justify-between rounded-xl px-3 font-medium text-text hover:bg-bg">
+              {t.language}<span className="rounded-full bg-slate-100 px-2.5 text-[13px] font-semibold text-primary">বাংলা | EN</span>
+            </button>
+          </nav>
+        </>
+      )}
     </header>
   );
 }
@@ -134,7 +188,7 @@ export function WeekStatusView({ data }: { data: HomeData | null }) {
             <Stat label={h.todaySales} value={taka(data.todaySales)} color="text-green-700" />
             <Stat label={h.todaySpend} value={taka(data.todaySpend)} color="text-slate-700" />
             <Stat label={h.totalDue} value={taka(data.totalDue)} color="text-danger" />
-            <Stat label={h.lowStock} value={`${formatNumber(data.lowStock, lang)}${h.productsUnit}`} color="text-amber-700" />
+            <Stat label={h.lowStock} value={`${formatNumber(data.lowStock, lang)}${h.productsUnit}`} color="text-amber-700" href="/stock" />
           </div>
           <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
             <ProfitCard week={data.week} taka={taka} />
@@ -143,17 +197,15 @@ export function WeekStatusView({ data }: { data: HomeData | null }) {
           </div>
         </>
       )}
+      <MenuTiles />
     </section>
   );
 }
 
-function Stat({ label, value, color }: { label: string; value: string; color: string }) {
-  return (
-    <div className="flex flex-col gap-1 rounded-[20px] border-[1.5px] border-border bg-white p-5 shadow-[0_4px_14px_rgba(15,23,42,0.05)]">
-      <span className="text-sm text-muted">{label}</span>
-      <span className={`text-[28px] leading-tight font-bold ${color}`}>{value}</span>
-    </div>
-  );
+function Stat({ label, value, color, href }: { label: string; value: string; color: string; href?: string }) {
+  const box = "flex flex-col gap-1 rounded-[20px] border-[1.5px] border-border bg-white p-5 shadow-[0_4px_14px_rgba(15,23,42,0.05)]";
+  const inner = <><span className="text-sm text-muted">{label}</span><span className={`text-[28px] leading-tight font-bold ${color}`}>{value}</span></>;
+  return href ? <Link href={href} className={`${box} hover:border-accent`}>{inner}</Link> : <div className={box}>{inner}</div>;
 }
 
 function ProfitCard({ week, taka }: { week: HomeData["week"]; taka: (n: number) => string }) {
