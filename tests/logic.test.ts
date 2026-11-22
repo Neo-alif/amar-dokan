@@ -189,6 +189,64 @@ test("stockOutlook: days left and status", () => {
   assert.deepEqual(stockOutlook(4, 5, 0), { daysLeft: null, status: "low" });    // no sales, below reorder
 });
 
+import { dhakaMonthStart, monthSummary, oldestDueDays, pickActions, todayNumbers } from "../src/lib/logic/summary.ts";
+
+test("dhakaMonthStart: 1st 00:00 Dhaka", () => {
+  assert.equal(dhakaMonthStart(new Date("2026-11-23T06:00:00Z")).toISOString(), "2026-10-31T18:00:00.000Z");
+  assert.equal(dhakaMonthStart(new Date("2026-11-23T06:00:00Z"), -1).toISOString(), "2026-09-30T18:00:00.000Z");
+});
+
+const L = (d: string, q: number, p: number, c: number, id: string) => ({ occurred_at: d, quantity: q, unit_price: p, cost_price: c, product_id: id });
+
+test("monthSummary: same point last month, top products", () => {
+  const m = monthSummary([
+    L("2026-11-02T04:00:00Z", 2, 340, 310, "oil"), L("2026-11-05T04:00:00Z", 10, 76, 68, "rice"),
+    L("2026-10-03T04:00:00Z", 5, 76, 68, "rice"),  // last month, before the same point
+    L("2026-10-20T04:00:00Z", 99, 76, 68, "rice"), // last month, after the same point: ignored
+  ], [{ occurred_at: "2026-11-03T04:00:00Z", total: 1200 }], new Date("2026-11-10T06:00:00Z"));
+  assert.deepEqual([m.sales, m.profit, m.spend, m.lastMonthSales, m.salesChangePct, m.marginPct], [1440, 140, 1200, 380, 279, 9.7]);
+  assert.deepEqual(m.top5.map((p) => p.id), ["rice", "oil"]);
+});
+
+test("todayNumbers: today vs yesterday up to the same time", () => {
+  const t = todayNumbers([
+    L("2026-11-23T03:00:00Z", 3, 10, 8, "a"), L("2026-11-23T04:00:00Z", 5, 10, 8, "b"),
+    L("2026-11-22T03:00:00Z", 4, 10, 8, "a"), L("2026-11-22T10:00:00Z", 9, 10, 8, "a"), // yesterday after 12:00: ignored
+  ], new Date("2026-11-23T06:00:00Z"));
+  assert.deepEqual([t.sales, t.yesterdaySameTime, t.changePct, t.top3], [80, 40, 100, ["b", "a"]]);
+});
+
+test("oldestDueDays: FIFO, payments clear the oldest baki first", () => {
+  const now = new Date("2026-11-23T00:00:00Z");
+  assert.equal(oldestDueDays([
+    { change: 100, occurred_at: "2026-11-01T00:00:00Z" },
+    { change: 50, occurred_at: "2026-11-10T00:00:00Z" },
+    { change: -100, occurred_at: "2026-11-12T00:00:00Z" },
+  ], now), 13);
+  assert.equal(oldestDueDays([{ change: 100, occurred_at: "2026-11-01T00:00:00Z" }, { change: -100, occurred_at: "2026-11-02T00:00:00Z" }], now), null);
+});
+
+test("pickActions: urgent ≤ 2 days, oldest big due, growing products", () => {
+  const a = pickActions(
+    [{ id: "sugar", daysLeft: 1.7 }, { id: "oil", daysLeft: 1.9 }, { id: "milk", daysLeft: 5 }, { id: "x", daysLeft: 0 }],
+    [{ customer: "রহিম", due: 1200, days: 14 }, { customer: "করিম", due: 3000, days: 3 }],
+    [L("2026-11-22T04:00:00Z", 5, 1, 1, "dal")], new Date("2026-11-23T06:00:00Z"),
+  );
+  assert.deepEqual(a, [
+    { kind: "urgent", product_id: "x", daysLeft: 0 }, { kind: "urgent", product_id: "sugar", daysLeft: 1.7 },
+    { kind: "watch", customer: "রহিম", due: 1200, days: 14 }, { kind: "tip", product_ids: ["dal"] },
+  ]);
+});
+
+import { allowedNumbers, numbersIn, numbersOk } from "../src/lib/logic/numberCheck.ts";
+
+test("numberCheck: Bangla digits, commas, decimals; unknown number fails", () => {
+  assert.deepEqual(numbersIn("মোট বিক্রি ৳ ১,৬৮,৪০০, মার্জিন ১৮.৫%"), [168400, 18.5]);
+  const ok = allowedNumbers({ sales: 168400, margin: 18.5, top: ["a", "b", "c"], change: -12 });
+  assert.equal(numbersOk("বিক্রি ৳১,৬৮,৪০০, ১২% কম; সেরা ৩টি পণ্য", ok), true);
+  assert.equal(numbersOk("বিক্রি প্রায় ১.৭ লাখ", ok), false); // a number the facts don't have
+});
+
 import { restock } from "../src/lib/logic/restock.ts";
 
 const rp = (id: string, stock: number, avg: number | null, cost: number, sell: number) =>

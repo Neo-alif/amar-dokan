@@ -4,13 +4,13 @@ import Link from "next/link";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 // Navy bar used by every inner page (mockup: back-to-home + amber page title).
-type Section = "entry" | "stock" | "restock"; // dictionary sections that have a `title`
+type Section = "entry" | "stock" | "restock" | "report"; // dictionary sections that have a `title`
 
 export function PageHeader({ section }: { section: Section }) {
   const { t } = useLanguage();
   const title = t[section].title;
   return (
-    <header className="bg-primary border-b border-[#27466E]">
+    <header className="bg-primary border-b border-[#27466E] print:hidden">
       <div className="mx-auto flex max-w-[1200px] items-center justify-between gap-4 px-4 py-3.5 sm:px-8">
         <Link href="/" className="flex min-h-12 items-center gap-2.5 text-white hover:text-[#FBBF24]">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6" /></svg>

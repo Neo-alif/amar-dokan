@@ -4,27 +4,15 @@ import { extract } from "@/lib/ai/extract";
 import { AllProvidersFailed } from "@/lib/ai/provider";
 import { loadShopContext, logAi, updateAiLog } from "@/lib/db/queries";
 import { MAX_INPUT_CHARS } from "@/lib/logic/normalize";
+import { rateLimited } from "@/lib/rateLimit";
 
 const Body = z.object({
   text: z.string().trim().min(1).max(MAX_INPUT_CHARS),
   lang: z.enum(["bn", "en"]).default("bn"),
 });
 
-// shortcut: in-memory per-IP limit; resets on restart and isn't shared between server instances.
-// Fine for one local/demo server; use a shared store if this ever runs on many instances.
-const RATE_LIMIT = 20;
-const hits = new Map<string, number[]>();
-function rateLimited(ip: string): boolean {
-  const now = Date.now();
-  const recent = (hits.get(ip) ?? []).filter((t) => now - t < 60_000);
-  recent.push(now);
-  hits.set(ip, recent);
-  return recent.length > RATE_LIMIT;
-}
-
 export async function POST(req: Request) {
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() || "local";
-  if (rateLimited(ip)) return Response.json({ error: "RATE_LIMITED" }, { status: 429 });
+  if (rateLimited(req, "extract")) return Response.json({ error: "RATE_LIMITED" }, { status: 429 });
 
   const body = Body.safeParse(await req.json().catch(() => null));
   if (!body.success) return Response.json({ error: "INVALID_INPUT" }, { status: 400 });

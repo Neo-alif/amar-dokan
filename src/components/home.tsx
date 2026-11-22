@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useLanguage } from "@/i18n/LanguageContext";
 import type { HomeData } from "@/lib/db/queries";
 import { formatNumber, formatTaka } from "@/lib/format";
+import { ActionsCard, AuditCard } from "@/components/insightCards";
 
 const MicIcon = ({ size, stroke }: { size: number; stroke: string }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -137,6 +138,8 @@ export function WeekStatusView({ data }: { data: HomeData | null }) {
           </div>
           <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
             <ProfitCard week={data.week} taka={taka} />
+            <ActionsCard data={data} />
+            <AuditCard />
           </div>
         </>
       )}

@@ -1,49 +1,94 @@
 import { db, shopId } from "./client.ts";
 import type { ShopContext } from "../ai/extract.ts";
-import { dhakaWeekStart, weeklyProfit, type SaleLine } from "../logic/summary.ts";
+import {
+  dhakaMonthStart, dhakaWeekStart, monthSummary, oldestDueDays, pickActions, todayNumbers, weeklyProfit, type SaleLine,
+} from "../logic/summary.ts";
 import { addDays, dailySeries, dhakaDay, forecast, stockOutlook } from "../logic/forecast.ts";
 
 const one = <T>(x: T | T[]) => (Array.isArray(x) ? x[0] : x); // PostgREST embeds may come back as arrays
 
-// Home page numbers: stat strip + weekly profit (this week and last week of sale lines).
-export async function loadHomeData(now = new Date()) {
-  const shop = shopId();
-  const [today, customers, stock] = await Promise.all([
-    db().from("today_summary").select("sales, spend").eq("shop_id", shop).maybeSingle(),
-    db().from("customers").select("due_balance").eq("shop_id", shop),
-    loadStock(now),
-  ]);
-  for (const r of [today, customers]) if (r.error) throw new Error(`home data: ${r.error.message}`);
-
-  const since = new Date(dhakaWeekStart(now).getTime() - 7 * 24 * 3600 * 1000).toISOString();
-  const lines: SaleLine[] = [];
-  for (let from = 0; ; from += 1000) { // PostgREST returns at most 1000 rows per request
-    const { data, error } = await db().from("transaction_items")
-      .select("id, quantity, unit_price, products(cost_price), transactions!inner(occurred_at, type, shop_id)")
-      .eq("transactions.shop_id", shop).eq("transactions.type", "sale").gte("transactions.occurred_at", since)
-      .order("id").range(from, from + 999);
-    if (error) throw new Error(`sale lines: ${error.message}`);
-    for (const r of data) {
-      lines.push({
-        occurred_at: one(r.transactions).occurred_at,
-        quantity: Number(r.quantity),
-        unit_price: Number(r.unit_price),
-        cost_price: Number(one(r.products).cost_price),
-      });
-    }
-    if (data.length < 1000) break;
+// PostgREST returns at most 1000 rows per request, so read in pages.
+async function all<T>(page: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>, what: string) {
+  const out: T[] = [];
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await page(from, from + 999);
+    if (error) throw new Error(`${what}: ${error.message}`);
+    out.push(...(data ?? []));
+    if (!data || data.length < 1000) return out;
   }
+}
 
+// Everything the home page, insight and report need, read once.
+async function loadShopNumbers(now: Date) {
+  const shop = shopId();
+  const since = new Date(Math.min(dhakaMonthStart(now, -1).getTime(), dhakaWeekStart(now).getTime() - 7 * 864e5)).toISOString();
+  const [today, shopRow, customers, stock, rawLines, ledger, spend] = await Promise.all([
+    db().from("today_summary").select("sales, spend").eq("shop_id", shop).maybeSingle(),
+    db().from("shops").select("name").eq("id", shop).maybeSingle(),
+    db().from("customers").select("id, name, due_balance").eq("shop_id", shop),
+    loadStock(now),
+    all((a, b) => db().from("transaction_items")
+      .select("id, product_id, quantity, unit_price, products(cost_price), transactions!inner(occurred_at, type, shop_id)")
+      .eq("transactions.shop_id", shop).eq("transactions.type", "sale").gte("transactions.occurred_at", since)
+      .order("id").range(a, b), "sale lines"),
+    all((a, b) => db().from("customer_ledger").select("id, customer_id, change, occurred_at").eq("shop_id", shop).order("id").range(a, b), "ledger"),
+    all((a, b) => db().from("transactions").select("id, occurred_at, total").eq("shop_id", shop)
+      .in("type", ["purchase", "expense"]).gte("occurred_at", since).order("id").range(a, b), "spend"),
+  ]);
+  for (const r of [today, shopRow, customers]) if (r.error) throw new Error(`shop numbers: ${r.error.message}`);
+
+  const lines: SaleLine[] = rawLines.map((r) => ({
+    occurred_at: one(r.transactions).occurred_at, product_id: r.product_id,
+    quantity: Number(r.quantity), unit_price: Number(r.unit_price), cost_price: Number(one(r.products).cost_price),
+  }));
+  const dues = customers.data!.filter((c) => Number(c.due_balance) > 0).map((c) => ({
+    customer: c.name, due: Number(c.due_balance),
+    days: oldestDueDays(ledger.filter((e) => e.customer_id === c.id).map((e) => ({ change: Number(e.change), occurred_at: e.occurred_at })), now),
+  }));
   return {
+    shopName: shopRow.data?.name ?? "",
     todaySales: Number(today.data?.sales ?? 0),
     todaySpend: Number(today.data?.spend ?? 0),
     totalDue: customers.data!.reduce((s, c) => s + Number(c.due_balance), 0),
-    lowStock: stock.filter((p) => p.status !== "ok").length, // same rule as /stock (forecast.ts)
+    stock, lines, dues,
+    spend: spend.map((r) => ({ occurred_at: r.occurred_at, total: Number(r.total) })),
+  };
+}
+
+const namesOf = (stock: StockRow[]) => Object.fromEntries(stock.map((p) => [p.id, { bn: p.name_bn, en: p.name_en ?? p.name_bn }]));
+
+// Home page: stat strip, weekly profit, এখন যা করবেন.
+export async function loadHomeData(now = new Date()) {
+  const n = await loadShopNumbers(now);
+  return {
+    todaySales: n.todaySales,
+    todaySpend: n.todaySpend,
+    totalDue: n.totalDue,
+    lowStock: n.stock.filter((p) => p.status !== "ok").length, // same rule as /stock (forecast.ts)
     weekStart: dhakaWeekStart(now).toISOString(),
-    week: weeklyProfit(lines, now),
+    week: weeklyProfit(n.lines, now),
+    actions: pickActions(n.stock, n.dues, n.lines, now),
+    names: namesOf(n.stock),
   };
 }
 export type HomeData = Awaited<ReturnType<typeof loadHomeData>>;
+
+// Verified numbers for the AI insight + monthly audit (the LLM sees only these).
+export async function loadInsightNumbers(now = new Date()) {
+  const n = await loadShopNumbers(now);
+  const oldDues = n.dues.filter((d) => d.days !== null && d.days > 7);
+  return {
+    shopName: n.shopName,
+    names: namesOf(n.stock),
+    today: { ...todayNumbers(n.lines, now), spend: n.todaySpend },
+    month: monthSummary(n.lines, n.spend, now),
+    totalDue: n.totalDue,
+    oldDue: { customers: oldDues.length, total: oldDues.reduce((s, d) => s + d.due, 0) },
+    lowStock: n.stock.filter((p) => p.status !== "ok").sort((a, b) => (a.daysLeft ?? 1e9) - (b.daysLeft ?? 1e9))
+      .map((p) => ({ id: p.id, daysLeft: p.daysLeft === null ? null : Math.floor(p.daysLeft) })),
+  };
+}
+export type InsightNumbers = Awaited<ReturnType<typeof loadInsightNumbers>>;
 
 export async function loadShopContext(lang: ShopContext["lang"]): Promise<ShopContext> {
   const shop = shopId();
@@ -82,23 +127,19 @@ export async function loadStock(now = new Date()) {
     .select("id, name_bn, name_en, unit, stock_qty, reorder_level, cost_price, sell_price").eq("shop_id", shop);
   if (error) throw new Error(`products: ${error.message}`);
 
+  const rows = await all((a, b) => db().from("daily_product_sales").select("product_id, day, qty_sold")
+    .eq("shop_id", shop).gte("day", addDays(today, -90)).lte("day", yesterday)
+    .order("product_id").order("day").range(a, b), "daily sales");
   const sales = new Map<string, { day: string; qty: number }[]>();
-  for (let from = 0; ; from += 1000) { // PostgREST returns at most 1000 rows per request
-    const { data, error } = await db().from("daily_product_sales").select("product_id, day, qty_sold")
-      .eq("shop_id", shop).gte("day", addDays(today, -90)).lte("day", yesterday)
-      .order("product_id").order("day").range(from, from + 999);
-    if (error) throw new Error(`daily sales: ${error.message}`);
-    for (const r of data) {
-      if (!sales.has(r.product_id)) sales.set(r.product_id, []);
-      sales.get(r.product_id)!.push({ day: r.day, qty: Number(r.qty_sold) });
-    }
-    if (data.length < 1000) break;
+  for (const r of rows) {
+    if (!sales.has(r.product_id)) sales.set(r.product_id, []);
+    sales.get(r.product_id)!.push({ day: r.day, qty: Number(r.qty_sold) });
   }
 
   return products.map((p) => {
-    const rows = sales.get(p.id) ?? [];
-    const first = rows[0]?.day; // history starts at the product's first sale
-    const f = first ? forecast(dailySeries(rows, first, yesterday), first) : null;
+    const hist = sales.get(p.id) ?? [];
+    const first = hist[0]?.day; // history starts at the product's first sale
+    const f = first ? forecast(dailySeries(hist, first, yesterday), first) : null;
     const stock = Number(p.stock_qty), reorder = Number(p.reorder_level);
     return {
       id: p.id, name_bn: p.name_bn, name_en: p.name_en as string | null, unit: p.unit,
