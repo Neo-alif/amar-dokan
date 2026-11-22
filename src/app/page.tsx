@@ -1,14 +1,27 @@
-"use client";
+import { Suspense } from "react";
+import { connection } from "next/server";
+import { FloatingMic, Hero, StatusFallback, TopBar, WeekStatusView } from "@/components/home";
+import { loadHomeData } from "@/lib/db/queries";
 
-import { useLanguage } from "@/i18n/LanguageContext";
+// Live shop numbers: read on every request (not prerendered), streamed in behind a fallback.
+async function WeekStatus() {
+  await connection();
+  const data = await loadHomeData().catch((e) => {
+    console.error("home data failed:", e);
+    return null; // view shows the Bangla error message
+  });
+  return <WeekStatusView data={data} />;
+}
 
 export default function Home() {
-  const { t } = useLanguage();
-
   return (
-    <main className="flex flex-1 flex-col items-center justify-center gap-3 px-4 text-center">
-      <p className="text-lg text-muted">{t.heroTag}</p>
-      <h1 className="text-4xl font-semibold text-primary">{t.heroTitle}</h1>
-    </main>
+    <div className="flex flex-1 flex-col">
+      <TopBar />
+      <Hero />
+      <Suspense fallback={<StatusFallback />}>
+        <WeekStatus />
+      </Suspense>
+      <FloatingMic />
+    </div>
   );
 }

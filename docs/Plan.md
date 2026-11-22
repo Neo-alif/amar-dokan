@@ -50,19 +50,20 @@
 - **Done when:** Supabase dashboard shows realistic data; `today_summary` returns numbers
 
 ## Phase 2 — AI extraction (21 Nov night, ~3 h) · P0 ⭐
-- [ ] `lib/schema.ts` (Zod), `lib/logic/normalize.ts`
-- [ ] `lib/ai/provider.ts`: Gemini structured output → Groq fallback, timeout, retry
-- [ ] `lib/ai/prompts.ts` with 8–10 few-shot examples
-- [ ] `lib/logic/matchProduct.ts`
-- [ ] `/api/extract` (+ `ai_logs`)
-- [ ] `tests/banglish-cases.json` (30 now, 50+ by 22 Nov) + throttled `npm run test:extract`
+- [x] `lib/schema.ts` (Zod, said-values only + `z.toJSONSchema`), `lib/logic/normalize.ts`, `lib/logic/amounts.ts`
+- [x] `lib/ai/provider.ts`: Gemini structured output → Groq fallback, timeout, retry
+- [x] `lib/ai/prompts.ts` with 8 few-shot examples (improved once: kore/bhara)
+- [x] `lib/logic/matchProduct.ts`
+- [x] `/api/extract` (+ `ai_logs`)
+- [x] `tests/banglish-cases.json` (30) + throttled `npm run test:extract` → Gemini 29/30 run (Gemini itself 27/27); Groq-only hard cases 3/5, Groq free tier ≈3 calls/min
+- [ ] 50+ cases (friend's ~15 sentences still to add)
 - **Done when:** accuracy % printed; failures reviewed and the prompt improved once
 
 ## Phase 3 — Entry flow + dashboard (22 Nov, ~7 h) · P0 ⭐
-- [ ] Text entry + 3 sample-sentence chips
-- [ ] `ConfirmCard` (view / edit / cancel, "নতুন পণ্য/কাস্টমার" badges, idempotency key, button disabled while saving)
-- [ ] `/api/transactions` (Zod again → new items → `apply_transaction` → Bangla error map)
-- [ ] Home (match `docs/mockup/Main.dc.html` + UIspec §3b): navy top bar with বাং/EN pill (optional), hero + হিসাব দিন, 4-box stat strip (আজকের বিক্রি · আজকের খরচ · মোট বাকি · স্টক কম), weekly profit box, এখন যা করবেন, menu boxes, floating mic
+- [x] Text entry + 3 sample-sentence chips
+- [x] `ConfirmCard` (view / edit / cancel, "নতুন পণ্য/কাস্টমার" badges, idempotency key, button disabled while saving)
+- [x] `/api/transactions` (Zod again → new items → `apply_transaction` → Bangla error map)
+- [~] Home (done: top bar + pill, hero, stat strip, weekly profit, floating mic; to do: এখন যা করবেন + audit in Phase 4, menu tiles/⋮ menu with the pages) (match `docs/mockup/Main.dc.html` + UIspec §3b): navy top bar with বাং/EN pill (optional), hero + হিসাব দিন, 4-box stat strip (আজকের বিক্রি · আজকের খরচ · মোট বাকি · স্টক কম), weekly profit box, এখন যা করবেন, menu boxes, floating mic
 - [ ] `/dues`: list, customer ledger, জমা নিন
 - [ ] `MicButton` voice (**P0**, Web Speech `bn-BD`; text stays an equal option)
 - [ ] Ask a friend for ~15 test sentences; reach 50+ cases

@@ -7,6 +7,27 @@ const bn = {
   // Hero copy from the approved mockup (docs/mockup/Main.dc.html)
   heroTag: "আপনার দোকানের এআই হিসাবরক্ষক",
   heroTitle: "আমার দোকানে সব হিসাব",
+  heroTitleHighlight: "আমার দোকানে", // amber part of the H1 (mockup)
+  heroSubline: "বিক্রি, বাকি, স্টক, সব এক জায়গায়। শুধু বলুন বা লিখুন।",
+  heroFeatures: ["বলে বা লিখে হিসাব", "কাস্টমারের বাকির হিসাব", "স্টক শেষ হওয়ার আগেই সতর্কতা", "বাজেট বুঝে কেনাকাটার পরামর্শ"],
+  language: "ভাষা",
+  home: {
+    weekTitle: "এই সপ্তাহের অবস্থা",
+    weekSubtitle: "লাভ, জরুরি কাজ আর মাসের হিসাব এক নজরে",
+    sampleData: "নমুনা তথ্য",
+    todaySales: "আজকের বিক্রি",
+    todaySpend: "আজকের খরচ",
+    totalDue: "মোট বাকি",
+    lowStock: "স্টক কম",
+    productsUnit: "টি পণ্য", // joined to the number: ৩টি পণ্য
+    weeklyProfit: "সাপ্তাহিক লাভ",
+    lastWeek: "গত সপ্তাহে এই সময় পর্যন্ত",
+    sales: "বিক্রি",
+    costOfSales: "কেনা দাম",
+    noComparison: "গত সপ্তাহের সাথে তুলনা নেই",
+    loadError: "হিসাব আনা যায়নি। ইন্টারনেট দেখে পেজটা আবার খুলুন।",
+    loading: "হিসাব আনছি…",
+  },
 
   backHome: "হোমে ফিরুন",
   entry: {
@@ -78,6 +99,27 @@ const en: Dict = {
   appName: "Amar Dokan",
   heroTag: "Your shop's AI bookkeeper",
   heroTitle: "Every account of your shop, in one place",
+  heroTitleHighlight: "Every account of your shop,",
+  heroSubline: "Sales, dues, stock, all in one place. Just speak or type.",
+  heroFeatures: ["Record by voice or text", "Customer due book", "Alerts before stock runs out", "Budget-aware buying advice"],
+  language: "Language",
+  home: {
+    weekTitle: "This week",
+    weekSubtitle: "Profit, urgent tasks and the month at a glance",
+    sampleData: "Sample data",
+    todaySales: "Today's sales",
+    todaySpend: "Today's spend",
+    totalDue: "Total due",
+    lowStock: "Low stock",
+    productsUnit: " products",
+    weeklyProfit: "Weekly profit",
+    lastWeek: "Same point last week:",
+    sales: "Sales",
+    costOfSales: "cost",
+    noComparison: "No last-week figure to compare",
+    loadError: "Couldn't load the numbers. Check the internet and reopen the page.",
+    loading: "Loading numbers…",
+  },
 
   backHome: "Back to home",
   entry: {

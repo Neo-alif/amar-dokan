@@ -126,3 +126,30 @@ test("card: purchase ignores due; payment needs customer and ≤ due; unknown ne
   assert.deepEqual(cardProblems(card({ type: "unknown" })), ["NEED_TYPE"]);
   assert.deepEqual(cardProblems(card({ type: "expense", amount: null })), ["AMOUNT_REQUIRED"]);
 });
+
+import { dhakaWeekStart, weeklyProfit } from "../src/lib/logic/summary.ts";
+
+test("dhakaWeekStart: Saturday 00:00 Dhaka, even late at night UTC", () => {
+  // Mon 23 Nov 2026 01:00 Dhaka = Sun 22 Nov 19:00 UTC → week starts Sat 21 Nov 00:00 Dhaka = 20 Nov 18:00 UTC
+  assert.equal(dhakaWeekStart(new Date("2026-11-22T19:00:00Z")).toISOString(), "2026-11-20T18:00:00.000Z");
+  // Fri 27 Nov 23:30 Dhaka is still the same week
+  assert.equal(dhakaWeekStart(new Date("2026-11-27T17:30:00Z")).toISOString(), "2026-11-20T18:00:00.000Z");
+  // Sat 28 Nov 00:30 Dhaka starts the next week
+  assert.equal(dhakaWeekStart(new Date("2026-11-27T18:30:00Z")).toISOString(), "2026-11-27T18:00:00.000Z");
+});
+
+test("weeklyProfit: this week vs last week, daily bars", () => {
+  const now = new Date("2026-11-23T06:00:00Z"); // Mon 23 Nov, 12:00 Dhaka
+  const lines = [
+    { occurred_at: "2026-11-22T04:00:00Z", quantity: 2, unit_price: 340, cost_price: 310 }, // Sun this week: +60
+    { occurred_at: "2026-11-23T03:00:00Z", quantity: 1, unit_price: 130, cost_price: 118 }, // Mon this week: +12
+    { occurred_at: "2026-11-15T04:00:00Z", quantity: 4, unit_price: 76, cost_price: 68 },   // last week, before same point: +32
+    { occurred_at: "2026-11-18T04:00:00Z", quantity: 4, unit_price: 76, cost_price: 68 },   // last week Wed, after same point: ignored
+    { occurred_at: "2026-11-01T04:00:00Z", quantity: 9, unit_price: 100, cost_price: 1 },   // older: ignored
+  ];
+  const w = weeklyProfit(lines, now);
+  assert.deepEqual([w.profit, w.lastWeek, w.changePct, w.sales], [72, 32, 125, 810]);
+  assert.deepEqual(w.daily, [0, 60, 12, 0, 0, 0, 0]);
+  assert.equal(w.todayIndex, 2);
+  assert.equal(weeklyProfit([], now).changePct, null);
+});
