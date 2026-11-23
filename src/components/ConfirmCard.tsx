@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import type { ErrorCode } from "@/i18n/dictionary";
-import { answerPaid, cardChange, cardProblems, cardTotals, isAmountType, type Card, type CardType, type Method } from "@/lib/logic/card";
+import { answerPaid, answerUnit, unitMismatch, cardChange, cardProblems, cardTotals, isAmountType, type Card, type CardType, type Method } from "@/lib/logic/card";
 import { numbersIn } from "@/lib/logic/numberCheck";
 import { formatNumber, formatTaka } from "@/lib/format";
 import { MicButton } from "@/components/MicButton";
@@ -144,7 +144,7 @@ export function ConfirmCard({ initial, meta, onDone }: { initial: Card; meta: Ca
               {editing ? (
                 <div className="grid grid-cols-[1fr_80px_100px_auto] gap-2">
                   <input aria-label={c.product} className={input} value={it.name} onChange={(e) => setItem(i, { name: e.target.value, product_id: null, stock_before: null })} />
-                  <input aria-label={c.quantity} className={input} type="number" inputMode="decimal" min="0" value={it.quantity ?? ""} onChange={(e) => setItem(i, { quantity: num(e.target.value) })} />
+                  <input aria-label={c.quantity} className={`${input} ${unitMismatch(it) ? "border-2 border-amber-500 bg-amber-50" : ""}`} type="number" inputMode="decimal" min="0" value={it.quantity ?? ""} onChange={(e) => setItem(i, { quantity: num(e.target.value) })} />
                   <input aria-label={c.unitPrice} placeholder={c.unitPrice} className={input} type="number" inputMode="decimal" min="0" value={it.unit_price ?? ""} onChange={(e) => setItem(i, { unit_price: num(e.target.value), price_from_list: false })} />
                   <button type="button" onClick={() => set({ items: card.items.filter((_, j) => j !== i) })} className="min-h-11 px-2 text-sm text-danger">{c.removeItem}</button>
                   {it.price_from_list && <span className="col-span-4"><ListLabel label={c.listPrice} /></span>}
@@ -157,6 +157,10 @@ export function ConfirmCard({ initial, meta, onDone }: { initial: Card; meta: Ca
                     {it.price_from_list && <ListLabel label={c.listPrice} />}
                   </span>
                 </>
+              )}
+              {unitMismatch(it) && (
+                <PerUnitQuestion question={c.askPerUnit(it.unit!, t.units[it.product_unit!] ?? it.product_unit!)} unit={t.units[it.product_unit!] ?? ""}
+                  onAnswer={(n) => setItem(i, answerUnit(it, n))} />
               )}
               {card.type === "sale" && it.stock_before != null && it.quantity != null && it.quantity > it.stock_before && (
                 <span className="block text-sm font-normal text-warning">{c.stockWarn} {formatNumber(it.stock_before, lang)}</span>
@@ -286,6 +290,24 @@ function PaidQuestion({ question, onAnswer, onError }: {
         </div>
       )}
     </div>
+  );
+}
+
+// "এক প্যাকেটে কত কেজি?" when the spoken unit isn't the product's unit: stock is counted in the product's unit.
+function PerUnitQuestion({ question, unit, onAnswer }: { question: string; unit: string; onAnswer: (n: number) => void }) {
+  const { t } = useLanguage();
+  const [value, setValue] = useState("");
+  const n = num(value);
+  return (
+    <span className="mt-2 flex flex-col gap-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-base font-normal">
+      <span className="font-semibold text-amber-900">{question}</span>
+      <span className="flex items-center gap-2">
+        <input aria-label={question} className={input} type="number" inputMode="decimal" min="0" step="any" value={value} onChange={(e) => setValue(e.target.value)} />
+        <span className="text-muted">{unit}</span>
+        <button type="button" disabled={n == null || n <= 0} onClick={() => onAnswer(n!)}
+          className="min-h-11 rounded-xl bg-primary px-4 font-semibold text-white disabled:opacity-50">{t.card.paidOk}</button>
+      </span>
+    </span>
   );
 }
 

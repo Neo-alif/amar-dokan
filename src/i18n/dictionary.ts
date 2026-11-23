@@ -376,6 +376,9 @@ const bn = {
     paidAmount: "টাকার পরিমাণ",
     paidOk: "বসান",
     listPrice: "তালিকার দাম",
+    // said = unit key; Bangla needs the locative form (প্যাকেটে, টিতে, ডজনে)
+    askPerUnit: (said: string, unit: string) =>
+      `এক ${({ pcs: "টিতে", packet: "প্যাকেটে", dozen: "ডজনে", kg: "কেজিতে", g: "গ্রামে", litre: "লিটারে", ml: "মি.লি.-তে" } as Record<string, string>)[said] ?? said} কত ${unit}?`,
     method: "টাকা কীভাবে",
     methods: { cash: "নগদ", bkash: "বিকাশ", bank: "ব্যাংক" },
   },
@@ -384,6 +387,7 @@ const bn = {
     NEED_TYPE: "লেনদেনের ধরন বেছে নিন",
     NEED_ITEM_DETAILS: "প্রতিটা পণ্যের নাম, পরিমাণ আর দাম লিখুন",
     NEED_PAID: "কত টাকা দেওয়া হয়েছে বেছে নিন",
+    UNIT_MISMATCH: "পরিমাণের একক মিলছে না, প্রশ্নের উত্তর দিন",
     DUE_EXCEEDS_TOTAL: "বাকি মোটের চেয়ে বেশি হতে পারে না",
     CUSTOMER_REQUIRED_FOR_DUE: "বাকি রাখতে কাস্টমারের নাম লাগবে",
     CUSTOMER_REQUIRED: "কাস্টমারের নাম লাগবে",
@@ -784,6 +788,7 @@ const en: Dict = {
     paidAmount: "Amount",
     paidOk: "Set",
     listPrice: "List price",
+    askPerUnit: (said: string, unit: string) => `How many ${unit} in one ${said}?`, // said = unit key
     method: "Paid by",
     methods: { cash: "Cash", bkash: "bKash", bank: "Bank" },
   },
@@ -791,6 +796,7 @@ const en: Dict = {
     NEED_TYPE: "Choose the transaction type",
     NEED_ITEM_DETAILS: "Enter name, quantity and price for every product",
     NEED_PAID: "Choose how much was paid",
+    UNIT_MISMATCH: "The unit doesn't match the product, answer the question",
     DUE_EXCEEDS_TOTAL: "Due cannot be more than the total",
     CUSTOMER_REQUIRED_FOR_DUE: "A customer name is needed to keep a due",
     CUSTOMER_REQUIRED: "A customer name is needed",

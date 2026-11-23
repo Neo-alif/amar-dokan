@@ -14,7 +14,7 @@ import { MAX_INPUT_CHARS } from "@/lib/logic/normalize";
 type Draft = {
   type: CardType; customer: string | null; customer_id: string | null; due_before: number | null;
   supplier: string | null; supplier_id: string | null; supplier_due_before: number | null;
-  items: { product: string; product_id: string | null; unit: string | null; quantity: number | null; unit_price: number | null; stock_before: number | null; list_price: number | null }[];
+  items: { product: string; product_id: string | null; unit: string | null; quantity: number | null; unit_price: number | null; stock_before: number | null; list_price: number | null; product_unit: string | null }[];
   missing: string[];
   total: number | null; paid: number | null; received: number | null; due: number; ask_paid: boolean; method: Card["method"] | null; expense_category: string | null; clarify_question: string | null;
 };
@@ -28,7 +28,7 @@ const toCard = (d: Draft): Card => ({
   supplier_id: d.supplier_id,
   supplier_name: d.supplier ?? "",
   supplier_due_before: d.supplier_due_before,
-  items: d.items.map((i) => ({ product_id: i.product_id, name: i.product, unit: i.unit, quantity: i.quantity, unit_price: i.unit_price, stock_before: i.stock_before })),
+  items: d.items.map((i) => ({ product_id: i.product_id, name: i.product, unit: i.unit, quantity: i.quantity, unit_price: i.unit_price, stock_before: i.stock_before, product_unit: i.product_unit })),
   due: d.due,
   all_due: (d.type === "sale" || d.type === "purchase") && d.paid === 0, // "পুরোটাই বাকি": nothing paid
   received: d.type === "sale" ? d.received : null,

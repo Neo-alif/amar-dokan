@@ -5,11 +5,12 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { extract } from "../src/lib/ai/extract.ts";
 import { loadShopContext } from "../src/lib/db/queries.ts";
+import { unitMismatch } from "../src/lib/logic/card.ts";
 
 type ExpectItem = { product: string; quantity: number; unit_price: number | null };
 type Case = {
   id: number; category: string; text: string;
-  expect: { type: string; customer: string | null; items: ExpectItem[]; total: number | null; paid?: number | null; due?: number; missing?: string[]; ask_paid?: boolean };
+  expect: { type: string; customer: string | null; items: ExpectItem[]; total: number | null; paid?: number | null; due?: number; missing?: string[]; ask_paid?: boolean; unit_mismatch?: boolean };
 };
 
 // Default ≈15 calls/min suits Gemini. Groq free tier allows ~8000 input tokens/min and one call is
@@ -47,7 +48,9 @@ for (const [i, c] of selected.entries()) {
     if (c.expect.paid !== undefined && !eq(d.paid, c.expect.paid)) problems.push(`paid ${d.paid}≠${c.expect.paid}`);
     if (c.expect.due !== undefined && !eq(d.due, c.expect.due)) problems.push(`due ${d.due}≠${c.expect.due}`);
     if (c.expect.ask_paid !== undefined && d.ask_paid !== c.expect.ask_paid) problems.push(`ask_paid ${d.ask_paid}≠${c.expect.ask_paid}`);
-    const wantMissing =c.expect.missing ?? [];
+    const mismatch = d.items.some(unitMismatch);
+    if (mismatch !== (c.expect.unit_mismatch ?? false)) problems.push(`unit_mismatch ${mismatch}≠${c.expect.unit_mismatch ?? false}`);
+    const wantMissing = c.expect.missing ?? [];
     if ([...d.missing].sort().join() !== [...wantMissing].sort().join()) problems.push(`missing ${JSON.stringify(d.missing)}≠${JSON.stringify(wantMissing)}`);
 
     const ok = problems.length === 0;

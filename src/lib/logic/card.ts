@@ -13,6 +13,7 @@ export type CardItem = {
   quantity: number | null;
   unit_price: number | null;
   stock_before: number | null;
+  product_unit?: string | null; // the shop's unit for a matched product (stock is counted in it)
   price_from_list?: boolean; // owner picked "তালিকার দাম" (not said, not AI) → small label on the card
 };
 export type Card = {
@@ -53,6 +54,24 @@ export function cardChange(c: Card): number | null {
   return change > 0 ? change : null;
 }
 
+// Spoken unit vs the product's unit. pcs/packet are both counts ("2 ta biskut" = 2 packets); anything
+// else that differs (packet vs kg, pcs vs dozen, g vs kg) is asked, never converted silently.
+const COUNT = ["pcs", "packet"];
+export function unitMismatch(it: { unit: string | null; product_unit?: string | null }): boolean {
+  const { unit, product_unit } = it;
+  return Boolean(unit && product_unit && unit !== product_unit && !(COUNT.includes(unit) && COUNT.includes(product_unit)));
+}
+
+// Answer to "এক প্যাকেটে কত কেজি?": quantity moves to the product's unit, money stays the same.
+// A said price was per spoken unit → ÷ perUnit; a list price is already per product unit.
+export function answerUnit(it: CardItem, perUnit: number): Partial<CardItem> {
+  return {
+    unit: it.product_unit ?? it.unit,
+    quantity: it.quantity != null ? r2(it.quantity * perUnit) : null,
+    unit_price: it.unit_price != null && !it.price_from_list ? r2(it.unit_price / perUnit) : it.unit_price,
+  };
+}
+
 // "তালিকার দাম ৳X" quick answer: only when exactly one item lacks a price and it matched a product.
 export function listPriceChoice(items: { unit_price: number | null; list_price: number | null }[]): { index: number; price: number } | null {
   const unpriced = items.flatMap((it, index) => (it.unit_price == null ? [{ index, price: it.list_price }] : []));
@@ -76,6 +95,7 @@ export function cardProblems(c: Card): ErrorCode[] {
   if (c.type === "unknown") p.push("NEED_TYPE");
   if (c.type === "sale" || c.type === "purchase") {
     if (!itemsComplete(c)) p.push("NEED_ITEM_DETAILS");
+    if (c.items.some(unitMismatch)) p.push("UNIT_MISMATCH");
     if (c.paid_unknown) p.push("NEED_PAID");
     const { total, due } = cardTotals(c);
     if (total != null && due > total) p.push("DUE_EXCEEDS_TOTAL");

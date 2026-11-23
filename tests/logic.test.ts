@@ -515,3 +515,21 @@ test("list price quick answer: only when exactly one item lacks a price and it m
   assert.equal(listPriceChoice([{ unit_price: null, list_price: null }]), null); // new product
   assert.equal(listPriceChoice([{ unit_price: null, list_price: 65 }, { unit_price: null, list_price: 130 }]), null);
 });
+
+test("unit mismatch: packet of a per-kg dal is asked, not converted; counts mix freely", async () => {
+  const { unitMismatch, answerUnit } = await import("../src/lib/logic/card.ts");
+  assert.equal(unitMismatch({ unit: "packet", product_unit: "kg" }), true);  // দুই প্যাকেট মসুর ডাল
+  assert.equal(unitMismatch({ unit: "pcs", product_unit: "dozen" }), true);  // 12 ta dim
+  assert.equal(unitMismatch({ unit: "pcs", product_unit: "packet" }), false); // 2 ta biskut
+  assert.equal(unitMismatch({ unit: "kg", product_unit: "kg" }), false);
+  assert.equal(unitMismatch({ unit: "packet", product_unit: null }), false);  // new product: nothing to compare
+  const dal = { product_id: "d", name: "মসুর ডাল", unit: "packet", product_unit: "kg", quantity: 2, unit_price: 70, stock_before: 18 };
+  const c = card({ customer_name: "আকবর", items: [dal] });
+  assert.deepEqual(cardProblems(c), ["UNIT_MISMATCH"]);
+  // 1 packet = 0.5 kg: 2 packets → 1 kg; ৳70/packet → ৳140/kg, line total stays ৳140
+  const fixed = { ...c, items: [{ ...dal, ...answerUnit(dal, 0.5) }] };
+  assert.deepEqual([fixed.items[0].unit, fixed.items[0].quantity, fixed.items[0].unit_price, cardTotals(fixed).total], ["kg", 1, 140, 140]);
+  assert.deepEqual(cardProblems(fixed), []);
+  // list price is already per kg → not divided
+  assert.equal(answerUnit({ ...dal, unit_price: 135, price_from_list: true }, 0.5).unit_price, 135);
+});

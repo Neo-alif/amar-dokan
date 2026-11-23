@@ -44,6 +44,7 @@ export async function extract(text: string, ctx: ShopContext) {
         product_id,
         is_new: product_id === null,
         stock_before: product ? Number(product.stock_qty) : null,
+        product_unit: product?.unit ?? null, // spoken unit can differ ("2 packet" of a per-kg dal): the card asks, never converts
         // offered as a quick answer when the price wasn't said; never filled in silently
         list_price: product ? Number(x.type === "purchase" ? product.cost_price : product.sell_price) : null,
       };
