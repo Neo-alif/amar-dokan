@@ -10,7 +10,8 @@ import { formatNumber, formatTaka } from "@/lib/format";
 
 export type Insight = InsightText & { numbers: InsightNumbers };
 
-// Fetches /api/insight in the owner's language (the AI writes in that language). Live call every time.
+// Fetches /api/insight in the owner's language (the AI writes in that language). Live call every time,
+// one per page view: each page mounts this hook once.
 export function useInsight() {
   const { lang } = useLanguage();
   const [tries, setTries] = useState(0);
@@ -18,11 +19,13 @@ export function useInsight() {
   const key = `${lang}:${tries}`;
   useEffect(() => {
     let alive = true;
-    fetch("/api/insight", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ lang }) })
+    // Abort on cleanup (StrictMode remount, language switch, leaving the page) so the server stops that AI call.
+    const ctrl = new AbortController();
+    fetch("/api/insight", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ lang }), signal: ctrl.signal })
       .then(async (r) => { if (!r.ok) throw new Error(String(r.status)); return (await r.json()) as Insight; })
       .then((data) => alive && setRes({ key, data }))
       .catch(() => alive && setRes({ key, error: true }));
-    return () => { alive = false; };
+    return () => { alive = false; ctrl.abort(); };
   }, [key, lang]);
   const current = res?.key === key ? res : null;
   return { data: current?.data ?? null, error: !!current?.error, loading: !current, retry: () => setTries((n) => n + 1) };

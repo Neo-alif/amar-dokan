@@ -33,7 +33,8 @@ export function insightFacts(n: InsightNumbers, lang: Lang) {
     },
     total_due: R(n.totalDue),
     old_due: { older_than_days: 7, customers: n.oldDue.customers, total: R(n.oldDue.total) },
-    low_stock: n.lowStock.map((p) => ({ name: name(p.id), days_left: p.daysLeft })),
+    // 5 most urgent only: keeps the prompt small (~650 tokens) for Groq's free token limits
+    low_stock: n.lowStock.slice(0, 5).map((p) => ({ name: name(p.id), days_left: p.daysLeft })),
   };
 }
 type Facts = ReturnType<typeof insightFacts>;
@@ -63,13 +64,13 @@ function template(f: Facts, lang: Lang) {
   };
 }
 
-export async function insight(n: InsightNumbers, lang: Lang) {
+export async function insight(n: InsightNumbers, lang: Lang, signal?: AbortSignal) {
   const facts = insightFacts(n, lang);
   const fallback = template(facts, lang);
   let reply: z.infer<typeof Reply> | null = null, provider: string | null = null;
   try {
     const r = await callLLM({ system: insightSystemPrompt(lang), user: JSON.stringify(facts), jsonSchema: ReplyJsonSchema },
-      (raw) => Reply.parse(JSON.parse(raw)));
+      (raw) => Reply.parse(JSON.parse(raw)), signal);
     reply = r.data; provider = `${r.provider}/${r.model}`;
   } catch (e) {
     console.error("insight AI failed:", (e as Error).message); // falls back to the template below

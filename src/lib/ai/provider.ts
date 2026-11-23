@@ -69,14 +69,16 @@ export class AllProvidersFailed extends Error {
 }
 
 // `parse` validates the raw text (JSON + Zod). If it throws, that provider counts as failed.
-export async function callLLM<T>(req: LLMRequest, parse: (text: string) => T): Promise<LLMResult<T>> {
+// `signal`: the caller's request; if the page is closed we stop instead of calling the next provider.
+export async function callLLM<T>(req: LLMRequest, parse: (text: string) => T, signal?: AbortSignal): Promise<LLMResult<T>> {
   const attempts: string[] = [];
   for (const p of PROVIDERS) {
     if (!p.model || !p.apiKey) { attempts.push(`${p.name}: not configured`); continue; }
     for (let attempt = 1; attempt <= 2; attempt++) {
+      if (signal?.aborted) throw new AllProvidersFailed([...attempts, "aborted by client"]);
       const started = Date.now();
       try {
-        const text = await p.call(req, p.model, p.apiKey, AbortSignal.timeout(TIMEOUT_MS));
+        const text = await p.call(req, p.model, p.apiKey, signal ? AbortSignal.any([signal, AbortSignal.timeout(TIMEOUT_MS)]) : AbortSignal.timeout(TIMEOUT_MS));
         return { provider: p.name, model: p.model, data: parse(text), latency_ms: Date.now() - started };
       } catch (e) {
         const status = (e as { status?: number }).status;
