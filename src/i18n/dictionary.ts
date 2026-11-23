@@ -535,3 +535,5 @@ export const dictionary = { bn, en };
 export type Lang = keyof typeof dictionary;
 export type ErrorCode = keyof Dict["errors"];
 export const DEFAULT_LANG: Lang = "bn";
+export const LANG_COOKIE = "amar-dokan-lang"; // read by the root layout so the server renders the chosen language
+export const langFrom = (v: string | undefined): Lang => (v === "en" ? "en" : DEFAULT_LANG);

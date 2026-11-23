@@ -227,7 +227,7 @@ function ProfitCard({ week, taka }: { week: HomeData["week"]; taka: (n: number) 
 
 export function StatusFallback() {
   const { t } = useLanguage();
-  // Skeleton, not words: the server renders this before the saved language is known.
+  // Skeleton boxes while the live numbers load.
   return (
     <div className="mx-auto grid w-full max-w-[1200px] grid-cols-2 gap-4 px-4 py-12 sm:px-8 lg:grid-cols-4" role="status">
       <span className="sr-only">{t.home.loading}</span>

@@ -1,46 +1,10 @@
 "use client";
 
-import { createContext, useContext, useEffect, useSyncExternalStore, type ReactNode } from "react";
-import { DEFAULT_LANG, dictionary, type Lang } from "./dictionary";
+import { createContext, useContext, useState, type ReactNode } from "react";
+import { dictionary, LANG_COOKIE, type Lang } from "./dictionary";
 
-const STORAGE_KEY = "amar-dokan-lang";
-
-// The saved language lives outside React (localStorage), so we read it with
-// useSyncExternalStore: the server snapshot is always the default (no hydration mismatch),
-// and the client reads the saved choice.
-const listeners = new Set<() => void>();
-let unsavedLang: Lang | null = null; // used only when localStorage is blocked (private mode)
-
-function subscribe(onChange: () => void) {
-  listeners.add(onChange);
-  window.addEventListener("storage", onChange); // another tab changed the language
-  return () => {
-    listeners.delete(onChange);
-    window.removeEventListener("storage", onChange);
-  };
-}
-
-function readLang(): Lang {
-  if (unsavedLang) return unsavedLang;
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved === "bn" || saved === "en") return saved;
-  } catch {
-    // localStorage blocked: fall through to the default.
-  }
-  return DEFAULT_LANG;
-}
-
-function setLang(next: Lang) {
-  try {
-    localStorage.setItem(STORAGE_KEY, next);
-    unsavedLang = null;
-  } catch {
-    unsavedLang = next; // not remembered, but still applies for this visit
-  }
-  listeners.forEach((notify) => notify());
-}
-
+// The language lives in a cookie: the root layout reads it on the server and passes it in,
+// so server HTML and the first client render match (no hydration mismatch in English).
 type LanguageContextValue = {
   lang: Lang;
   setLang: (lang: Lang) => void;
@@ -49,12 +13,14 @@ type LanguageContextValue = {
 
 const LanguageContext = createContext<LanguageContextValue | null>(null);
 
-export function LanguageProvider({ children }: { children: ReactNode }) {
-  const lang = useSyncExternalStore(subscribe, readLang, () => DEFAULT_LANG);
+export function LanguageProvider({ initialLang, children }: { initialLang: Lang; children: ReactNode }) {
+  const [lang, setLangState] = useState(initialLang);
 
-  useEffect(() => {
-    document.documentElement.lang = lang;
-  }, [lang]);
+  function setLang(next: Lang) {
+    document.cookie = `${LANG_COOKIE}=${next}; path=/; max-age=31536000; samesite=lax`; // 1 year
+    document.documentElement.lang = next;
+    setLangState(next);
+  }
 
   return (
     <LanguageContext.Provider value={{ lang, setLang, t: dictionary[lang] }}>
