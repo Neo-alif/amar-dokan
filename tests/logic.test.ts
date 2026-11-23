@@ -463,3 +463,17 @@ test("transactions: today's totals and day groups (Dhaka), supplier payment isn'
   assert.equal(groupByDay(rows, "all")[0].items[0].total, 1000); // newest first
   assert.equal(txnPeriodStart("today", now).toISOString(), "2026-11-22T18:00:00.000Z");
 });
+
+test("products: margin on sell price, sort orders", async () => {
+  const { marginPct, sortProducts } = await import("../src/lib/logic/products.ts");
+  assert.equal(marginPct(180, 160), 11);
+  assert.equal(marginPct(0, 10), null);
+  const rows = [
+    { name: "চিনি", weekQty: 5, sell_price: 140, cost_price: 125 },
+    { name: "আলু", weekQty: 9, sell_price: 40, cost_price: 30 },
+    { name: "ডিম", weekQty: 0, sell_price: 55, cost_price: 48 },
+  ];
+  assert.deepEqual(sortProducts(rows, "best", "bn").map((p) => p.name), ["আলু", "চিনি", "ডিম"]);
+  assert.deepEqual(sortProducts(rows, "worst", "bn").map((p) => p.name), ["ডিম", "চিনি", "আলু"]);
+  assert.deepEqual(sortProducts(rows, "margin", "bn").map((p) => p.name), ["আলু", "ডিম", "চিনি"]); // 25%, 13%, 11%
+});

@@ -1,7 +1,7 @@
 import { db, shopId } from "./client.ts";
 import type { ShopContext } from "../ai/extract.ts";
 import {
-  dhakaMonthStart, dhakaWeekStart, monthSummary, oldestDueDays, pickActions, todayNumbers, weekSellers, weeklyProfit, type SaleLine,
+  byProduct, dhakaMonthStart, dhakaWeekStart, monthSummary, oldestDueDays, pickActions, todayNumbers, weekSellers, weeklyProfit, type SaleLine,
 } from "../logic/summary.ts";
 import { addDays, dailySeries, dhakaDay, forecast, stockOutlook } from "../logic/forecast.ts";
 import { moneyPosition, type Account } from "../logic/money.ts";
@@ -288,3 +288,28 @@ export async function loadTransactions(period: TxnPeriod, now = new Date()) {
   return { period, today: todayTotals(list, now), rows: list };
 }
 export type TransactionsData = Awaited<ReturnType<typeof loadTransactions>>;
+
+// পণ্য: every product with prices, stock, 7-day forecast (from loadStock), names the AI understands, and qty sold this week.
+export async function loadProducts(now = new Date()) {
+  const shop = shopId();
+  const since = dhakaWeekStart(now).toISOString();
+  const [stock, aliases, rawLines] = await Promise.all([
+    loadStock(now),
+    db().from("products").select("id, aliases").eq("shop_id", shop),
+    all((a, b) => db().from("transaction_items")
+      .select("id, product_id, quantity, unit_price, transactions!inner(occurred_at, type, shop_id)")
+      .eq("transactions.shop_id", shop).eq("transactions.type", "sale").gte("transactions.occurred_at", since)
+      .order("id").range(a, b), "week sales"),
+  ]);
+  if (aliases.error) throw new Error(`aliases: ${aliases.error.message}`);
+  const week = byProduct(rawLines.map((l) => ({
+    occurred_at: one(l.transactions).occurred_at, product_id: l.product_id,
+    quantity: Number(l.quantity), unit_price: Number(l.unit_price), cost_price: 0,
+  })), Date.parse(since), now.getTime() + 1);
+  return stock.map((p) => ({
+    ...p,
+    aliases: (aliases.data.find((a) => a.id === p.id)?.aliases ?? []) as string[],
+    weekQty: Math.round((week.get(p.id)?.qty ?? 0) * 100) / 100,
+  }));
+}
+export type ProductRow = Awaited<ReturnType<typeof loadProducts>>[number];

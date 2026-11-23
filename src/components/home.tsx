@@ -22,6 +22,7 @@ const PAGES = [
   { href: "/dues", key: "dues", stroke: "#DC2626", tile: "bg-red-50 border-red-200", d: <><path d="M4 4h12a4 4 0 0 1 4 4v12H8a4 4 0 0 1-4-4z" /><path d="M8 9h8" /><path d="M8 13h6" /></> },
   { href: "/restock", key: "restock", stroke: "#16A34A", tile: "bg-green-50 border-green-200", d: <><circle cx="9" cy="20" r="1.5" /><circle cx="18" cy="20" r="1.5" /><path d="M2 3h3l2.5 12h12l2-8H6" /></> },
   { href: "/transactions", key: "transactions", stroke: "#6D28D9", tile: "bg-violet-50 border-violet-200", d: <><path d="M7 7h11l-3-3" /><path d="M17 17H6l3 3" /></> },
+  { href: "/products", key: "products", stroke: "#B45309", tile: "bg-amber-50 border-amber-200", d: <><path d="M3 12V4h8l10 10-8 8z" /><circle cx="7.5" cy="8.5" r="1.5" /></> },
   { href: "/report", key: "report", stroke: "#0F766E", tile: "", d: <><path d="M6 3h9l4 4v14H6z" /><path d="M9 12h7" /><path d="M9 16h5" /></> },
 ] as const;
 type Page = (typeof PAGES)[number];
