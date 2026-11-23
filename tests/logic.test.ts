@@ -533,3 +533,13 @@ test("unit mismatch: packet of a per-kg dal is asked, not converted; counts mix 
   // list price is already per kg → not divided
   assert.equal(answerUnit({ ...dal, unit_price: 135, price_from_list: true }, 0.5).unit_price, 135);
 });
+
+test("retryAfterMs reads Groq's retry-after seconds", async () => {
+  const { retryAfterMs } = await import("../src/lib/ai/provider.ts");
+  const err = (v?: string) => ({ headers: new Headers(v === undefined ? {} : { "retry-after": v }) });
+  assert.equal(retryAfterMs(err("2")), 2000);
+  assert.equal(retryAfterMs(err("1.5")), 1500);
+  assert.equal(retryAfterMs(err()), null);
+  assert.equal(retryAfterMs(err("soon")), null);
+  assert.equal(retryAfterMs(new Error("no headers")), null);
+});

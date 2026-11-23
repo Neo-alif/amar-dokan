@@ -1,5 +1,6 @@
 // Calls LLM providers in order (Gemini primary, Groq fallback). Each attempt has a timeout;
-// a 5xx gets one retry; anything else (429, timeout, bad JSON) moves to the next provider.
+// a 5xx gets one retry, a Groq 429 with retry-after <= 5s gets one retry after waiting;
+// anything else (long 429, timeout, bad JSON) moves to the next provider.
 // If all fail we throw — there is never a canned or cached answer.
 import { GoogleGenAI } from "@google/genai";
 import Groq from "groq-sdk";
@@ -60,6 +61,14 @@ const PROVIDERS: Provider[] = [
   },
 ];
 
+const MAX_429_WAIT_MS = 5_000;
+// retry-after is seconds (Groq sends e.g. "2" or "1.5"); null if missing or unreadable.
+export function retryAfterMs(e: unknown): number | null {
+  const v = (e as { headers?: Headers }).headers?.get?.("retry-after");
+  const sec = v == null ? NaN : Number(v);
+  return Number.isFinite(sec) && sec >= 0 ? Math.ceil(sec * 1000) : null;
+}
+
 export class AllProvidersFailed extends Error {
   attempts: string[];
   constructor(attempts: string[]) {
@@ -85,7 +94,12 @@ export async function callLLM<T>(req: LLMRequest, parse: (text: string) => T, si
         const line = `${p.name}#${attempt}: ${status ?? ""} ${Date.now() - started}ms ${(e as Error).message}`.slice(0, 200);
         console.warn("LLM attempt failed:", line); // logged even when a later provider succeeds
         attempts.push(line);
-        if (!(status && status >= 500 && attempt === 1)) break; // only a 5xx earns a retry
+        if (attempt !== 1) break;
+        if (status && status >= 500) continue; // a 5xx earns one retry
+        // Groq 429 per-minute limit: wait as long as it asks, if that's short. A daily limit (minutes away) moves on.
+        const wait = status === 429 && p.name === "groq" ? retryAfterMs(e) : null;
+        if (wait === null || wait > MAX_429_WAIT_MS) break;
+        await new Promise((r) => setTimeout(r, wait));
       }
     }
   }
