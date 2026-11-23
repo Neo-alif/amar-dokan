@@ -17,7 +17,7 @@ type Provider = {
   call: (req: LLMRequest, model: string, apiKey: string, signal: AbortSignal) => Promise<string>;
 };
 
-const PROVIDERS: Provider[] = [
+const BASE: Provider[] = [
   {
     name: "gemini",
     model: process.env.GEMINI_MODEL,
@@ -69,6 +69,13 @@ export function retryAfterMs(e: unknown): number | null {
   return Number.isFinite(sec) && sec >= 0 ? Math.ceil(sec * 1000) : null;
 }
 
+// Extra models with their own free quotas, tried after the env model of the same provider
+// (checked live on 24 Nov 2026; gemini-2.5-* are closed to new keys, gemini-3.5-flash timed out).
+const EXTRA_MODELS = { gemini: ["gemini-3.5-flash-lite"], groq: ["openai/gpt-oss-120b", "openai/gpt-oss-20b"] };
+// Order: Gemini env model → other Gemini → Groq env model → other Groq. Same parse/number check for all.
+const PROVIDERS: Provider[] = BASE.flatMap((p) =>
+  [...new Set([p.model, ...EXTRA_MODELS[p.name]])].map((model) => ({ ...p, model: p.model ? model : undefined })));
+
 export class AllProvidersFailed extends Error {
   attempts: string[];
   constructor(attempts: string[]) {
@@ -82,7 +89,7 @@ export class AllProvidersFailed extends Error {
 export async function callLLM<T>(req: LLMRequest, parse: (text: string) => T, signal?: AbortSignal): Promise<LLMResult<T>> {
   const attempts: string[] = [];
   for (const p of PROVIDERS) {
-    if (!p.model || !p.apiKey) { attempts.push(`${p.name}: not configured`); continue; }
+    if (!p.model || !p.apiKey) { attempts.push(`${p.name}/${p.model}: not configured`); continue; }
     for (let attempt = 1; attempt <= 2; attempt++) {
       if (signal?.aborted) throw new AllProvidersFailed([...attempts, "aborted by client"]);
       const started = Date.now();
@@ -91,7 +98,7 @@ export async function callLLM<T>(req: LLMRequest, parse: (text: string) => T, si
         return { provider: p.name, model: p.model, data: parse(text), latency_ms: Date.now() - started };
       } catch (e) {
         const status = (e as { status?: number }).status;
-        const line = `${p.name}#${attempt}: ${status ?? ""} ${Date.now() - started}ms ${(e as Error).message}`.slice(0, 200);
+        const line = `${p.name}/${p.model}#${attempt}: ${status ?? ""} ${Date.now() - started}ms ${(e as Error).message}`.slice(0, 200);
         console.warn("LLM attempt failed:", line); // logged even when a later provider succeeds
         attempts.push(line);
         if (attempt !== 1) break;
