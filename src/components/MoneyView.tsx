@@ -87,7 +87,8 @@ export function MoneyView({ money, home }: { money: MoneyData | null; home: Home
           <MoneyCard tone="orange" title={m.receivable} value={taka(money.receivable)} sub={m.customersOwe(n(money.customerCount))}
             action={<Link href="/dues" className={btn("orange")}>{m.duesLink}</Link>} />
           <MoneyCard tone="red" title={m.payable} value={taka(money.payable)}
-            sub={money.supplierCount ? m.suppliersOwed(n(money.supplierCount)) : m.noPayable} />
+            sub={money.supplierCount ? m.suppliersOwed(n(money.supplierCount)) : m.noPayable}
+            action={<Link href="/suppliers" className={btn("red")}>{m.suppliersLink}</Link>} />
         </div>
       )}
 

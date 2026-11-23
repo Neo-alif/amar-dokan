@@ -330,3 +330,23 @@ export async function loadExpenses(now = new Date()) {
   };
 }
 export type ExpensesData = Awaited<ReturnType<typeof loadExpenses>>;
+
+// সাপ্লায়ার: each supplier with what the shop still owes (দেনা) and the last time it paid them; biggest দেনা first.
+export async function loadSuppliers() {
+  const shop = shopId();
+  const [suppliers, payments] = await Promise.all([
+    db().from("suppliers").select("id, name, due_balance").eq("shop_id", shop),
+    all((a, b) => db().from("transactions").select("id, supplier_id, occurred_at, total").eq("shop_id", shop)
+      .eq("type", "payment").not("supplier_id", "is", null).order("id").range(a, b), "supplier payments"),
+  ]);
+  if (suppliers.error) throw new Error(`suppliers: ${suppliers.error.message}`);
+  const last = new Map<string, { at: string; amount: number }>();
+  for (const p of payments) {
+    const seen = last.get(p.supplier_id);
+    if (!seen || Date.parse(p.occurred_at) > Date.parse(seen.at)) last.set(p.supplier_id, { at: p.occurred_at, amount: Number(p.total) });
+  }
+  const list = suppliers.data.map((s) => ({ id: s.id as string, name: s.name as string, due: Number(s.due_balance), lastPayment: last.get(s.id) ?? null }))
+    .sort((a, b) => b.due - a.due || a.name.localeCompare(b.name));
+  return { suppliers: list, total: list.reduce((s, x) => s + x.due, 0) };
+}
+export type SuppliersData = Awaited<ReturnType<typeof loadSuppliers>>;
