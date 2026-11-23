@@ -99,13 +99,39 @@ test("matchCustomer: honorifics ignored", () => {
   assert.equal(matchCustomer("জসিম", customers), null);
 });
 
-import { cardChange, cardProblems, cardTotals, type Card } from "../src/lib/logic/card.ts";
+import { answerPaid, cardChange, cardProblems, cardTotals, type Card } from "../src/lib/logic/card.ts";
 
 const card = (over: Partial<Card>): Card => ({
-  type: "sale", method: "cash", customer_id: null, customer_name: "", due_before: null, supplier_id: null, supplier_name: "", supplier_due_before: null, items: [], due: 0, all_due: false, received: null, amount: null, expense_category: "", ...over,
+  type: "sale", method: "cash", customer_id: null, customer_name: "", due_before: null, supplier_id: null, supplier_name: "", supplier_due_before: null, items: [], due: 0, all_due: false, received: null, paid_unknown: false, amount: null, expense_category: "", ...over,
 });
 const line = (quantity: number | null, unit_price: number | null) =>
   ({ product_id: "x", name: "তেল", unit: "pcs", quantity, unit_price, stock_before: 10 });
+
+test("payment not said: named customer/supplier → ask, never assume cash; walk-in stays cash", () => {
+  const akbar = deriveAmounts({ ...base, customer: "আকবর", items: [item("মসুর ডাল", 2, { unit_price_said: 135 })] });
+  assert.deepEqual([akbar.ask_paid, akbar.paid, akbar.due], [true, null, 0]);
+  const sup = deriveAmounts({ ...base, type: "purchase", supplier: "রহমান ট্রেডার্স", items: [item("চিনি", 20)], total_said: 2600 });
+  assert.deepEqual([sup.ask_paid, sup.paid], [true, null]);
+  const walkIn = deriveAmounts({ ...base, items: [item("চাল", 2, { unit_price_said: 75 })] });
+  assert.deepEqual([walkIn.ask_paid, walkIn.paid], [false, 150]);
+  const said = deriveAmounts({ ...base, customer: "আকবর", items: [item("চাল", 2, { unit_price_said: 75 })], due_said: 50 });
+  assert.equal(said.ask_paid, false);
+});
+
+test("card: paid question blocks save until answered; answers set baki", () => {
+  const c = card({ customer_name: "আকবর", items: [line(2, 135)], paid_unknown: true });
+  assert.deepEqual(cardProblems(c), ["NEED_PAID"]);
+  const full = { ...c, ...answerPaid(c, "full") };
+  assert.deepEqual([cardTotals(full), cardProblems(full)], [{ total: 270, paid: 270, due: 0 }, []]);
+  const none = { ...c, ...answerPaid(c, "none") };
+  assert.deepEqual(cardTotals(none), { total: 270, paid: 0, due: 270 });
+  const some = { ...c, ...answerPaid(c, 200) };
+  assert.deepEqual([cardTotals(some), cardProblems(some)], [{ total: 270, paid: 200, due: 70 }, []]);
+  const over = { ...c, ...answerPaid(c, 500) }; // gave a 500 note → no baki, ফেরত 230
+  assert.deepEqual([cardTotals(over).due, cardChange(over)], [0, 230]);
+  const purchase = card({ type: "purchase", supplier_name: "রহমান", items: [line(10, 100)], paid_unknown: true });
+  assert.deepEqual(cardTotals({ ...purchase, ...answerPaid(purchase, 400) }), { total: 1000, paid: 400, due: 600 });
+});
 
 test("card: demo sale totals and no problems", () => {
   const c = card({ customer_name: "রহিম ভাই", items: [line(2, 340)], due: 100 });

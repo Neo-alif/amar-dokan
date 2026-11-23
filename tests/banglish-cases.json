@@ -28,5 +28,6 @@
   { "id": 27, "category": "missing amount", "text": "Rahim vai kichu taka dilo", "expect": { "type": "payment", "customer": "রহিম ভাই", "items": [], "total": null, "missing": ["amount"] } },
   { "id": 28, "category": "unknown product", "text": "1 ta battery 40 taka", "expect": { "type": "sale", "customer": null, "items": [{ "product": "__new__", "quantity": 1, "unit_price": 40 }], "total": 40, "paid": 40, "due": 0 } },
   { "id": 29, "category": "unit price said", "text": "4 kg mug dal 170 taka kore", "expect": { "type": "sale", "customer": null, "items": [{ "product": "মুগ ডাল", "quantity": 4, "unit_price": 170 }], "total": 680, "paid": 680, "due": 0 } },
-  { "id": 30, "category": "English", "text": "Sold 2 bars of laundry soap for 60 taka", "expect": { "type": "sale", "customer": null, "items": [{ "product": "কাপড় কাচা সাবান", "quantity": 2, "unit_price": 30 }], "total": 60, "paid": 60, "due": 0 } }
+  { "id": 30, "category": "English", "text": "Sold 2 bars of laundry soap for 60 taka", "expect": { "type": "sale", "customer": null, "items": [{ "product": "কাপড় কাচা সাবান", "quantity": 2, "unit_price": 30 }], "total": 60, "paid": 60, "due": 0 } },
+  { "id": 31, "category": "payment not said", "text": "আকবরকে দুই কেজি মসুর ডাল দিলাম", "expect": { "type": "sale", "customer": null, "items": [{ "product": "মসুর ডাল", "quantity": 2, "unit_price": null }], "total": null, "paid": null, "missing": ["price"], "ask_paid": true } }
 ]

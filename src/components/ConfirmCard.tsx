@@ -3,8 +3,10 @@
 import { useState } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import type { ErrorCode } from "@/i18n/dictionary";
-import { cardChange, cardProblems, cardTotals, isAmountType, type Card, type CardType, type Method } from "@/lib/logic/card";
+import { answerPaid, cardChange, cardProblems, cardTotals, isAmountType, type Card, type CardType, type Method } from "@/lib/logic/card";
+import { numbersIn } from "@/lib/logic/numberCheck";
 import { formatNumber, formatTaka } from "@/lib/format";
+import { MicButton } from "@/components/MicButton";
 
 export type CardMeta = { log_id: string | null; raw_text: string | null; manual: boolean; clarify_question: string | null };
 
@@ -190,14 +192,14 @@ export function ConfirmCard({ initial, meta, onDone }: { initial: Card; meta: Ca
         {isItems && (
           <>
             <dt className="text-muted">{c.total}</dt><dd className="font-semibold">{taka(total)}</dd>
-            <dt className="text-muted">{c.paid}</dt><dd className="font-semibold text-green-700">{taka(paid)}</dd>
+            <dt className="text-muted">{c.paid}</dt><dd className="font-semibold text-green-700">{taka(card.paid_unknown ? null : paid)}</dd>
           </>
         )}
         {(card.type === "sale" || card.type === "purchase") && (
           <>
             <dt className="text-muted">{card.type === "purchase" ? c.owed : c.due}</dt>
             <dd className="font-bold text-danger">
-              {editing ? <input aria-label={c.due} className={input} type="number" inputMode="decimal" min="0" value={card.all_due ? due : card.due} onChange={(e) => set({ due: num(e.target.value) ?? 0, all_due: false })} /> : taka(due)}
+              {editing ? <input aria-label={c.due} className={input} type="number" inputMode="decimal" min="0" value={card.paid_unknown ? "" : card.all_due ? due : card.due} onChange={(e) => set({ due: num(e.target.value) ?? 0, all_due: false, paid_unknown: false })} /> : taka(card.paid_unknown ? null : due)}
             </dd>
             {editing && card.type === "sale" && (
               <><dt className="text-muted">{c.received}</dt>
@@ -222,6 +224,9 @@ export function ConfirmCard({ initial, meta, onDone }: { initial: Card; meta: Ca
         )}
       </dl>
 
+      {card.paid_unknown && isItems && (
+        <PaidQuestion question={card.type === "purchase" ? c.askPaidPurchase : c.askPaidSale} onAnswer={(a) => set(answerPaid(card, a))} onError={setError} />
+      )}
       {problems.length === 0 ? (
         <Changes card={card} total={total} paid={paid} due={due} />
       ) : (
@@ -247,6 +252,37 @@ export function ConfirmCard({ initial, meta, onDone }: { initial: Card; meta: Ca
         <button type="button" onClick={() => setEditing(!editing)} className="h-12 rounded-xl border border-border bg-white font-semibold text-primary">{editing ? c.doneEdit : c.edit}</button>
         <button type="button" onClick={cancel} disabled={saving} className="h-12 rounded-xl border border-red-200 bg-white font-semibold text-danger">{c.cancel}</button>
       </div>
+    </div>
+  );
+}
+
+// "কত টাকা দিয়েছে?" when the sentence said nothing about payment: never assume full cash.
+function PaidQuestion({ question, onAnswer, onError }: {
+  question: string; onAnswer: (a: "full" | "none" | number) => void; onError: (e: ErrorCode | null) => void;
+}) {
+  const { t } = useLanguage();
+  const c = t.card;
+  const [other, setOther] = useState(false);
+  const [value, setValue] = useState("");
+  const amount = num(value);
+  const btn = "min-h-11 rounded-xl border-2 px-4 font-semibold";
+  return (
+    <div className="flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+      <p className="font-semibold text-amber-900">{question}</p>
+      <div className="flex flex-wrap gap-2">
+        <button type="button" onClick={() => onAnswer("full")} className={`${btn} border-green-600 bg-white text-green-700`}>{c.paidFull}</button>
+        <button type="button" onClick={() => onAnswer("none")} className={`${btn} border-red-300 bg-white text-danger`}>{c.paidNone}</button>
+        <button type="button" onClick={() => setOther(true)} aria-pressed={other} className={`${btn} border-border bg-white text-primary`}>{c.paidOther}</button>
+      </div>
+      {other && (
+        <div className="flex items-center gap-2">
+          <input aria-label={c.paidAmount} placeholder={c.paidAmount} className={input} type="number" inputMode="decimal" min="0" autoFocus
+            value={value} onChange={(e) => setValue(e.target.value)} />
+          <MicButton small onText={(s) => { const n = numbersIn(s)[0]; if (n != null) setValue(String(n)); }} onError={onError} />
+          <button type="button" disabled={amount == null || amount < 0} onClick={() => onAnswer(amount!)}
+            className="min-h-11 rounded-xl bg-primary px-4 font-semibold text-white disabled:opacity-50">{c.paidOk}</button>
+        </div>
+      )}
     </div>
   );
 }

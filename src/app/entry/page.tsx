@@ -14,7 +14,7 @@ type Draft = {
   type: CardType; customer: string | null; customer_id: string | null; due_before: number | null;
   supplier: string | null; supplier_id: string | null; supplier_due_before: number | null;
   items: { product: string; product_id: string | null; unit: string | null; quantity: number | null; unit_price: number | null; stock_before: number | null }[];
-  total: number | null; paid: number | null; received: number | null; due: number; method: Card["method"] | null; expense_category: string | null; clarify_question: string | null;
+  total: number | null; paid: number | null; received: number | null; due: number; ask_paid: boolean; method: Card["method"] | null; expense_category: string | null; clarify_question: string | null;
 };
 
 const toCard = (d: Draft): Card => ({
@@ -30,6 +30,7 @@ const toCard = (d: Draft): Card => ({
   due: d.due,
   all_due: (d.type === "sale" || d.type === "purchase") && d.paid === 0, // "পুরোটাই বাকি": nothing paid
   received: d.type === "sale" ? d.received : null,
+  paid_unknown: d.ask_paid,
   amount: isAmountType(d.type) ? d.total : null,
   expense_category: d.expense_category ?? "",
 });
@@ -38,7 +39,7 @@ const EMPTY_CARD: Card = {
   type: "unknown", method: "cash", customer_id: null, customer_name: "", due_before: null,
   supplier_id: null, supplier_name: "", supplier_due_before: null,
   items: [{ product_id: null, name: "", unit: null, quantity: 1, unit_price: null, stock_before: null }],
-  due: 0, all_due: false, received: null, amount: null, expense_category: "",
+  due: 0, all_due: false, received: null, paid_unknown: false, amount: null, expense_category: "",
 };
 
 type Opened = { key: number; card: Card; meta: CardMeta };

@@ -25,8 +25,9 @@ export type Card = {
   supplier_due_before: number | null;  // দেনা before this transaction
   items: CardItem[];
   due: number;            // sale: customer baki (পাওনা) · purchase: owed to the supplier (দেনা)
-  all_due: boolean;
-  received: number | null; // sale only: cash the customer handed over, if said → ফেরত (shown, not saved)       // sale only: "পুরোটাই বাকি" → baki follows the total until the owner edits it
+  all_due: boolean;        // "পুরোটাই বাকি" → baki follows the total until the owner edits it
+  received: number | null; // sale only: cash the customer handed over, if said → ফেরত (shown, not saved)
+  paid_unknown: boolean;   // sale/purchase: payment not said → owner answers "কত টাকা দিয়েছে?" before saving
   amount: number | null;  // expense / payment
   expense_category: string;
 };
@@ -51,12 +52,24 @@ export function cardChange(c: Card): number | null {
   return change > 0 ? change : null;
 }
 
+// Answer to "কত টাকা দিয়েছে/দিলেন?": full → no baki · none → all baki · a number → baki = total − paid.
+// A sale paid above the total keeps the extra as cash handed over, so ফেরত shows.
+export function answerPaid(c: Card, answer: "full" | "none" | number): Partial<Card> {
+  const done = { paid_unknown: false, received: null };
+  if (answer === "full") return { ...done, due: 0, all_due: false };
+  if (answer === "none") return { ...done, due: 0, all_due: true };
+  const { total } = cardTotals({ ...c, due: 0, all_due: false });
+  const due = total != null ? Math.max(0, r2(total - answer)) : 0;
+  return { ...done, due, all_due: false, received: c.type === "sale" && total != null && answer > total ? answer : null };
+}
+
 export function cardProblems(c: Card): ErrorCode[] {
   const p: ErrorCode[] = [];
   const hasCustomer = c.customer_name.trim() !== "";
   if (c.type === "unknown") p.push("NEED_TYPE");
   if (c.type === "sale" || c.type === "purchase") {
     if (!itemsComplete(c)) p.push("NEED_ITEM_DETAILS");
+    if (c.paid_unknown) p.push("NEED_PAID");
     const { total, due } = cardTotals(c);
     if (total != null && due > total) p.push("DUE_EXCEEDS_TOTAL");
     if (c.type === "sale" && (due > 0 || c.all_due) && !hasCustomer) p.push("CUSTOMER_REQUIRED_FOR_DUE");

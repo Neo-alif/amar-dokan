@@ -15,6 +15,7 @@ export type Amounts = {
   total: number | null;
   paid: number | null;
   due: number;
+  ask_paid: boolean; // named customer/supplier but payment not said → the card asks, never assumes cash
   missing: ("type" | "items" | "quantity" | "price" | "amount" | "customer" | "supplier")[];
   warnings: ("TOTAL_MISMATCH" | "PAID_DUE_MISMATCH" | "PAID_EXCEEDS_TOTAL")[];
 };
@@ -30,7 +31,7 @@ export function deriveAmounts(x: Extraction): Amounts {
     if (amount == null) missing.push("amount");
     if (x.type === "payment" && !x.customer) missing.push("customer");
     if (x.type === "supplier_payment" && !x.supplier) missing.push("supplier");
-    return { items: [], total: amount, paid: amount, due: 0, missing, warnings };
+    return { items: [], total: amount, paid: amount, due: 0, ask_paid: false, missing, warnings };
   }
 
   if (x.type === "unknown") missing.push("type");
@@ -57,10 +58,13 @@ export function deriveAmounts(x: Extraction): Amounts {
   const total = itemsTotal ?? x.total_said;
   if (itemsTotal != null && x.total_said != null && Math.abs(itemsTotal - x.total_said) > 0.5) warnings.push("TOTAL_MISMATCH");
 
-  // Nothing said about payment → a cash sale: paid in full, no due.
+  // Payment not said: a walk-in (no name) can only pay cash, since baki needs a name.
+  // With a named customer/supplier we don't know → paid stays null and the card asks.
+  const ask_paid = (x.type === "sale" || x.type === "purchase") && x.paid_said == null && x.due_said == null
+    && Boolean(x.type === "sale" ? x.customer : x.supplier);
   let due = x.due_said ?? (x.paid_said != null && total != null ? r2(total - x.paid_said) : 0);
   if (due < 0) { warnings.push("PAID_EXCEEDS_TOTAL"); due = 0; }
-  const paid = x.paid_said ?? (total != null ? r2(total - due) : null);
+  const paid = ask_paid ? null : x.paid_said ?? (total != null ? r2(total - due) : null);
   if (x.paid_said != null && x.due_said != null && total != null && Math.abs(x.paid_said + x.due_said - total) > 0.5) {
     warnings.push("PAID_DUE_MISMATCH");
   }
@@ -68,5 +72,5 @@ export function deriveAmounts(x: Extraction): Amounts {
   if (due > 0 && x.type === "purchase" && !x.supplier) missing.push("supplier");
   if (due > 0 && x.type !== "purchase" && !x.customer) missing.push("customer");
 
-  return { items, total, paid, due, missing, warnings };
+  return { items, total, paid, due, ask_paid, missing, warnings };
 }
