@@ -36,3 +36,9 @@ body {
   font-family: var(--font-sans);
   line-height: 1.6; /* room for Bangla conjuncts (juktakkhor) */
 }
+
+/* Tailwind 4 resets buttons to cursor:default; show the hand on everything clickable. */
+@layer base {
+  button, a, [role="button"], select, label[for] { cursor: pointer; }
+  :disabled, [aria-disabled="true"] { cursor: not-allowed; }
+}
