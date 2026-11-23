@@ -20,7 +20,7 @@ A Bangla-first AI business assistant for small retailers in Bangladesh. The shop
 | Name | GitHub | Role |
 |---|---|---|
 | Alif | [Neo-alif](https://github.com/Neo-alif) | Developer |
-| Ariful Haque | — | Video editor & researcher |
+| Ariful Haque | — | Researcher |
 
 ## Problem
 

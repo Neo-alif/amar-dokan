@@ -1,6 +1,6 @@
 # CLAUDE.md — Amar Dokan (আমার দোকান)
 
-Bangla-first AI business assistant for small retailers in Bangladesh. Built solo by Alif (GitHub: Neo-alif) for CoU AI Hackathon 2026.
+Bangla-first AI business assistant for small retailers in Bangladesh. Built by team Bro_Code (Alif, GitHub: Neo-alif — developer; Ariful Haque — researcher) for CoU AI Hackathon 2026.
 Pre-build 21–23 Nov 2026 · On-site final 24 Nov 2026 (5 hours, Comilla University).
 
 ## Source of truth
