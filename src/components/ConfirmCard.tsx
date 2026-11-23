@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import type { ErrorCode } from "@/i18n/dictionary";
-import { cardProblems, cardTotals, type Card, type CardType } from "@/lib/logic/card";
+import { cardChange, cardProblems, cardTotals, type Card, type CardType } from "@/lib/logic/card";
 import { formatNumber, formatTaka } from "@/lib/format";
 
 export type CardMeta = { log_id: string | null; raw_text: string | null; manual: boolean; clarify_question: string | null };
@@ -30,6 +30,7 @@ export function ConfirmCard({ initial, meta, onDone }: { initial: Card; meta: Ca
 
   const { total, paid, due } = cardTotals(card);
   const problems = cardProblems(card);
+  const saleChange = cardChange(card);
   const [change, setChange] = useState<number | null>(null); // ফেরত: cash handed back, shown only (not saved)
   const taka = (n: number | null) => (n == null ? "—" : formatTaka(n, lang));
   const set = (patch: Partial<Card>) => setCard((prev) => ({ ...prev, ...patch }));
@@ -176,6 +177,13 @@ export function ConfirmCard({ initial, meta, onDone }: { initial: Card; meta: Ca
             <dd className="font-bold text-danger">
               {editing ? <input aria-label={c.due} className={input} type="number" inputMode="decimal" min="0" value={card.all_due ? due : card.due} onChange={(e) => set({ due: num(e.target.value) ?? 0, all_due: false })} /> : taka(due)}
             </dd>
+            {editing && (
+              <><dt className="text-muted">{c.received}</dt>
+              <dd><input aria-label={c.received} className={input} type="number" inputMode="decimal" min="0" value={card.received ?? ""} onChange={(e) => set({ received: num(e.target.value) })} /></dd></>
+            )}
+            {saleChange != null && (
+              <><dt className="text-muted">{c.changeBack}</dt><dd className="font-bold text-amber-700">{taka(saleChange)}{!editing && card.received != null && <span className="ml-2 text-sm font-normal text-muted">({c.received} {taka(card.received)})</span>}</dd></>
+            )}
           </>
         )}
       </dl>

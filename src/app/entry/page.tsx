@@ -13,7 +13,7 @@ import { MAX_INPUT_CHARS } from "@/lib/logic/normalize";
 type Draft = {
   type: CardType; customer: string | null; customer_id: string | null; due_before: number | null;
   items: { product: string; product_id: string | null; unit: string | null; quantity: number | null; unit_price: number | null; stock_before: number | null }[];
-  total: number | null; paid: number | null; due: number; expense_category: string | null; clarify_question: string | null;
+  total: number | null; paid: number | null; received: number | null; due: number; expense_category: string | null; clarify_question: string | null;
 };
 
 const toCard = (d: Draft): Card => ({
@@ -24,6 +24,7 @@ const toCard = (d: Draft): Card => ({
   items: d.items.map((i) => ({ product_id: i.product_id, name: i.product, unit: i.unit, quantity: i.quantity, unit_price: i.unit_price, stock_before: i.stock_before })),
   due: d.due,
   all_due: d.type === "sale" && d.paid === 0, // "পুরোটাই বাকি": nothing paid
+  received: d.type === "sale" ? d.received : null,
   amount: d.type === "expense" || d.type === "payment" ? d.total : null,
   expense_category: d.expense_category ?? "",
 });
@@ -31,7 +32,7 @@ const toCard = (d: Draft): Card => ({
 const EMPTY_CARD: Card = {
   type: "unknown", customer_id: null, customer_name: "", due_before: null,
   items: [{ product_id: null, name: "", unit: null, quantity: 1, unit_price: null, stock_before: null }],
-  due: 0, all_due: false, amount: null, expense_category: "",
+  due: 0, all_due: false, received: null, amount: null, expense_category: "",
 };
 
 export default function EntryPage() {

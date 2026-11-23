@@ -193,6 +193,7 @@ const bn = {
     stockWarn: "স্টকে আছে মাত্র",
     dueNow: "এখনকার বাকি",
     changeBack: "ফেরত দিন",
+    received: "কাস্টমার দিল",
     takeDueGiveBack: (due: string, back: string) => `${due} জমা নিন, ${back} ফেরত দিন`,
   },
   // Problems the card finds before saving, and error codes from the server/DB (Schema §4)
@@ -412,6 +413,7 @@ const en: Dict = {
     stockWarn: "Only in stock:",
     dueNow: "Current due",
     changeBack: "Give back",
+    received: "Customer gave",
     takeDueGiveBack: (due: string, back: string) => `Take ${due}, give back ${back}`,
   },
   errors: {

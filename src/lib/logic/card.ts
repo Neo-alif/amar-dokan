@@ -18,7 +18,8 @@ export type Card = {
   due_before: number | null;
   items: CardItem[];
   due: number;            // sale only: money left as baki (what the owner says)
-  all_due: boolean;       // sale only: "পুরোটাই বাকি" → baki follows the total until the owner edits it
+  all_due: boolean;
+  received: number | null; // sale only: cash the customer handed over, if said → ফেরত (shown, not saved)       // sale only: "পুরোটাই বাকি" → baki follows the total until the owner edits it
   amount: number | null;  // expense / payment
   expense_category: string;
 };
@@ -32,6 +33,14 @@ export function cardTotals(c: Card): { total: number | null; paid: number | null
   const total = itemsComplete(c) ? r2(c.items.reduce((s, i) => s + i.quantity! * i.unit_price!, 0)) : null;
   const due = c.type !== "sale" ? 0 : c.all_due ? (total ?? 0) : c.due;
   return { total, paid: total != null ? r2(total - due) : null, due };
+}
+
+// ফেরত = cash handed over − what this sale takes. Only when the customer's cash was said or typed.
+export function cardChange(c: Card): number | null {
+  const { paid } = cardTotals(c);
+  if (c.type !== "sale" || c.received == null || paid == null) return null;
+  const change = r2(c.received - paid);
+  return change > 0 ? change : null;
 }
 
 export function cardProblems(c: Card): ErrorCode[] {

@@ -49,6 +49,7 @@ export async function extract(text: string, ctx: ShopContext) {
     customer_is_new: Boolean(x.customer) && customerId === null,
     total: amounts.total,
     paid: amounts.paid,
+    received: x.paid_said, // cash the customer said they handed over (for ফেরত), as said
     due: amounts.due,
     expense_category: x.expense_category,
     missing: amounts.missing,
