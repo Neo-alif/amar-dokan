@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<title>আমার দোকান — মিলিয়ে নিন</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&amp;family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#1F3A5F}a:hover{color:#D97706}
+</style>
+</helmet>
+<div style="width: 1440px; height: 1000px; box-sizing: border-box; background: rgba(15,23,42,0.55); font-family: 'Hind Siliguri', Inter, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px; padding: 40px">
+<p style="margin: 0; font-size: 18px; color: #FFFFFF">হোমের “টাকার অবস্থা” বক্সে <strong style="color: #FBBF24">মিলিয়ে নিন</strong> চাপলে এই ছোট বক্স খোলে (বাম: নগদ, ডান: ব্যাংক/বিকাশ)</p>
+<div style="display: flex; gap: 40px; align-items: flex-start">
+<div role="dialog" aria-label="নগদ মিলিয়ে নিন" style="width: 520px; background: #FFFFFF; border-radius: 24px; border-top: 6px solid #16A34A; box-shadow: 0 30px 70px rgba(15,23,42,0.35); padding: 26px 28px; display: flex; flex-direction: column; gap: 16px">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<h2 style="margin: 0; font-size: 24px; font-weight: 700; color: #1F3A5F">নগদ মিলিয়ে নিন</h2>
+<button type="button" aria-label="বন্ধ" style="width: 36px; height: 36px; border-radius: 10px; border: 0; background: #F1F5F9; font-size: 18px; color: #475569">✕</button>
+</div>
+<div style="background: #F0FDF4; border-radius: 14px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center">
+<span style="font-size: 15px; color: #334155">অ্যাপের হিসাবে আছে</span>
+<strong style="font-size: 22px; color: #16A34A">৳ ১৫,৭৪০</strong>
+</div>
+<label style="display: flex; flex-direction: column; gap: 6px">
+<span style="font-size: 15px; font-weight: 600; color: #334155">আসলে গুনে কত পেলেন?</span>
+<span style="display: flex; align-items: center; gap: 8px; height: 52px; border: 2px solid #16A34A; border-radius: 14px; padding: 0 14px; background: #FFFFFF">
+<span style="font-size: 20px; font-weight: 700; color: #475569">৳</span>
+<input type="text" value="১৫,৫০০" aria-label="আসলে গুনে কত পেলেন?" style="flex: 1; min-width: 0; border: 0; font: inherit; font-size: 22px; font-weight: 700; outline: none; background: transparent; color: #0F172A">
+<button type="button" aria-label="বলে লিখুন" style="width: 36px; height: 36px; border-radius: 999px; border: 0; background: #F3EEFF; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6D28D9" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0"></path><path d="M12 18v3"></path></svg></button>
+</span><span style="font-size: 13px; color: #64748B">শেষ মিলানো আজ সকাল ৯:১০ (৳ ১২,৫০০) + তারপর নগদে আয় ৳ ৫,৬২০ − নগদে খরচ ৳ ২,৩৮০</span></label>
+<div style="display: flex; justify-content: space-between; align-items: center; background: #FEF2F2; border-radius: 12px; padding: 10px 14px">
+<span style="font-size: 15px; color: #334155">পার্থক্য</span>
+<strong style="font-size: 18px; color: #DC2626">−৳ ২৪০ (কম)</strong>
+</div>
+<label style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 14px; font-weight: 600; color: #475569">কারণ (ঐচ্ছিক)</span>
+<input type="text" placeholder="যেমন: খুচরা দিয়েছি, ভুলে লিখিনি" aria-label="কারণ" style="height: 44px; box-sizing: border-box; border: 2px solid #E2E8F0; border-radius: 12px; padding: 0 14px; font: inherit; font-size: 15px"></label>
+<div style="display: grid; grid-template-columns: 1fr 2fr; gap: 10px">
+<button type="button" style="height: 50px; border-radius: 14px; border: 2px solid #E2E8F0; background: #FFFFFF; color: #475569; font: inherit; font-size: 16px; font-weight: 600">বাতিল</button>
+<button type="button" style="height: 50px; border-radius: 14px; border: 0; background: #16A34A; color: #FFFFFF; font: inherit; font-size: 17px; font-weight: 700">✓ সেভ করুন</button>
+</div>
+<div style="border-top: 1.5px solid #E2E8F0; padding-top: 12px"><span style="font-size: 14px; font-weight: 700; color: #475569">আগের মিলানো</span>
+<ul style="list-style: none; margin: 6px 0 0; padding: 0; font-size: 14px"><li style="display: flex; justify-content: space-between; gap: 10px; padding: 6px 0; border-bottom: 1px dashed #E2E8F0"><span style="color: #64748B">২২ নভে.</span><span>খুচরা দিয়েছি</span><strong style="color: #DC2626">−৳ ৫০</strong></li><li style="display: flex; justify-content: space-between; gap: 10px; padding: 6px 0; border-bottom: 1px dashed #E2E8F0"><span style="color: #64748B">২০ নভে.</span><span>—</span><strong style="color: #15803D">+৳ ২০</strong></li></ul></div>
+</div>
+<div role="dialog" aria-label="ব্যাংক / বিকাশ মিলিয়ে নিন" style="width: 520px; background: #FFFFFF; border-radius: 24px; border-top: 6px solid #1D4ED8; box-shadow: 0 30px 70px rgba(15,23,42,0.35); padding: 26px 28px; display: flex; flex-direction: column; gap: 16px">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<h2 style="margin: 0; font-size: 24px; font-weight: 700; color: #1F3A5F">ব্যাংক / বিকাশ মিলিয়ে নিন</h2>
+<button type="button" aria-label="বন্ধ" style="width: 36px; height: 36px; border-radius: 10px; border: 0; background: #F1F5F9; font-size: 18px; color: #475569">✕</button>
+</div>
+<div style="background: #EFF6FF; border-radius: 14px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center">
+<span style="font-size: 15px; color: #334155">অ্যাপের হিসাবে আছে</span>
+<strong style="font-size: 22px; color: #1D4ED8">৳ ৪৫,৯০০</strong>
+</div>
+<label style="display: flex; flex-direction: column; gap: 6px">
+<span style="font-size: 15px; font-weight: 600; color: #334155">ব্যাংকে এখন কত?</span>
+<span style="display: flex; align-items: center; gap: 8px; height: 52px; border: 2px solid #1D4ED8; border-radius: 14px; padding: 0 14px; background: #FFFFFF">
+<span style="font-size: 20px; font-weight: 700; color: #475569">৳</span>
+<input type="text" value="৩৮,০০০" aria-label="ব্যাংকে এখন কত?" style="flex: 1; min-width: 0; border: 0; font: inherit; font-size: 22px; font-weight: 700; outline: none; background: transparent; color: #0F172A">
+<button type="button" aria-label="বলে লিখুন" style="width: 36px; height: 36px; border-radius: 999px; border: 0; background: #F3EEFF; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6D28D9" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0"></path><path d="M12 18v3"></path></svg></button>
+</span></label><label style="display: flex; flex-direction: column; gap: 6px">
+<span style="font-size: 15px; font-weight: 600; color: #334155">বিকাশে এখন কত?</span>
+<span style="display: flex; align-items: center; gap: 8px; height: 52px; border: 2px solid #1D4ED8; border-radius: 14px; padding: 0 14px; background: #FFFFFF">
+<span style="font-size: 20px; font-weight: 700; color: #475569">৳</span>
+<input type="text" value="৮,৪০০" aria-label="বিকাশে এখন কত?" style="flex: 1; min-width: 0; border: 0; font: inherit; font-size: 22px; font-weight: 700; outline: none; background: transparent; color: #0F172A">
+<button type="button" aria-label="বলে লিখুন" style="width: 36px; height: 36px; border-radius: 999px; border: 0; background: #F3EEFF; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6D28D9" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0"></path><path d="M12 18v3"></path></svg></button>
+</span><span style="font-size: 13px; color: #64748B">অ্যাপ বা স্টেটমেন্ট দেখে লিখুন</span></label>
+<div style="display: flex; justify-content: space-between; align-items: center; background: #F0FDF4; border-radius: 12px; padding: 10px 14px">
+<span style="font-size: 15px; color: #334155">পার্থক্য</span>
+<strong style="font-size: 18px; color: #15803D">+৳ ৫০০ (বেশি)</strong>
+</div>
+<label style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 14px; font-weight: 600; color: #475569">কারণ (ঐচ্ছিক)</span>
+<input type="text" placeholder="যেমন: খুচরা দিয়েছি, ভুলে লিখিনি" aria-label="কারণ" style="height: 44px; box-sizing: border-box; border: 2px solid #E2E8F0; border-radius: 12px; padding: 0 14px; font: inherit; font-size: 15px"></label>
+<div style="display: grid; grid-template-columns: 1fr 2fr; gap: 10px">
+<button type="button" style="height: 50px; border-radius: 14px; border: 2px solid #E2E8F0; background: #FFFFFF; color: #475569; font: inherit; font-size: 16px; font-weight: 600">বাতিল</button>
+<button type="button" style="height: 50px; border-radius: 14px; border: 0; background: #1D4ED8; color: #FFFFFF; font: inherit; font-size: 17px; font-weight: 700">✓ সেভ করুন</button>
+</div>
+<div style="border-top: 1.5px solid #E2E8F0; padding-top: 12px"><span style="font-size: 14px; font-weight: 700; color: #475569">আগের মিলানো</span>
+<ul style="list-style: none; margin: 6px 0 0; padding: 0; font-size: 14px"><li style="display: flex; justify-content: space-between; gap: 10px; padding: 6px 0; border-bottom: 1px dashed #E2E8F0"><span style="color: #64748B">১৮ নভে.</span><span>বিকাশ ক্যাশব্যাক</span><strong style="color: #15803D">+৳ ৩০</strong></li></ul></div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

@@ -13,11 +13,12 @@ import { MAX_INPUT_CHARS } from "@/lib/logic/normalize";
 type Draft = {
   type: CardType; customer: string | null; customer_id: string | null; due_before: number | null;
   items: { product: string; product_id: string | null; unit: string | null; quantity: number | null; unit_price: number | null; stock_before: number | null }[];
-  total: number | null; paid: number | null; received: number | null; due: number; expense_category: string | null; clarify_question: string | null;
+  total: number | null; paid: number | null; received: number | null; due: number; method: Card["method"] | null; expense_category: string | null; clarify_question: string | null;
 };
 
 const toCard = (d: Draft): Card => ({
   type: d.type,
+  method: d.method ?? "cash",
   customer_id: d.customer_id,
   customer_name: d.customer ?? "",
   due_before: d.due_before,
@@ -30,7 +31,7 @@ const toCard = (d: Draft): Card => ({
 });
 
 const EMPTY_CARD: Card = {
-  type: "unknown", customer_id: null, customer_name: "", due_before: null,
+  type: "unknown", method: "cash", customer_id: null, customer_name: "", due_before: null,
   items: [{ product_id: null, name: "", unit: null, quantity: 1, unit_price: null, stock_before: null }],
   due: 0, all_due: false, received: null, amount: null, expense_category: "",
 };

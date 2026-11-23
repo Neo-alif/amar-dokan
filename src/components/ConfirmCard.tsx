@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import type { ErrorCode } from "@/i18n/dictionary";
-import { cardChange, cardProblems, cardTotals, type Card, type CardType } from "@/lib/logic/card";
+import { cardChange, cardProblems, cardTotals, type Card, type CardType, type Method } from "@/lib/logic/card";
 import { formatNumber, formatTaka } from "@/lib/format";
 
 export type CardMeta = { log_id: string | null; raw_text: string | null; manual: boolean; clarify_question: string | null };
@@ -16,6 +16,7 @@ const BADGE: Record<CardType, string> = {
   unknown: "bg-slate-100 text-slate-600",
 };
 const TYPES: CardType[] = ["sale", "purchase", "expense", "payment"];
+const METHOD_LIST: Method[] = ["cash", "bkash", "bank"];
 const num = (v: string) => (v.trim() === "" || Number.isNaN(Number(v)) ? null : Number(v));
 const input = "w-full min-h-11 rounded-xl border border-border bg-white px-3 text-base";
 
@@ -50,6 +51,7 @@ export function ConfirmCard({ initial, meta, onDone }: { initial: Card; meta: Ca
           log_id: meta.log_id,
           edited: JSON.stringify(card) !== JSON.stringify(initial),
           type: card.type,
+          method: card.method,
           customer_id: card.customer_id,
           customer_name: card.customer_name.trim() || null,
           items: isItems ? card.items.map((i) => ({ product_id: i.product_id, name: i.name.trim(), unit: i.unit, quantity: i.quantity, unit_price: i.unit_price })) : [],
@@ -186,10 +188,22 @@ export function ConfirmCard({ initial, meta, onDone }: { initial: Card; meta: Ca
             )}
           </>
         )}
+        {card.type !== "unknown" && (
+          <>
+            <dt className="text-muted">{c.method}</dt>
+            <dd className="font-semibold">
+              {editing ? (
+                <select aria-label={c.method} value={card.method} onChange={(e) => set({ method: e.target.value as Method })} className={input}>
+                  {METHOD_LIST.map((m) => <option key={m} value={m}>{c.methods[m]}</option>)}
+                </select>
+              ) : c.methods[card.method]}
+            </dd>
+          </>
+        )}
       </dl>
 
       {problems.length === 0 ? (
-        <Changes card={card} total={total} due={due} />
+        <Changes card={card} total={total} paid={paid} due={due} />
       ) : (
         <ul className="list-inside list-disc text-[15px] font-semibold text-danger" aria-live="polite">
           {problems.map((p) => <li key={p}>{t.errors[p]}</li>)}
@@ -222,7 +236,7 @@ function New({ label }: { label: string }) {
 }
 
 // "নিশ্চিত করলে যা বদলাবে" preview (mockup). Display only; the DB does the real update.
-function Changes({ card, total, due }: { card: Card; total: number | null; due: number }) {
+function Changes({ card, total, paid, due }: { card: Card; total: number | null; paid: number | null; due: number }) {
   const { t, lang } = useLanguage();
   const c = t.card;
   const lines: string[] = [];
@@ -241,6 +255,7 @@ function Changes({ card, total, due }: { card: Card; total: number | null; due: 
   if (card.type === "payment" && card.due_before != null && card.amount) {
     lines.push(`${card.customer_name} ${c.changeDue} ${formatTaka(card.due_before, lang)} → ${formatTaka(card.due_before - card.amount, lang)}`);
   }
+  if (paid) lines.push(`${c.methods[card.method]} ${card.type === "sale" || card.type === "payment" ? "+" : "−"}${formatTaka(paid, lang)}`);
   if (!lines.length) return null;
   return (
     <div className="flex flex-col gap-1.5 border-t border-dashed border-border pt-3.5 text-[15px] text-slate-600">

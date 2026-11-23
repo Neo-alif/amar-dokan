@@ -8,7 +8,7 @@ import type { Extraction } from "../src/lib/schema.ts";
 
 const base: Extraction = {
   type: "sale", items: [], customer: null, total_said: null, paid_said: null, due_said: null,
-  expense_category: null, clarify_question: null, confidence: 1,
+  method: null, expense_category: null, clarify_question: null, confidence: 1,
 };
 const item = (product: string, quantity: number | null, extra: Partial<Extraction["items"][number]> = {}) =>
   ({ product, quantity, unit: null, unit_price_said: null, line_total_said: null, ...extra });
@@ -102,7 +102,7 @@ test("matchCustomer: honorifics ignored", () => {
 import { cardChange, cardProblems, cardTotals, type Card } from "../src/lib/logic/card.ts";
 
 const card = (over: Partial<Card>): Card => ({
-  type: "sale", customer_id: null, customer_name: "", due_before: null, items: [], due: 0, all_due: false, received: null, amount: null, expense_category: "", ...over,
+  type: "sale", method: "cash", customer_id: null, customer_name: "", due_before: null, items: [], due: 0, all_due: false, received: null, amount: null, expense_category: "", ...over,
 });
 const line = (quantity: number | null, unit_price: number | null) =>
   ({ product_id: "x", name: "তেল", unit: "pcs", quantity, unit_price, stock_before: 10 });
@@ -284,4 +284,27 @@ test("restock: tie on days left → bigger margin first; zero budget → nothing
   assert.deepEqual(r.lines.map((l) => [l.id, l.qty, l.cost]), [["b", 14, 140], ["a", 14, 140]]);
   assert.equal(r.spent, 280);
   assert.deepEqual(restock([rp("a", 4, 2, 10, 11)], 0).lines, []);
+});
+
+import { countDifference, moneyPosition } from "../src/lib/logic/money.ts";
+
+test("moneyPosition: total = cash + bank + bkash + receivable − payable", () => {
+  const row = (account: "cash" | "bank" | "bkash", balance: number) => ({ account, counted: null, counted_at: null, money_in: 0, money_out: 0, balance });
+  const m = moneyPosition([row("cash", 12500), row("bank", 38000), row("bkash", 7900)], 14250, 6000);
+  assert.equal(m.bankTotal, 45900);
+  assert.equal(m.total, 66650); // the mockup's numbers
+  assert.equal(m.cash.balance, 12500);
+});
+
+test("moneyPosition: missing accounts count as 0; negative balance kept; no float drift", () => {
+  const m = moneyPosition([{ account: "cash", counted: 500, counted_at: "2026-11-23T03:10:00Z", money_in: 0.1, money_out: 100, balance: -0.3 }], 0.2, 0);
+  assert.equal(m.bank.balance, 0);
+  assert.equal(m.bkash.counted, null);
+  assert.equal(m.total, -0.1);
+});
+
+test("countDifference: counted − expected", () => {
+  assert.equal(countDifference(500, 580), -80);
+  assert.equal(countDifference(46400, 45900), 500);
+  assert.equal(countDifference(0.3, 0.1), 0.2);
 });

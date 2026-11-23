@@ -5,6 +5,7 @@ import { z } from "zod";
 
 export const UNITS = ["pcs", "kg", "g", "litre", "ml", "dozen", "packet"] as const;
 export const TXN_TYPES = ["sale", "purchase", "expense", "payment", "unknown"] as const;
+export const METHODS = ["cash", "bkash", "bank"] as const; // how money moved; cash is the default
 
 const said = (what: string) => z.number().nonnegative().nullable().describe(`${what}, only if the speaker said it, else null`);
 
@@ -23,6 +24,7 @@ export const Extraction = z.object({
   total_said: said("total money of the whole transaction"),
   paid_said: said("money paid now"),
   due_said: said("money left as baki/due"),
+  method: z.enum(METHODS).nullable().describe("how the money moved, only if said: bkash/bikash/বিকাশ → bkash, bank/check/ব্যাংক → bank, else null"),
   expense_category: z.string().nullable().describe("for expense: what it was for (e.g. বিদ্যুৎ বিল), else null"),
   clarify_question: z.string().nullable().describe("one short question in the user's language if something needed is missing, else null"),
   confidence: z.number().min(0).max(1),

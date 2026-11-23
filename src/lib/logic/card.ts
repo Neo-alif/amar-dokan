@@ -1,6 +1,9 @@
 // ConfirmCard state → live totals and blocking problems. Preview only: the server re-validates
 // and the DB recomputes every number on save.
 import type { ErrorCode } from "../../i18n/dictionary";
+import type { METHODS } from "../schema";
+
+export type Method = (typeof METHODS)[number];
 
 export type CardType = "sale" | "purchase" | "expense" | "payment" | "unknown";
 export type CardItem = {
@@ -13,6 +16,7 @@ export type CardItem = {
 };
 export type Card = {
   type: CardType;
+  method: Method;          // cash (default) · bkash · bank: which money account moves
   customer_id: string | null;
   customer_name: string;
   due_before: number | null;

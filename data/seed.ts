@@ -104,6 +104,14 @@ const { data: custRows, error: cErr } = await db.from("customers")
 if (cErr || !custRows) throw new Error(`insert customers failed: ${cErr?.message}`);
 const customers = custRows.map((c) => ({ ...c, due: 0 }));
 
+// Opening money (টাকার অবস্থা): the owner's first "মিলিয়ে নিন" on day 1, before any transaction.
+// Without it every account would start at 0 and cash would go negative over 60 days of stock buying.
+{
+  const { error } = await db.from("money_counts").insert([["cash", 40000], ["bank", 38000], ["bkash", 7900]].map(([account, counted]) => (
+    { shop_id: shopId, account, counted, expected: 0, note: "seed: শুরুর হিসাব", counted_at: at(dhakaDay(-(DAYS - 1)).iso, 7, 0) })));
+  if (error) throw new Error(`insert opening money failed: ${error.message}`);
+}
+
 // ── 3. Simulate each day, oldest first ──
 let txnCount = 0;
 for (let offset = -(DAYS - 1); offset <= 0; offset++) {

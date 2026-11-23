@@ -183,12 +183,6 @@ export function WeekStatusView({ data }: { data: HomeData | null }) {
         <p role="alert" className="rounded-2xl border border-red-200 bg-red-50 p-5 font-semibold text-danger">{h.loadError}</p>
       ) : (
         <>
-          <div className="mb-5 grid grid-cols-2 gap-4 lg:grid-cols-4">
-            <Stat label={h.todaySales} value={taka(data.todaySales)} color="text-green-700" />
-            <Stat label={h.todaySpend} value={taka(data.todaySpend)} color="text-slate-700" />
-            <Stat label={h.totalDue} value={taka(data.totalDue)} color="text-danger" />
-            <Stat label={h.lowStock} value={`${formatNumber(data.lowStock, lang)}${h.productsUnit}`} color="text-amber-700" href="/stock" />
-          </div>
           <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
             <ProfitCard week={data.week} taka={taka} />
             <ActionsCard data={data} />
@@ -199,12 +193,6 @@ export function WeekStatusView({ data }: { data: HomeData | null }) {
       <MenuTiles />
     </section>
   );
-}
-
-function Stat({ label, value, color, href }: { label: string; value: string; color: string; href?: string }) {
-  const box = "flex flex-col gap-1 rounded-[20px] border-[1.5px] border-border bg-white p-5 shadow-[0_4px_14px_rgba(15,23,42,0.05)]";
-  const inner = <><span className="text-sm text-muted">{label}</span><span className={`text-[28px] leading-tight font-bold ${color}`}>{value}</span></>;
-  return href ? <Link href={href} className={`${box} hover:border-accent`}>{inner}</Link> : <div className={box}>{inner}</div>;
 }
 
 function ProfitCard({ week, taka }: { week: HomeData["week"]; taka: (n: number) => string }) {

@@ -1,7 +1,7 @@
 // POST /api/transactions — save a transaction the owner confirmed on the ConfirmCard.
 // Everything is re-validated here (the card is editable); apply_transaction recomputes all money.
 import { z } from "zod";
-import { UNITS } from "@/lib/schema";
+import { METHODS, UNITS } from "@/lib/schema";
 import { db, shopId } from "@/lib/db/client";
 import { loadShopContext, updateAiLog } from "@/lib/db/queries";
 import { matchCustomer, matchProduct } from "@/lib/logic/matchProduct";
@@ -13,6 +13,7 @@ const Body = z.object({
   log_id: z.uuid().nullable(),
   edited: z.boolean(),
   type: z.enum(["sale", "purchase", "expense", "payment"]),
+  method: z.enum(METHODS).default("cash"),
   customer_id: z.uuid().nullable(),
   customer_name: z.string().trim().max(60).nullable(),
   items: z.array(z.object({
@@ -73,7 +74,7 @@ export async function POST(req: Request) {
     // No occurred_at here: the DB stamps now(); only the seed may backdate.
     const { data: transactionId, error } = await db().rpc("apply_transaction", {
       p: {
-        idempotency_key: b.idempotency_key, shop_id: shop, type: b.type, customer_id: customerId,
+        idempotency_key: b.idempotency_key, shop_id: shop, type: b.type, method: b.method, customer_id: customerId,
         paid: b.paid, total: b.total, items, expense_category: b.expense_category, raw_text: b.raw_text,
       },
     });

@@ -51,6 +51,7 @@ export async function extract(text: string, ctx: ShopContext) {
     paid: amounts.paid,
     received: x.paid_said, // cash the customer said they handed over (for ফেরত), as said
     due: amounts.due,
+    method: x.method,
     expense_category: x.expense_category,
     missing: amounts.missing,
     warnings: amounts.warnings,

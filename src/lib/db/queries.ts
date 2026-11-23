@@ -4,6 +4,7 @@ import {
   dhakaMonthStart, dhakaWeekStart, monthSummary, oldestDueDays, pickActions, todayNumbers, weeklyProfit, type SaleLine,
 } from "../logic/summary.ts";
 import { addDays, dailySeries, dhakaDay, forecast, stockOutlook } from "../logic/forecast.ts";
+import { moneyPosition, type Account } from "../logic/money.ts";
 
 const one = <T>(x: T | T[]) => (Array.isArray(x) ? x[0] : x); // PostgREST embeds may come back as arrays
 
@@ -63,7 +64,6 @@ export async function loadHomeData(now = new Date()) {
   return {
     todaySales: n.todaySales,
     todaySpend: n.todaySpend,
-    totalDue: n.totalDue,
     lowStock: n.stock.filter((p) => p.status !== "ok").length, // same rule as /stock (forecast.ts)
     weekStart: dhakaWeekStart(now).toISOString(),
     week: weeklyProfit(n.lines, now),
@@ -192,3 +192,31 @@ export async function loadDues(now = new Date()) {
   };
 }
 export type DuesData = Awaited<ReturnType<typeof loadDues>>;
+
+// টাকার অবস্থা: balances per account from the DB, customer dues (পাওনা), supplier dues (দেনা), count history.
+export async function loadMoney() {
+  const shop = shopId();
+  const [pos, counts, customers, suppliers] = await Promise.all([
+    db().rpc("money_position", { p_shop: shop }),
+    db().from("money_counts").select("id, account, counted, expected, note, counted_at").eq("shop_id", shop)
+      .order("counted_at", { ascending: false }).limit(20),
+    db().from("customers").select("due_balance").eq("shop_id", shop).gt("due_balance", 0),
+    db().from("suppliers").select("due_balance").eq("shop_id", shop).gt("due_balance", 0),
+  ]);
+  for (const r of [pos, counts, customers, suppliers]) if (r.error) throw new Error(`money: ${r.error.message}`);
+  const rows = (pos.data as Record<string, string | null>[]).map((r) => ({
+    account: r.account as Account, counted: r.counted == null ? null : Number(r.counted), counted_at: r.counted_at,
+    money_in: Number(r.money_in), money_out: Number(r.money_out), balance: Number(r.balance),
+  }));
+  const sum = (xs: { due_balance: number }[]) => xs.reduce((s, x) => s + Number(x.due_balance), 0);
+  return {
+    ...moneyPosition(rows, sum(customers.data!), sum(suppliers.data!)),
+    customerCount: customers.data!.length,
+    supplierCount: suppliers.data!.length,
+    history: counts.data!.map((c) => ({
+      id: c.id as string, account: c.account as Account, counted: Number(c.counted), diff: Number(c.counted) - Number(c.expected),
+      note: c.note as string | null, at: c.counted_at as string,
+    })),
+  };
+}
+export type MoneyData = Awaited<ReturnType<typeof loadMoney>>;
