@@ -477,3 +477,18 @@ test("products: margin on sell price, sort orders", async () => {
   assert.deepEqual(sortProducts(rows, "worst", "bn").map((p) => p.name), ["ডিম", "চিনি", "আলু"]);
   assert.deepEqual(sortProducts(rows, "margin", "bn").map((p) => p.name), ["আলু", "ডিম", "চিনি"]); // 25%, 13%, 11%
 });
+
+test("expenseMonth: expenses only, full last month, share of sales", async () => {
+  const { expenseMonth } = await import("../src/lib/logic/business.ts");
+  const now = new Date("2026-11-23T10:00:00+06:00");
+  const txns = [
+    { type: "expense", occurred_at: "2026-11-01T09:00:00+06:00", total: 5000, expense_category: "দোকান ভাড়া" },
+    { type: "expense", occurred_at: "2026-11-05T09:00:00+06:00", total: 1000, expense_category: "বিদ্যুৎ বিল" },
+    { type: "purchase", occurred_at: "2026-11-05T09:00:00+06:00", total: 9000 },
+    { type: "sale", occurred_at: "2026-11-06T09:00:00+06:00", total: 40000 },
+    { type: "expense", occurred_at: "2026-10-30T09:00:00+06:00", total: 4500 }, // last month, after the same day-of-month
+  ];
+  const e = expenseMonth(txns, now);
+  assert.deepEqual([e.month, e.lastMonth, e.salesPct], [6000, 4500, 15]);
+  assert.deepEqual(e.byCategory.map((c) => c.category), ["দোকান ভাড়া", "বিদ্যুৎ বিল"]);
+});

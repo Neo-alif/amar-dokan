@@ -6,7 +6,7 @@ import {
 import { addDays, dailySeries, dhakaDay, forecast, stockOutlook } from "../logic/forecast.ts";
 import { moneyPosition, type Account } from "../logic/money.ts";
 import {
-  businessPosition, dailySales, expenseBreakdown, periodRange, profitAndLoss, topProducts, type Period,
+  businessPosition, dailySales, expenseBreakdown, expenseMonth, periodRange, profitAndLoss, topProducts, type Period,
 } from "../logic/business.ts";
 import { todayTotals, txnPeriodStart, type TxnPeriod } from "../logic/ledger.ts";
 
@@ -313,3 +313,20 @@ export async function loadProducts(now = new Date()) {
   }));
 }
 export type ProductRow = Awaited<ReturnType<typeof loadProducts>>[number];
+
+// খরচ: sales and expenses since last month's start → month totals, categories, and this month's expense list.
+export async function loadExpenses(now = new Date()) {
+  const shop = shopId();
+  const start = dhakaMonthStart(now).getTime();
+  const rows = await all((a, b) => db().from("transactions").select("id, type, occurred_at, total, expense_category, note, raw_text")
+    .eq("shop_id", shop).in("type", ["sale", "expense"]).gte("occurred_at", dhakaMonthStart(now, -1).toISOString())
+    .order("id").range(a, b), "expenses");
+  const txns = rows.map((r) => ({ ...r, total: Number(r.total) }));
+  return {
+    ...expenseMonth(txns, now),
+    list: txns.filter((x) => x.type === "expense" && Date.parse(x.occurred_at) >= start)
+      .sort((a, b) => Date.parse(b.occurred_at) - Date.parse(a.occurred_at))
+      .map((x) => ({ id: x.id as string, at: x.occurred_at as string, category: x.expense_category as string | null, text: (x.note ?? x.raw_text) as string | null, total: x.total })),
+  };
+}
+export type ExpensesData = Awaited<ReturnType<typeof loadExpenses>>;

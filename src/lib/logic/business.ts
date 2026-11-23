@@ -78,3 +78,16 @@ export function expenseBreakdown(txns: Txn[], start: number, end: number, other:
 export const topProducts = (lines: SaleLine[], start: number, end: number, n = 5) =>
   [...byProduct(lines, start, end)].sort((a, b) => b[1].sales - a[1].sales).slice(0, n)
     .map(([id, p]) => ({ id, sales: r2(p.sales), profit: r2(p.profit) }));
+
+// খরচ page: this month (expenses only, never purchases), the whole of last month, and expenses as a share of this month's sales.
+export function expenseMonth(txns: Txn[], now: Date) {
+  const start = dhakaMonthStart(now).getTime(), prev = dhakaMonthStart(now, -1).getTime(), end = now.getTime() + 1;
+  const sum = (type: string, a: number, b: number) =>
+    r2(txns.filter((x) => x.type === type && inRange(x.occurred_at, a, b)).reduce((s, x) => s + x.total, 0));
+  const month = sum("expense", start, end), sales = sum("sale", start, end);
+  return {
+    month, lastMonth: sum("expense", prev, start),
+    salesPct: sales > 0 ? Math.round((month / sales) * 1000) / 10 : null,
+    byCategory: expenseBreakdown(txns, start, end, ""),
+  };
+}
