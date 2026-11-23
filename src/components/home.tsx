@@ -14,13 +14,14 @@ const MicIcon = ({ size, stroke }: { size: number; stroke: string }) => (
   </svg>
 );
 
-// Pages that exist (optional Products / Expenses / Transactions pages are not built, so not linked).
+// Menu (all pages) and home tiles (pages with a `tile`), in mockup order.
 const PAGES = [
   { href: "/entry", key: "entry", stroke: "#6D28D9", tile: "", d: <><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0" /><path d="M12 18v3" /></> },
+  { href: "/business", key: "business", stroke: "#4338CA", tile: "", d: <><path d="M3 3v18h18" /><path d="M7 15l4-4 3 3 5-6" /></> },
   { href: "/stock", key: "stock", stroke: "#1D4ED8", tile: "bg-blue-50 border-blue-200", d: <><path d="M21 8l-9-5-9 5 9 5 9-5z" /><path d="M3 8v8l9 5 9-5V8" /><path d="M12 13v8" /></> },
   { href: "/dues", key: "dues", stroke: "#DC2626", tile: "bg-red-50 border-red-200", d: <><path d="M4 4h12a4 4 0 0 1 4 4v12H8a4 4 0 0 1-4-4z" /><path d="M8 9h8" /><path d="M8 13h6" /></> },
   { href: "/restock", key: "restock", stroke: "#16A34A", tile: "bg-green-50 border-green-200", d: <><circle cx="9" cy="20" r="1.5" /><circle cx="18" cy="20" r="1.5" /><path d="M2 3h3l2.5 12h12l2-8H6" /></> },
-  { href: "/business", key: "business", stroke: "#4338CA", tile: "", d: <><path d="M3 3v18h18" /><path d="M7 15l4-4 3 3 5-6" /></> },
+  { href: "/transactions", key: "transactions", stroke: "#6D28D9", tile: "bg-violet-50 border-violet-200", d: <><path d="M7 7h11l-3-3" /><path d="M17 17H6l3 3" /></> },
   { href: "/report", key: "report", stroke: "#0F766E", tile: "", d: <><path d="M6 3h9l4 4v14H6z" /><path d="M9 12h7" /><path d="M9 16h5" /></> },
 ] as const;
 type Page = (typeof PAGES)[number];

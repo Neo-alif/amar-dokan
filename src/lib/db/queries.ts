@@ -8,6 +8,7 @@ import { moneyPosition, type Account } from "../logic/money.ts";
 import {
   businessPosition, dailySales, expenseBreakdown, periodRange, profitAndLoss, topProducts, type Period,
 } from "../logic/business.ts";
+import { todayTotals, txnPeriodStart, type TxnPeriod } from "../logic/ledger.ts";
 
 const one = <T>(x: T | T[]) => (Array.isArray(x) ? x[0] : x); // PostgREST embeds may come back as arrays
 
@@ -267,3 +268,23 @@ export async function loadBusiness(period: Period, now = new Date()) {
   };
 }
 export type BusinessData = Awaited<ReturnType<typeof loadBusiness>>;
+
+// লেনদেন: every transaction since the period start (filtering by type happens in the view, so today's totals see all).
+export async function loadTransactions(period: TxnPeriod, now = new Date()) {
+  const shop = shopId();
+  const since = txnPeriodStart(period, now).toISOString();
+  const rows = await all((a, b) => db().from("transactions")
+    .select("id, type, occurred_at, total, due, expense_category, raw_text, note, supplier_id, customers(name), suppliers(name), transaction_items(quantity, products(name_bn, name_en, unit))")
+    .eq("shop_id", shop).gte("occurred_at", since).order("id").range(a, b), "transactions");
+  const list = rows.map((r) => ({
+    id: r.id as string, type: r.type as string, occurred_at: r.occurred_at as string, total: Number(r.total), due: Number(r.due),
+    supplier_id: r.supplier_id as string | null, category: r.expense_category as string | null, raw: (r.note ?? r.raw_text) as string | null,
+    party: one(r.customers)?.name ?? one(r.suppliers)?.name ?? null,
+    items: (r.transaction_items ?? []).map((i) => {
+      const p = one(i.products);
+      return { bn: p?.name_bn ?? "", en: p?.name_en ?? p?.name_bn ?? "", qty: Number(i.quantity), unit: p?.unit ?? "pcs" };
+    }),
+  }));
+  return { period, today: todayTotals(list, now), rows: list };
+}
+export type TransactionsData = Awaited<ReturnType<typeof loadTransactions>>;

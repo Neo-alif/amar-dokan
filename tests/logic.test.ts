@@ -445,3 +445,21 @@ test("weekSellers: best by qty this Dhaka week, worst includes products that sol
   assert.deepEqual(w.worst.map((p) => p.id), ["c", "b", "a"]);
   assert.deepEqual(weekSellers([], ["a"], now), { best: [], worst: [{ id: "a", qty: 0, pct: 0 }] });
 });
+
+test("transactions: today's totals and day groups (Dhaka), supplier payment isn't জমা", async () => {
+  const { todayTotals, groupByDay, txnPeriodStart } = await import("../src/lib/logic/ledger.ts");
+  const now = new Date("2026-11-23T10:00:00+06:00");
+  const rows = [
+    { type: "sale", occurred_at: "2026-11-23T09:00:00+06:00", total: 500 },
+    { type: "purchase", occurred_at: "2026-11-23T08:30:00+06:00", total: 1200 },
+    { type: "expense", occurred_at: "2026-11-23T08:40:00+06:00", total: 80 },
+    { type: "payment", occurred_at: "2026-11-23T09:30:00+06:00", total: 300 },
+    { type: "payment", occurred_at: "2026-11-23T09:40:00+06:00", total: 1000, supplier_id: "s1" },
+    { type: "sale", occurred_at: "2026-11-22T23:59:00+06:00", total: 999 }, // yesterday in Dhaka
+  ];
+  assert.deepEqual(todayTotals(rows, now), { sales: 500, count: 5, spend: 1280, collected: 300 });
+  const g = groupByDay(rows, "sale");
+  assert.deepEqual(g.map((d) => [d.day, d.items.length]), [["2026-11-23", 1], ["2026-11-22", 1]]);
+  assert.equal(groupByDay(rows, "all")[0].items[0].total, 1000); // newest first
+  assert.equal(txnPeriodStart("today", now).toISOString(), "2026-11-22T18:00:00.000Z");
+});
