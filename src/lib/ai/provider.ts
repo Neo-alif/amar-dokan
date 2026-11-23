@@ -1,6 +1,6 @@
 // Calls LLM providers in order (Gemini primary, Groq fallback). Each attempt has a timeout;
-// a 5xx gets one retry, a Groq 429 with retry-after <= 5s gets one retry after waiting;
-// anything else (long 429, timeout, bad JSON) moves to the next provider.
+// only a 429 with retry-after <= 5s gets one retry after waiting; anything else
+// (503 overloaded, long 429, timeout, bad JSON) moves to the next model at once.
 // If all fail we throw — there is never a canned or cached answer.
 import { GoogleGenAI } from "@google/genai";
 import Groq from "groq-sdk";
@@ -69,12 +69,16 @@ export function retryAfterMs(e: unknown): number | null {
   return Number.isFinite(sec) && sec >= 0 ? Math.ceil(sec * 1000) : null;
 }
 
-// Extra models with their own free quotas, tried after the env model of the same provider
-// (checked live on 24 Nov 2026; gemini-2.5-* are closed to new keys, gemini-3.5-flash timed out).
-const EXTRA_MODELS = { gemini: ["gemini-3.5-flash-lite"], groq: ["openai/gpt-oss-120b", "openai/gpt-oss-20b"] };
-// Order: Gemini env model → other Gemini → Groq env model → other Groq. Same parse/number check for all.
+// Extra models with their own free quotas around each provider's env model
+// (checked live on 24 Nov 2026; gemini-2.5-* are closed to new keys, gemini-3.5-flash timed out;
+// gemini-3.1-flash-lite was often 503, so 3.5-flash-lite goes first).
+const MODEL_ORDER = {
+  gemini: (env: string) => ["gemini-3.5-flash-lite", env],
+  groq: (env: string) => [env, "openai/gpt-oss-120b", "openai/gpt-oss-20b"],
+};
+// Order: 3.5-flash-lite → GEMINI_MODEL → GROQ_MODEL → gpt-oss-120b → gpt-oss-20b. Same parse/number check for all.
 const PROVIDERS: Provider[] = BASE.flatMap((p) =>
-  [...new Set([p.model, ...EXTRA_MODELS[p.name]])].map((model) => ({ ...p, model: p.model ? model : undefined })));
+  p.model ? [...new Set(MODEL_ORDER[p.name](p.model))].map((model) => ({ ...p, model })) : [p]);
 
 export class AllProvidersFailed extends Error {
   attempts: string[];
@@ -102,9 +106,8 @@ export async function callLLM<T>(req: LLMRequest, parse: (text: string) => T, si
         console.warn("LLM attempt failed:", line); // logged even when a later provider succeeds
         attempts.push(line);
         if (attempt !== 1) break;
-        if (status && status >= 500) continue; // a 5xx earns one retry
-        // Groq 429 per-minute limit: wait as long as it asks, if that's short. A daily limit (minutes away) moves on.
-        const wait = status === 429 && p.name === "groq" ? retryAfterMs(e) : null;
+        // 429 per-minute limit: wait as long as it asks, if that's short. A daily limit (minutes away) moves on.
+        const wait = status === 429 ? retryAfterMs(e) : null;
         if (wait === null || wait > MAX_429_WAIT_MS) break;
         await new Promise((r) => setTimeout(r, wait));
       }

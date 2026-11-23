@@ -76,7 +76,7 @@ Raw results: `tests/results.json`, `tests/results-groq.json`.
 - Next.js 16 (App Router) + TypeScript, Tailwind CSS 4
 - Supabase (PostgreSQL): RLS on, no browser access; all writes through server API routes and one `apply_transaction` SQL function
 - Zod 4 (validation; the same schema becomes Gemini's JSON schema via `z.toJSONSchema`)
-- Gemini `gemini-3.1-flash-lite` via `@google/genai` (primary LLM), Groq `qwen/qwen3.8-27b` via `groq-sdk` (live fallback). Main model names are config in `.env.local`; extra fallback models with their own free quotas are tried after each (`EXTRA_MODELS` in `src/lib/ai/provider.ts`).
+- Gemini `gemini-3.1-flash-lite` via `@google/genai` (primary LLM), Groq `qwen/qwen3.8-27b` via `groq-sdk` (live fallback). Main model names are config in `.env.local`; full order with extra free-quota models: `gemini-3.5-flash-lite` → `gemini-3.1-flash-lite` → `qwen/qwen3.8-27b` → `openai/gpt-oss-120b` → `openai/gpt-oss-20b` (`MODEL_ORDER` in `src/lib/ai/provider.ts`).
 - Web Speech API (`bn-BD`, Chrome) for voice — no server cost
 - Hosting: local `npm run build && npm start` for the demo; Vercel (`sin1`, same region as Supabase Singapore) as backup
 
@@ -96,7 +96,7 @@ All demo data is **synthetic and self-generated** — no real shop or customer d
 | Claude Code (Anthropic, Claude Opus 5.5) | Development: planning, documentation, code writing and review, tests |
 | Claude Design canvas (Anthropic) | UI mockups (`docs/mockup/*.dc.html`) and the logo |
 | Google Gemini `gemini-3.1-flash-lite` | Runtime: transaction extraction, daily insight and monthly audit summary (live inference) |
-| Google Gemini `gemini-3.5-flash-lite` | Runtime: live fallback when `gemini-3.1-flash-lite` is unavailable |
+| Google Gemini `gemini-3.5-flash-lite` | Runtime: first model tried (extraction, insight); `gemini-3.1-flash-lite` is its fallback |
 | Groq-hosted `qwen/qwen3.8-27b` | Runtime: live fallback when Gemini is unavailable |
 | Groq-hosted `openai/gpt-oss-120b`, `openai/gpt-oss-20b` | Runtime: last live fallbacks when `qwen/qwen3.8-27b` is unavailable |
 
