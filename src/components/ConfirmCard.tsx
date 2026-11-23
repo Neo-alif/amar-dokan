@@ -145,14 +145,16 @@ export function ConfirmCard({ initial, meta, onDone }: { initial: Card; meta: Ca
                 <div className="grid grid-cols-[1fr_80px_100px_auto] gap-2">
                   <input aria-label={c.product} className={input} value={it.name} onChange={(e) => setItem(i, { name: e.target.value, product_id: null, stock_before: null })} />
                   <input aria-label={c.quantity} className={input} type="number" inputMode="decimal" min="0" value={it.quantity ?? ""} onChange={(e) => setItem(i, { quantity: num(e.target.value) })} />
-                  <input aria-label={c.unitPrice} placeholder={c.unitPrice} className={input} type="number" inputMode="decimal" min="0" value={it.unit_price ?? ""} onChange={(e) => setItem(i, { unit_price: num(e.target.value) })} />
+                  <input aria-label={c.unitPrice} placeholder={c.unitPrice} className={input} type="number" inputMode="decimal" min="0" value={it.unit_price ?? ""} onChange={(e) => setItem(i, { unit_price: num(e.target.value), price_from_list: false })} />
                   <button type="button" onClick={() => set({ items: card.items.filter((_, j) => j !== i) })} className="min-h-11 px-2 text-sm text-danger">{c.removeItem}</button>
+                  {it.price_from_list && <span className="col-span-4"><ListLabel label={c.listPrice} /></span>}
                 </div>
               ) : (
                 <>
                   {it.name} × {it.quantity == null ? "—" : formatNumber(it.quantity, lang)} {!it.product_id && <New label={c.newBadge} />}
                   <span className="block text-base font-normal text-muted">
                     {it.unit_price == null ? `${c.price}: —` : `${taka(it.unit_price)} × ${formatNumber(it.quantity ?? 0, lang)} = ${taka((it.quantity ?? 0) * it.unit_price)}`}
+                    {it.price_from_list && <ListLabel label={c.listPrice} />}
                   </span>
                 </>
               )}
@@ -285,6 +287,10 @@ function PaidQuestion({ question, onAnswer, onError }: {
       )}
     </div>
   );
+}
+
+function ListLabel({ label }: { label: string }) {
+  return <span className="ml-2 rounded-full bg-sky-100 px-2 py-0.5 align-middle text-xs font-semibold text-sky-800">{label}</span>;
 }
 
 function New({ label }: { label: string }) {

@@ -1,13 +1,13 @@
 // Sentence → validated draft transaction. Never writes to the DB (the owner confirms first).
 import { Extraction, ExtractionJsonSchema } from "../schema.ts";
 import { normalizeInput } from "../logic/normalize.ts";
-import { deriveAmounts } from "../logic/amounts.ts";
+import { deriveAmounts, keepSaidMoney } from "../logic/amounts.ts";
 import { matchCustomer, matchProduct } from "../logic/matchProduct.ts";
 import { extractionSystemPrompt } from "./prompts.ts";
 import { callLLM } from "./provider.ts";
 
 export type ShopContext = {
-  products: { id: string; name_bn: string; name_en: string | null; aliases: string[]; unit: string; sell_price: number; stock_qty: number }[];
+  products: { id: string; name_bn: string; name_en: string | null; aliases: string[]; unit: string; sell_price: number; cost_price: number; stock_qty: number }[];
   customers: { id: string; name: string; due_balance: number }[];
   suppliers: { id: string; name: string; due_balance: number }[];
   lang: "bn" | "en";
@@ -24,7 +24,7 @@ export async function extract(text: string, ctx: ShopContext) {
     (raw) => Extraction.parse(JSON.parse(raw)),
   );
 
-  const x = llm.data;
+  const x = keepSaidMoney(llm.data, input); // the LLM may not invent money
   const amounts = deriveAmounts(x);
   const productCandidates = ctx.products.map((p) => ({ id: p.id, names: [p.name_bn, p.name_en ?? "", ...p.aliases] }));
   const customerId = x.customer ? matchCustomer(x.customer, ctx.customers.map((c) => ({ id: c.id, names: [c.name] }))) : null;
@@ -44,6 +44,8 @@ export async function extract(text: string, ctx: ShopContext) {
         product_id,
         is_new: product_id === null,
         stock_before: product ? Number(product.stock_qty) : null,
+        // offered as a quick answer when the price wasn't said; never filled in silently
+        list_price: product ? Number(x.type === "purchase" ? product.cost_price : product.sell_price) : null,
       };
     }),
     customer: customerId ? ctx.customers.find((c) => c.id === customerId)!.name : x.customer,

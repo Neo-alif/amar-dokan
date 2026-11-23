@@ -6,14 +6,16 @@ import { ConfirmCard, type CardMeta } from "@/components/ConfirmCard";
 import { MicButton } from "@/components/MicButton";
 import { useLanguage } from "@/i18n/LanguageContext";
 import type { ErrorCode } from "@/i18n/dictionary";
-import { isAmountType, type Card, type CardType } from "@/lib/logic/card";
+import { isAmountType, listPriceChoice, type Card, type CardType } from "@/lib/logic/card";
+import { formatTaka } from "@/lib/format";
 import { MAX_INPUT_CHARS } from "@/lib/logic/normalize";
 
 // Shape returned by POST /api/extract (src/lib/ai/extract.ts → draft)
 type Draft = {
   type: CardType; customer: string | null; customer_id: string | null; due_before: number | null;
   supplier: string | null; supplier_id: string | null; supplier_due_before: number | null;
-  items: { product: string; product_id: string | null; unit: string | null; quantity: number | null; unit_price: number | null; stock_before: number | null }[];
+  items: { product: string; product_id: string | null; unit: string | null; quantity: number | null; unit_price: number | null; stock_before: number | null; list_price: number | null }[];
+  missing: string[];
   total: number | null; paid: number | null; received: number | null; due: number; ask_paid: boolean; method: Card["method"] | null; expense_category: string | null; clarify_question: string | null;
 };
 
@@ -52,7 +54,8 @@ export default function EntryPage() {
   const [error, setError] = useState<ErrorCode | null>(null);
   const [saved, setSaved] = useState(false);
   const [open, setOpen] = useState<Opened | null>(null);
-  const [clarify, setClarify] = useState<{ question: string; base: string; draft: Opened } | null>(null);
+  const [clarify, setClarify] = useState<{ question: string; base: string; draft: Opened; list: { index: number; price: number } | null } | null>(null);
+  const [otherPrice, setOtherPrice] = useState(false);
   const [answer, setAnswer] = useState("");
 
   // first ask: a missing price/amount shows the AI's question; the answer is sent with the sentence and goes to the card
@@ -70,8 +73,15 @@ export default function EntryPage() {
       });
       const body = await res.json().catch(() => ({}));
       if (res.ok) {
-        const next = { key: Date.now(), card: toCard(body.draft), meta: { log_id: body.log_id, raw_text: input, manual: false, clarify_question: body.draft.clarify_question } };
-        if (allowClarify && body.draft.clarify_question) { setAnswer(""); setClarify({ question: body.draft.clarify_question, base: input, draft: next }); }
+        const d: Draft = body.draft;
+        const priceMissing = d.missing.includes("price") || d.missing.includes("amount");
+        // the guard can drop a price the LLM invented; then the LLM wrote no question, so ask ourselves
+        const question = d.clarify_question ?? (priceMissing ? e.askPrice : null);
+        const next = { key: Date.now(), card: toCard(d), meta: { log_id: body.log_id, raw_text: input, manual: false, clarify_question: question } };
+        if (allowClarify && question) {
+          setAnswer(""); setOtherPrice(false);
+          setClarify({ question, base: input, draft: next, list: d.missing.includes("price") ? listPriceChoice(d.items) : null });
+        }
         else { setClarify(null); setOpen(next); }
       } else {
         setError((body.error as ErrorCode) ?? "SERVER_ERROR");
@@ -86,6 +96,15 @@ export default function EntryPage() {
 
   const send = () => extract(text, true);
   const sendAnswer = () => clarify && answer.trim() && extract(`${clarify.base}, ${answer.trim()}`.slice(0, MAX_INPUT_CHARS), false);
+
+  // "তালিকার দাম ৳X": no AI call; the card shows the price came from the list and stays editable
+  function useListPrice() {
+    if (!clarify?.list) return;
+    const { index, price } = clarify.list;
+    const card = clarify.draft.card;
+    setOpen({ ...clarify.draft, meta: { ...clarify.draft.meta, clarify_question: null }, card: { ...card, items: card.items.map((it, i) => (i === index ? { ...it, unit_price: price, price_from_list: true } : it)) } });
+    setClarify(null);
+  }
 
   function openManual() {
     setOpen({ key: Date.now(), card: EMPTY_CARD, meta: { log_id: null, raw_text: text || null, manual: true, clarify_question: null } });
@@ -147,7 +166,17 @@ export default function EntryPage() {
             <div className="flex flex-col gap-3 rounded-2xl border border-amber-200 border-l-4 border-l-warning bg-amber-50 px-5 py-4.5">
               <span className="text-sm font-bold text-amber-900">{e.clarifyTitle}</span>
               <p className="text-lg font-semibold text-text">{clarify.question}</p>
-              <form className="flex gap-2" onSubmit={(ev) => { ev.preventDefault(); sendAnswer(); }}>
+              {clarify.list && (
+                <div className="flex flex-wrap gap-2">
+                  <button type="button" onClick={useListPrice} className="min-h-11 rounded-xl border-2 border-green-600 bg-white px-4 font-semibold text-green-700">
+                    {e.listPriceBtn(formatTaka(clarify.list.price, lang))}
+                  </button>
+                  <button type="button" onClick={() => setOtherPrice(true)} aria-pressed={otherPrice} className="min-h-11 rounded-xl border-2 border-border bg-white px-4 font-semibold text-primary">
+                    {e.otherPrice}
+                  </button>
+                </div>
+              )}
+              {(!clarify.list || otherPrice) && <form className="flex gap-2" onSubmit={(ev) => { ev.preventDefault(); sendAnswer(); }}>
                 <input autoFocus aria-label={clarify.question} value={answer} placeholder={e.clarifyPlaceholder} maxLength={100}
                   onChange={(ev) => setAnswer(ev.target.value)}
                   className="h-11 min-w-0 flex-1 rounded-xl border border-border bg-white px-3.5 text-base" />
@@ -156,7 +185,7 @@ export default function EntryPage() {
                   className="h-11 shrink-0 rounded-xl bg-primary px-4.5 font-semibold text-white disabled:opacity-50">
                   {thinking ? e.thinking : e.clarifyAnswer}
                 </button>
-              </form>
+              </form>}
               <button type="button" onClick={() => { setOpen(clarify.draft); setClarify(null); }} className="min-h-11 self-start text-sm text-muted underline">{e.clarifySkip}</button>
             </div>
           )}

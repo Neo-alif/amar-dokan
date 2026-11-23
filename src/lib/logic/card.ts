@@ -13,6 +13,7 @@ export type CardItem = {
   quantity: number | null;
   unit_price: number | null;
   stock_before: number | null;
+  price_from_list?: boolean; // owner picked "তালিকার দাম" (not said, not AI) → small label on the card
 };
 export type Card = {
   type: CardType;
@@ -50,6 +51,12 @@ export function cardChange(c: Card): number | null {
   if (c.type !== "sale" || c.received == null || paid == null) return null;
   const change = r2(c.received - paid);
   return change > 0 ? change : null;
+}
+
+// "তালিকার দাম ৳X" quick answer: only when exactly one item lacks a price and it matched a product.
+export function listPriceChoice(items: { unit_price: number | null; list_price: number | null }[]): { index: number; price: number } | null {
+  const unpriced = items.flatMap((it, index) => (it.unit_price == null ? [{ index, price: it.list_price }] : []));
+  return unpriced.length === 1 && unpriced[0].price != null && unpriced[0].price > 0 ? { index: unpriced[0].index, price: unpriced[0].price } : null;
 }
 
 // Answer to "কত টাকা দিয়েছে/দিলেন?": full → no baki · none → all baki · a number → baki = total − paid.

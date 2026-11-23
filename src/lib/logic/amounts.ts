@@ -1,6 +1,7 @@
 // Deterministic money math for a draft transaction. The LLM only reports what was said;
 // everything here is computed. The DB (apply_transaction) recomputes and validates again on save.
 import type { Extraction } from "../schema";
+import { saidNumbers } from "./numberCheck.ts";
 
 export type DraftItem = {
   product: string;
@@ -73,4 +74,18 @@ export function deriveAmounts(x: Extraction): Amounts {
   if (due > 0 && x.type !== "purchase" && !x.customer) missing.push("customer");
 
   return { items, total, paid, due, ask_paid, missing, warnings };
+}
+
+// Guard: a price/amount the LLM returns but the owner never said (e.g. copied from the product list
+// in its context) is dropped, so the card asks "কত টাকায় দিলেন?" instead of trusting it. 0 = "puro baki".
+export function keepSaidMoney(x: Extraction, text: string): Extraction {
+  const said = saidNumbers(text);
+  const keep = (n: number | null) => (n == null || n === 0 || said.has(n) ? n : null);
+  return {
+    ...x,
+    items: x.items.map((it) => ({ ...it, unit_price_said: keep(it.unit_price_said), line_total_said: keep(it.line_total_said) })),
+    total_said: keep(x.total_said),
+    paid_said: keep(x.paid_said),
+    due_said: keep(x.due_said),
+  };
 }

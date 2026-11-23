@@ -492,3 +492,26 @@ test("expenseMonth: expenses only, full last month, share of sales", async () =>
   assert.deepEqual([e.month, e.lastMonth, e.salesPct], [6000, 4500, 15]);
   assert.deepEqual(e.byCategory.map((c) => c.category), ["দোকান ভাড়া", "বিদ্যুৎ বিল"]);
 });
+
+test("guard: a price the owner never said is dropped (LLM copied it from the product list)", async () => {
+  const { keepSaidMoney } = await import("../src/lib/logic/amounts.ts");
+  const { saidNumbers } = await import("../src/lib/logic/numberCheck.ts");
+  const text = "আকবরকে দুই প্যাকেট মসুরের ডাল দিলাম";
+  const x = keepSaidMoney({ ...base, customer: "আকবর", items: [item("মসুর ডাল", 2, { unit_price_said: 100 })] }, text);
+  assert.equal(x.items[0].unit_price_said, null);
+  assert.deepEqual(deriveAmounts(x).missing, ["price"]);
+  // said prices survive: digits, Bangla digits, number words, শ/হাজার
+  const kept = keepSaidMoney({ ...base, items: [item("চাল", 2, { line_total_said: 150 })], total_said: 150, paid_said: 0 }, "২ কেজি চাল দেড়শ টাকা, পুরো বাকি");
+  assert.deepEqual([kept.items[0].line_total_said, kept.total_said, kept.paid_said], [150, 150, 0]);
+  for (const [t, n] of [["680 taka", 680], ["৬৮০ টাকা", 680], ["পঞ্চাশ টাকা", 50], ["দুইশ টাকা", 200], ["dui sho taka", 200], ["পাঁচ হাজার", 5000], ["pach hajar", 5000], ["একশ", 100]] as const) {
+    assert.ok(saidNumbers(t).has(n), `${t} → ${n}`);
+  }
+});
+
+test("list price quick answer: only when exactly one item lacks a price and it matched", async () => {
+  const { listPriceChoice } = await import("../src/lib/logic/card.ts");
+  assert.deepEqual(listPriceChoice([{ unit_price: null, list_price: 135 }]), { index: 0, price: 135 });
+  assert.deepEqual(listPriceChoice([{ unit_price: 60, list_price: 65 }, { unit_price: null, list_price: 130 }]), { index: 1, price: 130 });
+  assert.equal(listPriceChoice([{ unit_price: null, list_price: null }]), null); // new product
+  assert.equal(listPriceChoice([{ unit_price: null, list_price: 65 }, { unit_price: null, list_price: 130 }]), null);
+});
