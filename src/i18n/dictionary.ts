@@ -2,6 +2,10 @@
 // Rule: add the en text in the same change as every new bn key.
 // `en` is typed as `Dict`, so TypeScript errors if a key exists in one language but not the other.
 
+// Bangla possessive: জসিম → জসিমের, রহিমা → রহিমার; a non-Bangla name gets -এর.
+const bnOf = (name: string) =>
+  /[ক-হৎড়-য়]$/.test(name) ? `${name}ের` : /[ঀ-৿]$/.test(name) ? `${name}র` : `${name}-এর`;
+
 const bn = {
   appName: "আমার দোকান",
   // Hero copy from the approved mockup (docs/mockup/Main.dc.html)
@@ -244,11 +248,12 @@ const bn = {
     lastToday: "শেষ লেনদেন আজ",
     ledger: "খাতা",
     current: "বর্তমান বাকি",
-    dueEntry: "বাকি",
+    dueEntry: "বাকিতে বিক্রি",
     payEntry: "জমা",
-    cash: "নগদ",
-    collect: "জমা নিন",
-    amount: "জমার টাকা",
+    dueAfter: "বাকি থাকল",
+    history: "লেনদেনের ইতিহাস",
+    collect: (name: string) => `${bnOf(name)} জমা নিন`,
+    amount: (name: string) => `${bnOf(name)} জমার টাকা`,
     saving: "সেভ হচ্ছে…",
     saved: (amount: string, name: string) => `✓ ${name}-এর ${amount} জমা হয়েছে`,
     empty: "কারো কাছে বাকি নেই।",
@@ -648,11 +653,12 @@ const en: Dict = {
     lastToday: "last activity today",
     ledger: "Ledger",
     current: "Current due",
-    dueEntry: "Due",
-    payEntry: "Paid",
-    cash: "cash",
-    collect: "Take payment",
-    amount: "Amount paid",
+    dueEntry: "Sold on credit",
+    payEntry: "Payment",
+    dueAfter: "Due after",
+    history: "History",
+    collect: (name: string) => `Take ${name}'s payment`,
+    amount: (name: string) => `${name}'s payment amount`,
     saving: "Saving…",
     saved: (amount: string, name: string) => `✓ ${amount} received from ${name}`,
     empty: "Nobody owes anything.",

@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { useLanguage } from "@/i18n/LanguageContext";
 import type { ErrorCode } from "@/i18n/dictionary";
 import type { DuesData } from "@/lib/db/queries";
-import { formatNumber, formatTaka } from "@/lib/format";
+import { formatDateTime, formatNumber, formatTaka } from "@/lib/format";
 
 export function DuesView({ data }: { data: DuesData | null }) {
   const { t, lang } = useLanguage();
@@ -24,8 +24,6 @@ export function DuesView({ data }: { data: DuesData | null }) {
 
   if (!data) return <p role="alert" className="rounded-2xl border border-red-200 bg-red-50 p-5 font-semibold text-danger">{d.loadError}</p>;
   const c = data.customers.find((x) => x.id === selected) ?? data.customers[0];
-  const locale = lang === "bn" ? "bn-BD" : "en-GB";
-  const date = (iso: string) => new Intl.DateTimeFormat(locale, { day: "2-digit", month: "short", timeZone: "Asia/Dhaka" }).format(new Date(iso));
 
   function pick(id: string) {
     setSelected(id); setAmount(""); setError(null); setSaved(null); setKey(crypto.randomUUID());
@@ -82,10 +80,10 @@ export function DuesView({ data }: { data: DuesData | null }) {
             </div>
             {data.customers.map((x) => (
               <button key={x.id} type="button" onClick={() => pick(x.id)} aria-pressed={x.id === c?.id}
-                className={`flex w-full items-center gap-3.5 border-b border-slate-100 px-4.5 py-3.5 text-left ${x.id === c?.id ? "bg-orange-50" : "hover:bg-bg"}`}>
+                className={`flex w-full items-center gap-3.5 border-b border-l-[6px] border-b-slate-100 px-4.5 py-3.5 text-left ${x.id === c?.id ? "border-l-primary bg-orange-50" : "border-l-transparent hover:bg-bg"}`}>
                 <span className="flex size-[42px] flex-none items-center justify-center rounded-full bg-slate-100 font-bold text-primary">{x.name.slice(0, 1)}</span>
                 <span className="flex min-w-0 flex-1 flex-col">
-                  <strong>{x.name}</strong>
+                  <strong className={x.id === c?.id ? "text-primary" : undefined}>{x.name}</strong>
                   <span className="text-[13px] text-muted">{x.lastDays === null ? "" : x.lastDays === 0 ? d.lastToday : d.lastTx(num(x.lastDays))}</span>
                 </span>
                 <strong className={`text-lg ${x.oldestDays !== null && x.oldestDays > 7 ? "text-danger" : "text-amber-700"}`}>{taka(x.due)}</strong>
@@ -98,27 +96,29 @@ export function DuesView({ data }: { data: DuesData | null }) {
               <span className="text-sm text-muted">{d.ledger}</span>
               <strong className="text-[22px] text-primary">{c.name}</strong>
               <span>{d.current} <strong className="text-danger">{taka(c.due)}</strong></span>
-              <div className="mt-2">
-                {c.entries.map((e, i) => (
-                  <div key={i} className="grid grid-cols-[64px_1fr_auto] gap-2.5 border-b border-dashed border-border py-3 text-[15px]">
-                    <span className="text-muted">{date(e.at)}</span>
-                    <span><strong>{e.change > 0 ? d.dueEntry : d.payEntry}</strong> · {e.items.length
-                      ? e.items.slice(0, 3).map((it) => `${it[lang]} ${num(it.qty)} ${t.units[it.unit] ?? it.unit}`).join(", ") + (e.items.length > 3 ? " …" : "")
-                      : d.cash}</span>
-                    <strong className={`text-right ${e.change > 0 ? "text-danger" : "text-green-700"}`}>{e.change > 0 ? "+" : "−"}{taka(Math.abs(e.change))}</strong>
-                  </div>
-                ))}
-              </div>
               <form onSubmit={pay} className="mt-3 flex flex-wrap gap-2.5">
-                <input aria-label={d.amount} placeholder={d.amount} inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)}
+                <input aria-label={d.amount(c.name)} placeholder={d.amount(c.name)} inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)}
                   className="h-11 min-w-0 flex-1 rounded-xl border border-border px-3.5" />
                 <button type="submit" disabled={saving || !amount.trim()} className="min-h-11 rounded-xl bg-success px-4.5 text-[15px] font-semibold text-white disabled:opacity-50">
-                  {saving ? d.saving : d.collect}
+                  {saving ? d.saving : d.collect(c.name)}
                 </button>
               </form>
               <div aria-live="polite" className="min-h-6">
                 {error && <p className="font-semibold text-danger">{t.errors[error]}</p>}
                 {saved && <p className="font-semibold text-success">{saved}</p>}
+              </div>
+              <strong className="mt-1 text-[15px] text-muted">{d.history}</strong>
+              <div className="max-h-[480px] overflow-y-auto">
+                {c.entries.map((e, i) => (
+                  <div key={i} className="grid grid-cols-[1fr_auto] gap-x-2.5 gap-y-0.5 border-b border-dashed border-border py-3 text-[15px]">
+                    <strong>{e.change > 0 ? d.dueEntry : d.payEntry}</strong>
+                    <strong className={`text-right ${e.change > 0 ? "text-danger" : "text-green-700"}`}>{e.change > 0 ? "+" : "−"}{taka(Math.abs(e.change))}</strong>
+                    <span className="text-sm text-muted">{formatDateTime(e.at, lang)}{e.items.length
+                      ? " · " + e.items.slice(0, 3).map((it) => `${it[lang]} ${num(it.qty)} ${t.units[it.unit] ?? it.unit}`).join(", ") + (e.items.length > 3 ? " …" : "")
+                      : ""}</span>
+                    <span className="text-right text-sm text-muted">{d.dueAfter} {taka(e.due)}</span>
+                  </div>
+                ))}
               </div>
             </section>
           )}

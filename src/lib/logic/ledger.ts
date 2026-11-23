@@ -40,3 +40,11 @@ export function groupByDay<T extends LedgerRow>(rows: T[], filter: TxnFilter) {
   }
   return [...days].map(([day, items]) => ({ day, items }));
 }
+
+// Customer ledger with the due after each entry ("running due"), newest first. Starts from 0 at the oldest entry.
+export function withRunningDue<T extends { at: string; change: number }>(entries: T[]) {
+  let due = 0;
+  return [...entries].sort((a, b) => Date.parse(a.at) - Date.parse(b.at))
+    .map((e) => ({ ...e, due: (due = Math.round((due + e.change) * 100) / 100) }))
+    .reverse();
+}

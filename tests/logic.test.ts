@@ -549,3 +549,20 @@ test("retryAfterMs reads Groq's retry-after seconds", async () => {
   assert.equal(retryAfterMs(err("soon")), null);
   assert.equal(retryAfterMs(new Error("no headers")), null);
 });
+
+test("withRunningDue: due after each entry, newest first", async () => {
+  const { withRunningDue } = await import("../src/lib/logic/ledger.ts");
+  const rows = withRunningDue([
+    { at: "2026-11-23T10:00:00Z", change: -300 },
+    { at: "2026-11-22T10:00:00Z", change: 500.1 },
+    { at: "2026-11-23T12:00:00Z", change: 0.2 },
+  ]);
+  assert.deepEqual(rows.map((r) => r.due), [200.3, 200.1, 500.1]);
+});
+
+test("formatDateTime: Asia/Dhaka, Bangla period words", async () => {
+  const { formatDateTime } = await import("../src/lib/format.ts");
+  assert.equal(formatDateTime("2026-11-23T19:15:00Z", "bn"), "২৪ নভে, রাত ১:১৫");
+  assert.equal(formatDateTime("2026-11-23T19:15:00Z", "en"), "24 Nov, 1:15 am");
+  assert.equal(formatDateTime("2026-11-24T08:05:00Z", "bn"), "২৪ নভে, দুপুর ২:০৫");
+});

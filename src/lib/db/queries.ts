@@ -8,7 +8,7 @@ import { moneyPosition, type Account } from "../logic/money.ts";
 import {
   businessPosition, dailySales, expenseBreakdown, expenseMonth, periodRange, profitAndLoss, topProducts, type Period,
 } from "../logic/business.ts";
-import { todayTotals, txnPeriodStart, type TxnPeriod } from "../logic/ledger.ts";
+import { todayTotals, txnPeriodStart, withRunningDue, type TxnPeriod } from "../logic/ledger.ts";
 
 const one = <T>(x: T | T[]) => (Array.isArray(x) ? x[0] : x); // PostgREST embeds may come back as arrays
 
@@ -191,7 +191,7 @@ export async function loadDues(now = new Date()) {
       id: c.id, name: c.name, due: Number(c.due_balance),
       lastDays: mine[0] ? Math.floor((now.getTime() - Date.parse(mine[0].at)) / 864e5) : null,
       oldestDays: oldestDueDays(mine.map((e) => ({ change: e.change, occurred_at: e.at })), now),
-      entries: mine.slice(0, 10).map((e) => ({ at: e.at, change: e.change, type: e.type, items: e.items })),
+      entries: withRunningDue(mine.map((e) => ({ at: e.at, change: e.change, type: e.type, items: e.items }))),
     };
   }).sort((a, b) => b.due - a.due);
   const old = list.filter((c) => c.oldestDays !== null && c.oldestDays > 7);

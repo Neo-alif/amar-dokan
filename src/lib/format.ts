@@ -16,3 +16,16 @@ const MODEL_NAMES: Record<string, string> = {
   "openai/gpt-oss-20b": "GPT-OSS 20B",
 };
 export const modelName = (id: string) => MODEL_NAMES[id] ?? id; // unknown (env-configured) model: show its id
+
+// "২৪ নভে, রাত ১:১৫" / "24 Nov, 1:15 am", always Asia/Dhaka (UTC+6, no DST).
+const BN_DIGITS = "০১২৩৪৫৬৭৮৯";
+const bnPeriod = (h: number) => (h < 4 ? "রাত" : h < 6 ? "ভোর" : h < 12 ? "সকাল" : h < 15 ? "দুপুর" : h < 18 ? "বিকাল" : h < 20 ? "সন্ধ্যা" : "রাত");
+export function formatDateTime(iso: string, lang: Lang) {
+  const d = new Date(iso);
+  const day = new Intl.DateTimeFormat(lang === "bn" ? "bn-BD" : "en-GB", { day: "numeric", month: "short", timeZone: "Asia/Dhaka" }).format(d);
+  const local = new Date(d.getTime() + 6 * 3600 * 1000);
+  const h = local.getUTCHours(), time = `${h % 12 || 12}:${String(local.getUTCMinutes()).padStart(2, "0")}`;
+  return lang === "bn"
+    ? `${day}, ${bnPeriod(h)} ${time.replace(/\d/g, (x) => BN_DIGITS[Number(x)])}`
+    : `${day}, ${time} ${h < 12 ? "am" : "pm"}`;
+}
