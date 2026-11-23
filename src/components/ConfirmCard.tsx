@@ -104,6 +104,9 @@ export function ConfirmCard({ initial, meta, onDone }: { initial: Card; meta: Ca
               ) : (
                 <>{card.customer_name || "—"} {card.customer_name && !card.customer_id && <New label={c.newBadge} />}</>
               )}
+              {card.due_before != null && card.due_before > 0 && (
+                <span className="block text-sm font-normal text-muted">{c.dueNow} {taka(card.due_before)}</span>
+              )}
             </dd>
           </>
         )}
