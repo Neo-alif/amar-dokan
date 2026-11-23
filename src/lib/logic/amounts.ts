@@ -15,7 +15,7 @@ export type Amounts = {
   total: number | null;
   paid: number | null;
   due: number;
-  missing: ("type" | "items" | "quantity" | "price" | "amount" | "customer")[];
+  missing: ("type" | "items" | "quantity" | "price" | "amount" | "customer" | "supplier")[];
   warnings: ("TOTAL_MISMATCH" | "PAID_DUE_MISMATCH" | "PAID_EXCEEDS_TOTAL")[];
 };
 
@@ -25,10 +25,11 @@ export function deriveAmounts(x: Extraction): Amounts {
   const missing: Amounts["missing"] = [];
   const warnings: Amounts["warnings"] = [];
 
-  if (x.type === "expense" || x.type === "payment") {
+  if (x.type === "expense" || x.type === "payment" || x.type === "supplier_payment") {
     const amount = x.type === "expense" ? (x.total_said ?? x.paid_said) : (x.paid_said ?? x.total_said);
     if (amount == null) missing.push("amount");
     if (x.type === "payment" && !x.customer) missing.push("customer");
+    if (x.type === "supplier_payment" && !x.supplier) missing.push("supplier");
     return { items: [], total: amount, paid: amount, due: 0, missing, warnings };
   }
 
@@ -63,7 +64,9 @@ export function deriveAmounts(x: Extraction): Amounts {
   if (x.paid_said != null && x.due_said != null && total != null && Math.abs(x.paid_said + x.due_said - total) > 0.5) {
     warnings.push("PAID_DUE_MISMATCH");
   }
-  if (due > 0 && !x.customer) missing.push("customer");
+  // baki on a sale = the customer owes (পাওনা); on a purchase = the shop owes the supplier (দেনা)
+  if (due > 0 && x.type === "purchase" && !x.supplier) missing.push("supplier");
+  if (due > 0 && x.type !== "purchase" && !x.customer) missing.push("customer");
 
   return { items, total, paid, due, missing, warnings };
 }

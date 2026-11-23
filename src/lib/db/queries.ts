@@ -92,13 +92,15 @@ export type InsightNumbers = Awaited<ReturnType<typeof loadInsightNumbers>>;
 
 export async function loadShopContext(lang: ShopContext["lang"]): Promise<ShopContext> {
   const shop = shopId();
-  const [products, customers] = await Promise.all([
+  const [products, customers, suppliers] = await Promise.all([
     db().from("products").select("id, name_bn, name_en, aliases, unit, sell_price, stock_qty").eq("shop_id", shop),
     db().from("customers").select("id, name, due_balance").eq("shop_id", shop),
+    db().from("suppliers").select("id, name, due_balance").eq("shop_id", shop),
   ]);
   if (products.error) throw new Error(`load products: ${products.error.message}`);
   if (customers.error) throw new Error(`load customers: ${customers.error.message}`);
-  return { products: products.data, customers: customers.data, lang };
+  if (suppliers.error) throw new Error(`load suppliers: ${suppliers.error.message}`);
+  return { products: products.data, customers: customers.data, suppliers: suppliers.data, lang };
 }
 
 export async function updateAiLog(

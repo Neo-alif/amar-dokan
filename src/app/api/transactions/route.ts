@@ -12,10 +12,12 @@ const Body = z.object({
   idempotency_key: z.uuid(),
   log_id: z.uuid().nullable(),
   edited: z.boolean(),
-  type: z.enum(["sale", "purchase", "expense", "payment"]),
+  type: z.enum(["sale", "purchase", "expense", "payment", "supplier_payment"]),
   method: z.enum(METHODS).default("cash"),
   customer_id: z.uuid().nullable(),
   customer_name: z.string().trim().max(60).nullable(),
+  supplier_id: z.uuid().nullable().default(null),
+  supplier_name: z.string().trim().max(60).nullable().default(null),
   items: z.array(z.object({
     product_id: z.uuid().nullable(),
     name: z.string().trim().min(1).max(80),
@@ -33,6 +35,7 @@ const Body = z.object({
 const DB_CODES = [
   "CUSTOMER_REQUIRED_FOR_DUE", "CUSTOMER_REQUIRED", "PAYMENT_EXCEEDS_DUE", "PAID_EXCEEDS_TOTAL",
   "ITEMS_REQUIRED", "AMOUNT_REQUIRED", "PRODUCT_NOT_FOUND", "CUSTOMER_NOT_FOUND", "DUE_ONLY_ON_SALE",
+  "SUPPLIER_REQUIRED_FOR_DUE", "SUPPLIER_NOT_FOUND",
 ] as const;
 
 export async function POST(req: Request) {
@@ -44,9 +47,23 @@ export async function POST(req: Request) {
   try {
     const ctx = await loadShopContext("bn");
 
+    // supplier_payment is a DB 'payment' with supplier_id; only purchases and supplier payments carry a supplier,
+    // only sales and customer payments carry a customer.
+    const withSupplier = b.type === "purchase" || b.type === "supplier_payment";
+    const withCustomer = b.type === "sale" || b.type === "payment";
+    let supplierId = withSupplier ? b.supplier_id : null;
+    if (withSupplier && !supplierId && b.supplier_name) {
+      supplierId = matchCustomer(b.supplier_name, ctx.suppliers.map((s) => ({ id: s.id, names: [s.name] })));
+      if (!supplierId) {
+        const { data, error } = await db().from("suppliers").insert({ shop_id: shop, name: b.supplier_name }).select("id").single();
+        if (error) throw error;
+        supplierId = data.id;
+      }
+    }
+
     // Resolve the customer: given id, else match by name, else create (only when a name was given).
-    let customerId = b.customer_id;
-    if (!customerId && b.customer_name) {
+    let customerId = withCustomer ? b.customer_id : null;
+    if (withCustomer && !customerId && b.customer_name) {
       customerId = matchCustomer(b.customer_name, ctx.customers.map((c) => ({ id: c.id, names: [c.name] })));
       if (!customerId) {
         const { data, error } = await db().from("customers").insert({ shop_id: shop, name: b.customer_name }).select("id").single();
@@ -74,13 +91,18 @@ export async function POST(req: Request) {
     // No occurred_at here: the DB stamps now(); only the seed may backdate.
     const { data: transactionId, error } = await db().rpc("apply_transaction", {
       p: {
-        idempotency_key: b.idempotency_key, shop_id: shop, type: b.type, method: b.method, customer_id: customerId,
+        idempotency_key: b.idempotency_key, shop_id: shop, type: b.type === "supplier_payment" ? "payment" : b.type,
+        method: b.method, customer_id: customerId, supplier_id: supplierId,
         paid: b.paid, total: b.total, items, expense_category: b.expense_category, raw_text: b.raw_text,
       },
     });
     if (error) {
       const code = DB_CODES.find((c) => error.message.includes(c));
-      if (code) return Response.json({ error: code }, { status: 422 });
+      if (code) {
+        const shown = code === "PAYMENT_EXCEEDS_DUE" && b.type === "supplier_payment" ? "SUPPLIER_PAYMENT_EXCEEDS_DUE"
+          : code === "CUSTOMER_REQUIRED" && b.type === "supplier_payment" ? "SUPPLIER_REQUIRED" : code;
+        return Response.json({ error: shown }, { status: 422 });
+      }
       throw error;
     }
 

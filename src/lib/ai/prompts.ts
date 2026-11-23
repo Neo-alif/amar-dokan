@@ -2,7 +2,7 @@
 
 export type PromptProduct = { name_bn: string; name_en: string | null; aliases: string[]; unit: string };
 
-export function extractionSystemPrompt(products: PromptProduct[], customers: string[], lang: "bn" | "en"): string {
+export function extractionSystemPrompt(products: PromptProduct[], customers: string[], lang: "bn" | "en", suppliers: string[] = []): string {
   const productLines = products
     .map((p) => `- ${p.name_bn} | ${p.name_en ?? ""} | ${p.aliases.join(", ")} | unit ${p.unit}`)
     .join("\n");
@@ -13,6 +13,7 @@ Rules:
 - Copy numbers exactly as said. NEVER calculate, divide, add or guess money. If a price or amount is not said, use null.
 - "baki"/"বাকি" = money left as due → due_said. Whole amount left as due with no number ("puro baki", "sob baki", "পুরোটাই বাকি", "kichu dey nai") → paid_said: 0. "dilo"/"joma"/"দিল" from a customer with no product = payment.
 - Sold to a customer = sale. "kinlam"/"কিনলাম"/bought for the shop = purchase. Bills, rent ("bhara"/"ভাড়া"), salary, transport, tea = expense.
+- Buying on credit from a supplier/wholesaler ("X theke baki te kinlam", "X traders er kache 500 baki") = purchase with supplier = X and due_said/paid_said as said. Paying a supplier back ("X ke 2000 dilam", "পাইকারকে দেনা শোধ") = supplier_payment with supplier = X and paid_said. A person who BUYS from the shop is a customer, never a supplier.
 - "ta"/"টা"/"pis" = pcs. Write product and customer names using the exact name from the lists below when they clearly match; otherwise write the name as said.
 - A money amount said once for a single product line is that line's money: put it in total_said (not unit_price_said) unless the speaker says it is per unit: "kore"/"করে"/"each"/"প্রতিটা"/"per kg" → unit_price_said.
 - method: "bkash" if bKash/bikash/বিকাশ is said, "bank" for bank/check/ব্যাংক, else null (cash is the default; never guess).
@@ -24,15 +25,19 @@ ${productLines}
 
 Customers: ${customers.join(", ") || "(none yet)"}
 
+Suppliers: ${suppliers.join(", ") || "(none yet)"}
+
 Examples (message → JSON):
-"Rahim vai ke 2 ta soyabin tel dilam, 680 taka, 100 taka baki" → {"type":"sale","items":[{"product":"সয়াবিন তেল","quantity":2,"unit":"pcs","unit_price_said":null,"line_total_said":null}],"customer":"রহিম ভাই","total_said":680,"paid_said":null,"due_said":100,"method":null,"expense_category":null,"clarify_question":null,"confidence":0.95}
-"Karim ke 3 ta sabun dilam" → {"type":"sale","items":[{"product":"গায়ে মাখা সাবান","quantity":3,"unit":"pcs","unit_price_said":null,"line_total_said":null}],"customer":"করিম","total_said":null,"paid_said":null,"due_said":null,"method":null,"expense_category":null,"clarify_question":"কত টাকায় দিলেন?","confidence":0.9}
-"2 kg chal 76 taka kore, 1 kg chini 130" → {"type":"sale","items":[{"product":"মিনিকেট চাল","quantity":2,"unit":"kg","unit_price_said":76,"line_total_said":null},{"product":"চিনি","quantity":1,"unit":"kg","unit_price_said":null,"line_total_said":130}],"customer":null,"total_said":null,"paid_said":null,"due_said":null,"method":null,"expense_category":null,"clarify_question":null,"confidence":0.9}
-"রহিম ভাই ৩০০ টাকা দিল" → {"type":"payment","items":[],"customer":"রহিম ভাই","total_said":null,"paid_said":300,"due_said":null,"method":null,"expense_category":null,"clarify_question":null,"confidence":0.95}
-"aj 10 kg dal kinlam 1200 taka" → {"type":"purchase","items":[{"product":"মসুর ডাল","quantity":10,"unit":"kg","unit_price_said":null,"line_total_said":null}],"customer":null,"total_said":1200,"paid_said":null,"due_said":null,"method":null,"expense_category":null,"clarify_question":null,"confidence":0.9}
-"current bill 800 dilam" → {"type":"expense","items":[],"customer":null,"total_said":800,"paid_said":null,"due_said":null,"method":null,"expense_category":"বিদ্যুৎ বিল","clarify_question":null,"confidence":0.95}
-"Salma apa 2 kg alu nilo 76 taka, 50 dilo" → {"type":"sale","items":[{"product":"আলু","quantity":2,"unit":"kg","unit_price_said":null,"line_total_said":null}],"customer":"সালমা আপা","total_said":76,"paid_said":50,"due_said":null,"method":null,"expense_category":null,"clarify_question":null,"confidence":0.85}
-"Jasim ke baki te ditam" → {"type":"unknown","items":[],"customer":"জসিম","total_said":null,"paid_said":null,"due_said":null,"method":null,"expense_category":null,"clarify_question":"কী দিয়েছেন আর কত টাকা?","confidence":0.3}`;
+"Rahim vai ke 2 ta soyabin tel dilam, 680 taka, 100 taka baki" → {"type":"sale","items":[{"product":"সয়াবিন তেল","quantity":2,"unit":"pcs","unit_price_said":null,"line_total_said":null}],"customer":"রহিম ভাই","supplier":null,"total_said":680,"paid_said":null,"due_said":100,"method":null,"expense_category":null,"clarify_question":null,"confidence":0.95}
+"Karim ke 3 ta sabun dilam" → {"type":"sale","items":[{"product":"গায়ে মাখা সাবান","quantity":3,"unit":"pcs","unit_price_said":null,"line_total_said":null}],"customer":"করিম","supplier":null,"total_said":null,"paid_said":null,"due_said":null,"method":null,"expense_category":null,"clarify_question":"কত টাকায় দিলেন?","confidence":0.9}
+"2 kg chal 76 taka kore, 1 kg chini 130" → {"type":"sale","items":[{"product":"মিনিকেট চাল","quantity":2,"unit":"kg","unit_price_said":76,"line_total_said":null},{"product":"চিনি","quantity":1,"unit":"kg","unit_price_said":null,"line_total_said":130}],"customer":null,"supplier":null,"total_said":null,"paid_said":null,"due_said":null,"method":null,"expense_category":null,"clarify_question":null,"confidence":0.9}
+"রহিম ভাই ৩০০ টাকা দিল" → {"type":"payment","items":[],"customer":"রহিম ভাই","supplier":null,"total_said":null,"paid_said":300,"due_said":null,"method":null,"expense_category":null,"clarify_question":null,"confidence":0.95}
+"aj 10 kg dal kinlam 1200 taka" → {"type":"purchase","items":[{"product":"মসুর ডাল","quantity":10,"unit":"kg","unit_price_said":null,"line_total_said":null}],"customer":null,"supplier":null,"total_said":1200,"paid_said":null,"due_said":null,"method":null,"expense_category":null,"clarify_question":null,"confidence":0.9}
+"current bill 800 dilam" → {"type":"expense","items":[],"customer":null,"supplier":null,"total_said":800,"paid_said":null,"due_said":null,"method":null,"expense_category":"বিদ্যুৎ বিল","clarify_question":null,"confidence":0.95}
+"Salma apa 2 kg alu nilo 76 taka, 50 dilo" → {"type":"sale","items":[{"product":"আলু","quantity":2,"unit":"kg","unit_price_said":null,"line_total_said":null}],"customer":"সালমা আপা","supplier":null,"total_said":76,"paid_said":50,"due_said":null,"method":null,"expense_category":null,"clarify_question":null,"confidence":0.85}
+"Rahman traders theke 20 kg chini kinlam 2600 taka, 1000 dilam baki thaklo" → {"type":"purchase","items":[{"product":"চিনি","quantity":20,"unit":"kg","unit_price_said":null,"line_total_said":null}],"customer":null,"supplier":"রহমান ট্রেডার্স","total_said":2600,"paid_said":1000,"due_said":null,"method":null,"expense_category":null,"clarify_question":null,"confidence":0.9}
+"রহমান ট্রেডার্সকে ১৫০০ টাকা বিকাশে দিলাম" → {"type":"supplier_payment","items":[],"customer":null,"supplier":"রহমান ট্রেডার্স","total_said":null,"paid_said":1500,"due_said":null,"method":"bkash","expense_category":null,"clarify_question":null,"confidence":0.9}
+"Jasim ke baki te ditam" → {"type":"unknown","items":[],"customer":"জসিম","supplier":null,"total_said":null,"paid_said":null,"due_said":null,"method":null,"expense_category":null,"clarify_question":"কী দিয়েছেন আর কত টাকা?","confidence":0.3}`;
 }
 
 // Daily insight + monthly audit. The model only words the facts; a number check runs on its reply (insight.ts).

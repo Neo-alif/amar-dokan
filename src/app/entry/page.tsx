@@ -6,12 +6,13 @@ import { ConfirmCard, type CardMeta } from "@/components/ConfirmCard";
 import { MicButton } from "@/components/MicButton";
 import { useLanguage } from "@/i18n/LanguageContext";
 import type { ErrorCode } from "@/i18n/dictionary";
-import type { Card, CardType } from "@/lib/logic/card";
+import { isAmountType, type Card, type CardType } from "@/lib/logic/card";
 import { MAX_INPUT_CHARS } from "@/lib/logic/normalize";
 
 // Shape returned by POST /api/extract (src/lib/ai/extract.ts → draft)
 type Draft = {
   type: CardType; customer: string | null; customer_id: string | null; due_before: number | null;
+  supplier: string | null; supplier_id: string | null; supplier_due_before: number | null;
   items: { product: string; product_id: string | null; unit: string | null; quantity: number | null; unit_price: number | null; stock_before: number | null }[];
   total: number | null; paid: number | null; received: number | null; due: number; method: Card["method"] | null; expense_category: string | null; clarify_question: string | null;
 };
@@ -22,16 +23,20 @@ const toCard = (d: Draft): Card => ({
   customer_id: d.customer_id,
   customer_name: d.customer ?? "",
   due_before: d.due_before,
+  supplier_id: d.supplier_id,
+  supplier_name: d.supplier ?? "",
+  supplier_due_before: d.supplier_due_before,
   items: d.items.map((i) => ({ product_id: i.product_id, name: i.product, unit: i.unit, quantity: i.quantity, unit_price: i.unit_price, stock_before: i.stock_before })),
   due: d.due,
-  all_due: d.type === "sale" && d.paid === 0, // "পুরোটাই বাকি": nothing paid
+  all_due: (d.type === "sale" || d.type === "purchase") && d.paid === 0, // "পুরোটাই বাকি": nothing paid
   received: d.type === "sale" ? d.received : null,
-  amount: d.type === "expense" || d.type === "payment" ? d.total : null,
+  amount: isAmountType(d.type) ? d.total : null,
   expense_category: d.expense_category ?? "",
 });
 
 const EMPTY_CARD: Card = {
   type: "unknown", method: "cash", customer_id: null, customer_name: "", due_before: null,
+  supplier_id: null, supplier_name: "", supplier_due_before: null,
   items: [{ product_id: null, name: "", unit: null, quantity: 1, unit_price: null, stock_before: null }],
   due: 0, all_due: false, received: null, amount: null, expense_category: "",
 };

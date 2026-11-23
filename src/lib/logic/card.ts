@@ -5,7 +5,7 @@ import type { METHODS } from "../schema";
 
 export type Method = (typeof METHODS)[number];
 
-export type CardType = "sale" | "purchase" | "expense" | "payment" | "unknown";
+export type CardType = "sale" | "purchase" | "expense" | "payment" | "supplier_payment" | "unknown";
 export type CardItem = {
   product_id: string | null;
   name: string;
@@ -20,8 +20,11 @@ export type Card = {
   customer_id: string | null;
   customer_name: string;
   due_before: number | null;
+  supplier_id: string | null;          // purchase on credit / supplier_payment
+  supplier_name: string;
+  supplier_due_before: number | null;  // দেনা before this transaction
   items: CardItem[];
-  due: number;            // sale only: money left as baki (what the owner says)
+  due: number;            // sale: customer baki (পাওনা) · purchase: owed to the supplier (দেনা)
   all_due: boolean;
   received: number | null; // sale only: cash the customer handed over, if said → ফেরত (shown, not saved)       // sale only: "পুরোটাই বাকি" → baki follows the total until the owner edits it
   amount: number | null;  // expense / payment
@@ -29,13 +32,14 @@ export type Card = {
 };
 
 const r2 = (n: number) => Math.round(n * 100) / 100;
+export const isAmountType = (t: CardType) => t === "expense" || t === "payment" || t === "supplier_payment"; // one amount, no items
 const itemsComplete = (c: Card) =>
   c.items.length > 0 && c.items.every((i) => i.name.trim() && i.quantity != null && i.quantity > 0 && i.unit_price != null);
 
 export function cardTotals(c: Card): { total: number | null; paid: number | null; due: number } {
-  if (c.type === "expense" || c.type === "payment") return { total: c.amount, paid: c.amount, due: 0 };
+  if (isAmountType(c.type)) return { total: c.amount, paid: c.amount, due: 0 };
   const total = itemsComplete(c) ? r2(c.items.reduce((s, i) => s + i.quantity! * i.unit_price!, 0)) : null;
-  const due = c.type !== "sale" ? 0 : c.all_due ? (total ?? 0) : c.due;
+  const due = c.type !== "sale" && c.type !== "purchase" ? 0 : c.all_due ? (total ?? 0) : c.due;
   return { total, paid: total != null ? r2(total - due) : null, due };
 }
 
@@ -54,15 +58,20 @@ export function cardProblems(c: Card): ErrorCode[] {
   if (c.type === "sale" || c.type === "purchase") {
     if (!itemsComplete(c)) p.push("NEED_ITEM_DETAILS");
     const { total, due } = cardTotals(c);
-    if (c.type === "sale" && total != null && due > total) p.push("DUE_EXCEEDS_TOTAL");
+    if (total != null && due > total) p.push("DUE_EXCEEDS_TOTAL");
     if (c.type === "sale" && (due > 0 || c.all_due) && !hasCustomer) p.push("CUSTOMER_REQUIRED_FOR_DUE");
+    if (c.type === "purchase" && (due > 0 || c.all_due) && !c.supplier_name.trim()) p.push("SUPPLIER_REQUIRED_FOR_DUE");
   }
-  if (c.type === "expense" || c.type === "payment") {
+  if (isAmountType(c.type)) {
     if (!(c.amount != null && c.amount > 0)) p.push("AMOUNT_REQUIRED");
   }
   if (c.type === "payment") {
     if (!hasCustomer) p.push("CUSTOMER_REQUIRED");
     else if (c.due_before != null && c.amount != null && c.amount > c.due_before) p.push("PAYMENT_EXCEEDS_DUE");
+  }
+  if (c.type === "supplier_payment") {
+    if (!c.supplier_name.trim()) p.push("SUPPLIER_REQUIRED");
+    else if (c.supplier_due_before != null && c.amount != null && c.amount > c.supplier_due_before) p.push("SUPPLIER_PAYMENT_EXCEEDS_DUE");
   }
   return p;
 }

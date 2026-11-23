@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import type { ErrorCode } from "@/i18n/dictionary";
-import { cardChange, cardProblems, cardTotals, type Card, type CardType, type Method } from "@/lib/logic/card";
+import { cardChange, cardProblems, cardTotals, isAmountType, type Card, type CardType, type Method } from "@/lib/logic/card";
 import { formatNumber, formatTaka } from "@/lib/format";
 
 export type CardMeta = { log_id: string | null; raw_text: string | null; manual: boolean; clarify_question: string | null };
@@ -13,9 +13,10 @@ const BADGE: Record<CardType, string> = {
   purchase: "bg-blue-100 text-blue-700",
   expense: "bg-amber-100 text-amber-800",
   payment: "bg-purple-100 text-purple-700",
+  supplier_payment: "bg-rose-100 text-rose-700",
   unknown: "bg-slate-100 text-slate-600",
 };
-const TYPES: CardType[] = ["sale", "purchase", "expense", "payment"];
+const TYPES: CardType[] = ["sale", "purchase", "expense", "payment", "supplier_payment"];
 const METHOD_LIST: Method[] = ["cash", "bkash", "bank"];
 const num = (v: string) => (v.trim() === "" || Number.isNaN(Number(v)) ? null : Number(v));
 const input = "w-full min-h-11 rounded-xl border border-border bg-white px-3 text-base";
@@ -54,6 +55,8 @@ export function ConfirmCard({ initial, meta, onDone }: { initial: Card; meta: Ca
           method: card.method,
           customer_id: card.customer_id,
           customer_name: card.customer_name.trim() || null,
+          supplier_id: card.supplier_id,
+          supplier_name: card.supplier_name.trim() || null,
           items: isItems ? card.items.map((i) => ({ product_id: i.product_id, name: i.name.trim(), unit: i.unit, quantity: i.quantity, unit_price: i.unit_price })) : [],
           paid,
           total: card.type === "expense" ? card.amount : null,
@@ -98,7 +101,7 @@ export function ConfirmCard({ initial, meta, onDone }: { initial: Card; meta: Ca
       )}
 
       <dl className="grid grid-cols-[110px_1fr] items-center gap-x-4 gap-y-3 text-[17px]">
-        {(card.type !== "expense") && (
+        {(card.type === "sale" || card.type === "payment" || card.type === "unknown") && (
           <>
             <dt className="text-muted">{c.customer}</dt>
             <dd className="font-semibold">
@@ -110,6 +113,23 @@ export function ConfirmCard({ initial, meta, onDone }: { initial: Card; meta: Ca
               )}
               {card.due_before != null && card.due_before > 0 && (
                 <span className="block text-sm font-normal text-muted">{c.dueNow} {taka(card.due_before)}</span>
+              )}
+            </dd>
+          </>
+        )}
+
+        {(card.type === "purchase" || card.type === "supplier_payment") && (
+          <>
+            <dt className="text-muted">{c.supplier}</dt>
+            <dd className="font-semibold">
+              {editing ? (
+                <input aria-label={c.supplier} className={input} value={card.supplier_name}
+                  onChange={(e) => set({ supplier_name: e.target.value, supplier_id: null, supplier_due_before: null })} />
+              ) : (
+                <>{card.supplier_name || "—"} {card.supplier_name && !card.supplier_id && <New label={c.newBadge} />}</>
+              )}
+              {card.supplier_due_before != null && card.supplier_due_before > 0 && (
+                <span className="block text-sm font-normal text-muted">{c.supplierDueNow} {taka(card.supplier_due_before)}</span>
               )}
             </dd>
           </>
@@ -147,7 +167,7 @@ export function ConfirmCard({ initial, meta, onDone }: { initial: Card; meta: Ca
           </button>
         )}
 
-        {(card.type === "expense" || card.type === "payment") && (
+        {isAmountType(card.type) && (
           <>
             <dt className="text-muted">{c.amount}</dt>
             <dd className="font-semibold">
@@ -173,13 +193,13 @@ export function ConfirmCard({ initial, meta, onDone }: { initial: Card; meta: Ca
             <dt className="text-muted">{c.paid}</dt><dd className="font-semibold text-green-700">{taka(paid)}</dd>
           </>
         )}
-        {card.type === "sale" && (
+        {(card.type === "sale" || card.type === "purchase") && (
           <>
-            <dt className="text-muted">{c.due}</dt>
+            <dt className="text-muted">{card.type === "purchase" ? c.owed : c.due}</dt>
             <dd className="font-bold text-danger">
               {editing ? <input aria-label={c.due} className={input} type="number" inputMode="decimal" min="0" value={card.all_due ? due : card.due} onChange={(e) => set({ due: num(e.target.value) ?? 0, all_due: false })} /> : taka(due)}
             </dd>
-            {editing && (
+            {editing && card.type === "sale" && (
               <><dt className="text-muted">{c.received}</dt>
               <dd><input aria-label={c.received} className={input} type="number" inputMode="decimal" min="0" value={card.received ?? ""} onChange={(e) => set({ received: num(e.target.value) })} /></dd></>
             )}
@@ -252,6 +272,10 @@ function Changes({ card, total, paid, due }: { card: Card; total: number | null;
     }
   }
   if (card.type === "sale" && due > 0) lines.push(`${card.customer_name} ${c.changeDue} +${formatTaka(due, lang)}`);
+  if (card.type === "purchase" && due > 0) lines.push(`${card.supplier_name} ${c.owed} +${formatTaka(due, lang)}`);
+  if (card.type === "supplier_payment" && card.supplier_due_before != null && card.amount) {
+    lines.push(`${card.supplier_name} ${c.owed} ${formatTaka(card.supplier_due_before, lang)} → ${formatTaka(card.supplier_due_before - card.amount, lang)}`);
+  }
   if (card.type === "payment" && card.due_before != null && card.amount) {
     lines.push(`${card.customer_name} ${c.changeDue} ${formatTaka(card.due_before, lang)} → ${formatTaka(card.due_before - card.amount, lang)}`);
   }

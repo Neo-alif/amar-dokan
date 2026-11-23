@@ -7,7 +7,7 @@ import { matchCustomer, matchProduct } from "../src/lib/logic/matchProduct.ts";
 import type { Extraction } from "../src/lib/schema.ts";
 
 const base: Extraction = {
-  type: "sale", items: [], customer: null, total_said: null, paid_said: null, due_said: null,
+  type: "sale", items: [], customer: null, supplier: null, total_said: null, paid_said: null, due_said: null,
   method: null, expense_category: null, clarify_question: null, confidence: 1,
 };
 const item = (product: string, quantity: number | null, extra: Partial<Extraction["items"][number]> = {}) =>
@@ -102,7 +102,7 @@ test("matchCustomer: honorifics ignored", () => {
 import { cardChange, cardProblems, cardTotals, type Card } from "../src/lib/logic/card.ts";
 
 const card = (over: Partial<Card>): Card => ({
-  type: "sale", method: "cash", customer_id: null, customer_name: "", due_before: null, items: [], due: 0, all_due: false, received: null, amount: null, expense_category: "", ...over,
+  type: "sale", method: "cash", customer_id: null, customer_name: "", due_before: null, supplier_id: null, supplier_name: "", supplier_due_before: null, items: [], due: 0, all_due: false, received: null, amount: null, expense_category: "", ...over,
 });
 const line = (quantity: number | null, unit_price: number | null) =>
   ({ product_id: "x", name: "তেল", unit: "pcs", quantity, unit_price, stock_before: 10 });
@@ -136,8 +136,8 @@ test("card: ফেরত = cash handed over − paid; none when not said or not 
   assert.equal(cardChange(card({ items: [line(1, null)], received: 500 })), null); // price not known yet
 });
 
-test("card: purchase ignores due; payment needs customer and ≤ due; unknown needs a type", () => {
-  assert.deepEqual(cardTotals(card({ type: "purchase", items: [line(10, 120)], due: 99 })), { total: 1200, paid: 1200, due: 0 });
+test("card: expense ignores due; payment needs customer and ≤ due; unknown needs a type", () => {
+  assert.deepEqual(cardTotals(card({ type: "expense", amount: 500, due: 99 })), { total: 500, paid: 500, due: 0 });
   assert.deepEqual(cardProblems(card({ type: "payment", amount: 300 })), ["CUSTOMER_REQUIRED"]);
   assert.deepEqual(cardProblems(card({ type: "payment", amount: 300, customer_name: "রহিম ভাই", due_before: 40 })), ["PAYMENT_EXCEEDS_DUE"]);
   assert.deepEqual(cardProblems(card({ type: "unknown" })), ["NEED_TYPE"]);
@@ -307,4 +307,30 @@ test("countDifference: counted − expected", () => {
   assert.equal(countDifference(500, 580), -80);
   assert.equal(countDifference(46400, 45900), 500);
   assert.equal(countDifference(0.3, 0.1), 0.2);
+});
+
+test("দেনা: purchase on credit needs a supplier; supplier payment is one amount", () => {
+  const credit = deriveAmounts({ ...base, type: "purchase", supplier: "রহমান ট্রেডার্স", items: [item("চিনি", 20)], total_said: 2600, paid_said: 1000 });
+  assert.equal(credit.items[0].unit_price, 130);
+  assert.equal(credit.paid, 1000);
+  assert.equal(credit.due, 1600);
+  assert.deepEqual(credit.missing, []);
+  const noSupplier = deriveAmounts({ ...base, type: "purchase", items: [item("চিনি", 20)], total_said: 2600, due_said: 1600 });
+  assert.deepEqual(noSupplier.missing, ["supplier"]); // never asks for a customer on a purchase
+  const pay = deriveAmounts({ ...base, type: "supplier_payment", supplier: "রহমান ট্রেডার্স", paid_said: 1500, method: "bkash" });
+  assert.deepEqual([pay.total, pay.paid, pay.due, pay.missing], [1500, 1500, 0, []]);
+  assert.deepEqual(deriveAmounts({ ...base, type: "supplier_payment", paid_said: 1500 }).missing, ["supplier"]);
+});
+
+test("card: credit purchase and supplier payment checks", () => {
+  const buy = card({ type: "purchase", items: [line(10, 30)], due: 200 });
+  assert.deepEqual(cardTotals(buy), { total: 300, paid: 100, due: 200 });
+  assert.deepEqual(cardProblems(buy), ["SUPPLIER_REQUIRED_FOR_DUE"]);
+  assert.deepEqual(cardProblems({ ...buy, supplier_name: "করিম ট্রেডার্স" }), []);
+  assert.deepEqual(cardProblems({ ...buy, supplier_name: "করিম ট্রেডার্স", due: 400 }), ["DUE_EXCEEDS_TOTAL"]);
+  const pay = card({ type: "supplier_payment", amount: 250, supplier_name: "করিম ট্রেডার্স", supplier_id: "s1", supplier_due_before: 200 });
+  assert.deepEqual(cardTotals(pay), { total: 250, paid: 250, due: 0 });
+  assert.deepEqual(cardProblems(pay), ["SUPPLIER_PAYMENT_EXCEEDS_DUE"]);
+  assert.deepEqual(cardProblems({ ...pay, amount: 200 }), []);
+  assert.deepEqual(cardProblems({ ...pay, supplier_name: "" }), ["SUPPLIER_REQUIRED"]);
 });

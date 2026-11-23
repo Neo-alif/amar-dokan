@@ -4,7 +4,8 @@
 import { z } from "zod";
 
 export const UNITS = ["pcs", "kg", "g", "litre", "ml", "dozen", "packet"] as const;
-export const TXN_TYPES = ["sale", "purchase", "expense", "payment", "unknown"] as const;
+// supplier_payment = the shop pays a supplier back (দেনা শোধ); saved as a DB payment with supplier_id
+export const TXN_TYPES = ["sale", "purchase", "expense", "payment", "supplier_payment", "unknown"] as const;
 export const METHODS = ["cash", "bkash", "bank"] as const; // how money moved; cash is the default
 
 const said = (what: string) => z.number().nonnegative().nullable().describe(`${what}, only if the speaker said it, else null`);
@@ -21,6 +22,7 @@ export const Extraction = z.object({
   type: z.enum(TXN_TYPES),
   items: z.array(ExtractedItem).describe("products for sale/purchase; empty for expense/payment"),
   customer: z.string().nullable().describe("customer name; use the exact name from the customer list when it clearly matches"),
+  supplier: z.string().nullable().describe("supplier/wholesaler the shop bought from or paid back; use the exact name from the supplier list when it clearly matches; else null"),
   total_said: said("total money of the whole transaction"),
   paid_said: said("money paid now"),
   due_said: said("money left as baki/due"),

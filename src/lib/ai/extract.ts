@@ -9,6 +9,7 @@ import { callLLM } from "./provider.ts";
 export type ShopContext = {
   products: { id: string; name_bn: string; name_en: string | null; aliases: string[]; unit: string; sell_price: number; stock_qty: number }[];
   customers: { id: string; name: string; due_balance: number }[];
+  suppliers: { id: string; name: string; due_balance: number }[];
   lang: "bn" | "en";
 };
 
@@ -16,7 +17,7 @@ export async function extract(text: string, ctx: ShopContext) {
   const input = normalizeInput(text);
   const llm = await callLLM(
     {
-      system: extractionSystemPrompt(ctx.products, ctx.customers.map((c) => c.name), ctx.lang),
+      system: extractionSystemPrompt(ctx.products, ctx.customers.map((c) => c.name), ctx.lang, ctx.suppliers.map((s) => s.name)),
       user: input,
       jsonSchema: ExtractionJsonSchema,
     },
@@ -27,6 +28,8 @@ export async function extract(text: string, ctx: ShopContext) {
   const amounts = deriveAmounts(x);
   const productCandidates = ctx.products.map((p) => ({ id: p.id, names: [p.name_bn, p.name_en ?? "", ...p.aliases] }));
   const customerId = x.customer ? matchCustomer(x.customer, ctx.customers.map((c) => ({ id: c.id, names: [c.name] }))) : null;
+  const supplierId = x.supplier ? matchCustomer(x.supplier, ctx.suppliers.map((s) => ({ id: s.id, names: [s.name] }))) : null;
+  const supplier = supplierId ? ctx.suppliers.find((s) => s.id === supplierId)! : null;
 
   const draft = {
     type: x.type,
@@ -47,6 +50,9 @@ export async function extract(text: string, ctx: ShopContext) {
     customer_id: customerId,
     due_before: customerId ? Number(ctx.customers.find((c) => c.id === customerId)!.due_balance) : null,
     customer_is_new: Boolean(x.customer) && customerId === null,
+    supplier: supplier?.name ?? x.supplier,
+    supplier_id: supplierId,
+    supplier_due_before: supplier ? Number(supplier.due_balance) : null,
     total: amounts.total,
     paid: amounts.paid,
     received: x.paid_said, // cash the customer said they handed over (for ফেরত), as said
