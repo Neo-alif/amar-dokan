@@ -144,3 +144,16 @@ export function pickActions(
     ...(growers.length ? [{ kind: "tip" as const, product_ids: growers }] : []),
   ];
 }
+
+// পণ্যের বিক্রি: qty sold this Dhaka week per product. Best = sold most (qty > 0); worst = sold least,
+// including products that sold nothing this week (they are the ones sitting on the shelf).
+export function weekSellers(lines: SaleLine[], productIds: string[], now: Date, n = 10) {
+  const sold = byProduct(lines, dhakaWeekStart(now).getTime(), now.getTime() + 1);
+  const all = productIds.map((id) => ({ id, qty: r2(sold.get(id)?.qty ?? 0) }));
+  const max = Math.max(0, ...all.map((p) => p.qty));
+  const withPct = (p: { id: string; qty: number }) => ({ ...p, pct: max > 0 ? Math.round((p.qty / max) * 100) : 0 });
+  return {
+    best: all.filter((p) => p.qty > 0).sort((a, b) => b.qty - a.qty).slice(0, n).map(withPct),
+    worst: [...all].sort((a, b) => a.qty - b.qty).slice(0, n).map(withPct),
+  };
+}

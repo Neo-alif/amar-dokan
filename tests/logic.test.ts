@@ -405,3 +405,17 @@ test("charts: daily sales per Dhaka day, expenses by category, top products", ()
   assert.deepEqual(ex, [{ category: "অন্যান্য", total: 200 }, { category: "চা-নাস্তা", total: 80 }]);
   assert.deepEqual(topProducts(lines, start, end).map((p) => p.id), ["b", "a"]);
 });
+
+test("weekSellers: best by qty this Dhaka week, worst includes products that sold nothing", async () => {
+  const { weekSellers } = await import("../src/lib/logic/summary.ts");
+  const now = new Date("2026-11-23T10:00:00+06:00"); // Monday; week started Sat 21 Nov
+  const lines = [
+    sold("2026-11-21T09:00:00+06:00", 4, 10, 8, "a"),
+    sold("2026-11-22T09:00:00+06:00", 2, 10, 8, "b"),
+    sold("2026-11-20T23:00:00+06:00", 50, 10, 8, "b"), // last week, ignored
+  ];
+  const w = weekSellers(lines, ["a", "b", "c"], now);
+  assert.deepEqual(w.best, [{ id: "a", qty: 4, pct: 100 }, { id: "b", qty: 2, pct: 50 }]);
+  assert.deepEqual(w.worst.map((p) => p.id), ["c", "b", "a"]);
+  assert.deepEqual(weekSellers([], ["a"], now), { best: [], worst: [{ id: "a", qty: 0, pct: 0 }] });
+});

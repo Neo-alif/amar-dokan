@@ -15,6 +15,12 @@ const bn = {
   home: {
     weekTitle: "এই সপ্তাহের অবস্থা",
     weekSubtitle: "লাভ, জরুরি কাজ আর মাসের হিসাব এক নজরে",
+    sellersTitle: "পণ্যের বিক্রি",
+    sellersSubtitle: "কোনটা দ্রুত চলছে, কোনটা পড়ে আছে (এই সপ্তাহ)",
+    bestSellers: "বেশি বিক্রি হচ্ছে",
+    worstSellers: "কম বিক্রি হচ্ছে",
+    seeAll: "সব দেখুন →",
+    noSales: "এই সপ্তাহে এখনো বিক্রি নেই",
     sampleData: "নমুনা তথ্য",
     productsUnit: "টি পণ্য", // joined to the number: ৩টি পণ্য
     weeklyProfit: "সাপ্তাহিক লাভ",
@@ -341,6 +347,12 @@ const en: Dict = {
   home: {
     weekTitle: "This week",
     weekSubtitle: "Profit, urgent tasks and the month at a glance",
+    sellersTitle: "Product sales",
+    sellersSubtitle: "What moves fast, what sits on the shelf (this week)",
+    bestSellers: "Selling most",
+    worstSellers: "Selling least",
+    seeAll: "See all →",
+    noSales: "No sales yet this week",
     sampleData: "Sample data",
     productsUnit: " products",
     weeklyProfit: "Weekly profit",

@@ -192,7 +192,54 @@ export function WeekStatusView({ data }: { data: HomeData | null }) {
         </>
       )}
       <MenuTiles />
+      {data && <SellersSection data={data} />}
     </section>
+  );
+}
+
+// পণ্যের বিক্রি (mockup Main.dc.html): this week's best and worst sellers by quantity, two scroll lists.
+function SellersSection({ data }: { data: HomeData }) {
+  const { t, lang } = useLanguage();
+  const h = t.home;
+  const list = (title: string, dot: string, bar: string, rows: HomeData["sellers"]["best"]) => (
+    <article className="flex flex-col gap-3 rounded-2xl border border-border bg-white px-6 py-5">
+      <div className="flex items-center justify-between gap-3">
+        <h3 className="flex items-center gap-2 text-lg font-semibold"><span className={`size-2.5 rounded-full ${dot}`} />{title}</h3>
+        <Link href="/products" className="text-[15px] font-semibold text-primary hover:text-accent">{h.seeAll}</Link>
+      </div>
+      {rows.length === 0 ? <p className="text-muted">{h.noSales}</p> : (
+        <ol className="flex h-[260px] flex-col gap-1 overflow-y-auto pr-1" tabIndex={0} aria-label={title}>
+          {rows.map((p, i) => (
+            <li key={p.id} className="grid grid-cols-[28px_1fr_90px] items-center gap-3 rounded-[10px] px-2 py-2.5 sm:grid-cols-[28px_1fr_120px_90px]">
+              <span className="text-sm text-muted">{formatNumber(i + 1, lang)}</span>
+              <span className="font-medium">{data.names[p.id]?.[lang]}</span>
+              <span className="hidden h-2 overflow-hidden rounded-full bg-slate-100 sm:block" aria-hidden="true">
+                <span className={`block h-full rounded-full ${bar}`} style={{ width: `${p.pct}%` }} />
+              </span>
+              <span className="text-right text-[15px] text-slate-600">{formatNumber(p.qty, lang)} {t.units[data.units[p.id]] ?? ""}</span>
+            </li>
+          ))}
+        </ol>
+      )}
+    </article>
+  );
+  return (
+    <div className="mt-14">
+      <div className="mb-6 flex items-center gap-3.5">
+        <span className="flex size-[52px] flex-none items-center justify-center rounded-2xl bg-[#CCFBF1]">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#14B8A6" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M21 8l-9-5-9 5 9 5 9-5z" /><path d="M3 8v8l9 5 9-5V8" /><path d="M12 13v8" /></svg>
+        </span>
+        <div className="flex flex-col gap-0.5">
+          <h2 className="text-[32px] leading-tight font-bold text-primary">{h.sellersTitle}</h2>
+          <span className="block h-[5px] w-[72px] rounded-full bg-[#14B8A6]" />
+          <span className="mt-1 text-[15px] text-muted">{h.sellersSubtitle}</span>
+        </div>
+      </div>
+      <div className="grid gap-5 md:grid-cols-2">
+        {list(h.bestSellers, "bg-success", "bg-success", data.sellers.best)}
+        {list(h.worstSellers, "bg-[#D97706]", "bg-[#D97706]", data.sellers.worst)}
+      </div>
+    </div>
   );
 }
 

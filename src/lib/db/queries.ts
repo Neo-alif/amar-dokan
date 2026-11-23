@@ -1,7 +1,7 @@
 import { db, shopId } from "./client.ts";
 import type { ShopContext } from "../ai/extract.ts";
 import {
-  dhakaMonthStart, dhakaWeekStart, monthSummary, oldestDueDays, pickActions, todayNumbers, weeklyProfit, type SaleLine,
+  dhakaMonthStart, dhakaWeekStart, monthSummary, oldestDueDays, pickActions, todayNumbers, weekSellers, weeklyProfit, type SaleLine,
 } from "../logic/summary.ts";
 import { addDays, dailySeries, dhakaDay, forecast, stockOutlook } from "../logic/forecast.ts";
 import { moneyPosition, type Account } from "../logic/money.ts";
@@ -72,7 +72,9 @@ export async function loadHomeData(now = new Date()) {
     weekStart: dhakaWeekStart(now).toISOString(),
     week: weeklyProfit(n.lines, now),
     actions: pickActions(n.stock, n.dues, n.lines, now),
+    sellers: weekSellers(n.lines, n.stock.map((p) => p.id), now),
     names: namesOf(n.stock),
+    units: Object.fromEntries(n.stock.map((p) => [p.id, p.unit])),
   };
 }
 export type HomeData = Awaited<ReturnType<typeof loadHomeData>>;
