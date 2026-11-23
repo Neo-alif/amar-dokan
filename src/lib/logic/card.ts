@@ -18,6 +18,7 @@ export type Card = {
   due_before: number | null;
   items: CardItem[];
   due: number;            // sale only: money left as baki (what the owner says)
+  all_due: boolean;       // sale only: "পুরোটাই বাকি" → baki follows the total until the owner edits it
   amount: number | null;  // expense / payment
   expense_category: string;
 };
@@ -29,7 +30,7 @@ const itemsComplete = (c: Card) =>
 export function cardTotals(c: Card): { total: number | null; paid: number | null; due: number } {
   if (c.type === "expense" || c.type === "payment") return { total: c.amount, paid: c.amount, due: 0 };
   const total = itemsComplete(c) ? r2(c.items.reduce((s, i) => s + i.quantity! * i.unit_price!, 0)) : null;
-  const due = c.type === "sale" ? c.due : 0;
+  const due = c.type !== "sale" ? 0 : c.all_due ? (total ?? 0) : c.due;
   return { total, paid: total != null ? r2(total - due) : null, due };
 }
 
@@ -39,9 +40,9 @@ export function cardProblems(c: Card): ErrorCode[] {
   if (c.type === "unknown") p.push("NEED_TYPE");
   if (c.type === "sale" || c.type === "purchase") {
     if (!itemsComplete(c)) p.push("NEED_ITEM_DETAILS");
-    const { total } = cardTotals(c);
-    if (c.type === "sale" && total != null && c.due > total) p.push("DUE_EXCEEDS_TOTAL");
-    if (c.type === "sale" && c.due > 0 && !hasCustomer) p.push("CUSTOMER_REQUIRED_FOR_DUE");
+    const { total, due } = cardTotals(c);
+    if (c.type === "sale" && total != null && due > total) p.push("DUE_EXCEEDS_TOTAL");
+    if (c.type === "sale" && (due > 0 || c.all_due) && !hasCustomer) p.push("CUSTOMER_REQUIRED_FOR_DUE");
   }
   if (c.type === "expense" || c.type === "payment") {
     if (!(c.amount != null && c.amount > 0)) p.push("AMOUNT_REQUIRED");

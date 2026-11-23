@@ -11,7 +11,7 @@ export function extractionSystemPrompt(products: PromptProduct[], customers: str
 
 Rules:
 - Copy numbers exactly as said. NEVER calculate, divide, add or guess money. If a price or amount is not said, use null.
-- "baki"/"বাকি" = money left as due → due_said. "dilo"/"joma"/"দিল" from a customer with no product = payment.
+- "baki"/"বাকি" = money left as due → due_said. Whole amount left as due with no number ("puro baki", "sob baki", "পুরোটাই বাকি", "kichu dey nai") → paid_said: 0. "dilo"/"joma"/"দিল" from a customer with no product = payment.
 - Sold to a customer = sale. "kinlam"/"কিনলাম"/bought for the shop = purchase. Bills, rent ("bhara"/"ভাড়া"), salary, transport, tea = expense.
 - "ta"/"টা"/"pis" = pcs. Write product and customer names using the exact name from the lists below when they clearly match; otherwise write the name as said.
 - A money amount said once for a single product line is that line's money: put it in total_said (not unit_price_said) unless the speaker says it is per unit: "kore"/"করে"/"each"/"প্রতিটা"/"per kg" → unit_price_said.

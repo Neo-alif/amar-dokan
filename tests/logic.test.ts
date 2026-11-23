@@ -102,7 +102,7 @@ test("matchCustomer: honorifics ignored", () => {
 import { cardProblems, cardTotals, type Card } from "../src/lib/logic/card.ts";
 
 const card = (over: Partial<Card>): Card => ({
-  type: "sale", customer_id: null, customer_name: "", due_before: null, items: [], due: 0, amount: null, expense_category: "", ...over,
+  type: "sale", customer_id: null, customer_name: "", due_before: null, items: [], due: 0, all_due: false, amount: null, expense_category: "", ...over,
 });
 const line = (quantity: number | null, unit_price: number | null) =>
   ({ product_id: "x", name: "তেল", unit: "pcs", quantity, unit_price, stock_before: 10 });
@@ -117,6 +117,16 @@ test("card: missing price, due without customer, due above total are blocked", (
   assert.deepEqual(cardProblems(card({ items: [line(2, null)] })), ["NEED_ITEM_DETAILS"]);
   assert.deepEqual(cardProblems(card({ items: [line(1, 100)], due: 50 })), ["CUSTOMER_REQUIRED_FOR_DUE"]);
   assert.deepEqual(cardProblems(card({ customer_name: "করিম", items: [line(1, 100)], due: 150 })), ["DUE_EXCEEDS_TOTAL"]);
+});
+
+test("card: all_due (পুরোটাই বাকি) follows the total once the price is filled in", () => {
+  const c = card({ customer_name: "মিজান", items: [line(1, 50)], all_due: true });
+  assert.deepEqual(cardTotals(c), { total: 50, paid: 0, due: 50 });
+  assert.deepEqual(cardProblems(c), []);
+  assert.deepEqual(cardProblems(card({ items: [line(1, 50)], all_due: true })), ["CUSTOMER_REQUIRED_FOR_DUE"]);
+  // AI side: "puro baki" with no price → paid 0 is kept, no guessed due
+  const a = deriveAmounts({ ...base, customer: "মিজান", items: [item("চিনি", 1)], paid_said: 0 });
+  assert.deepEqual([a.paid, a.due, a.missing], [0, 0, ["price"]]);
 });
 
 test("card: purchase ignores due; payment needs customer and ≤ due; unknown needs a type", () => {

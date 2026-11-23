@@ -167,7 +167,7 @@ export function ConfirmCard({ initial, meta, onDone }: { initial: Card; meta: Ca
           <>
             <dt className="text-muted">{c.due}</dt>
             <dd className="font-bold text-danger">
-              {editing ? <input aria-label={c.due} className={input} type="number" inputMode="decimal" min="0" value={card.due} onChange={(e) => set({ due: num(e.target.value) ?? 0 })} /> : taka(due)}
+              {editing ? <input aria-label={c.due} className={input} type="number" inputMode="decimal" min="0" value={card.all_due ? due : card.due} onChange={(e) => set({ due: num(e.target.value) ?? 0, all_due: false })} /> : taka(due)}
             </dd>
           </>
         )}
