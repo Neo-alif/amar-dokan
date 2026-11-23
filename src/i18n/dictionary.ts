@@ -192,6 +192,8 @@ const bn = {
     saved: "✓ সেভ হয়েছে",
     stockWarn: "স্টকে আছে মাত্র",
     dueNow: "এখনকার বাকি",
+    changeBack: "ফেরত দিন",
+    takeDueGiveBack: (due: string, back: string) => `${due} জমা নিন, ${back} ফেরত দিন`,
   },
   // Problems the card finds before saving, and error codes from the server/DB (Schema §4)
   errors: {
@@ -409,6 +411,8 @@ const en: Dict = {
     saved: "✓ Saved",
     stockWarn: "Only in stock:",
     dueNow: "Current due",
+    changeBack: "Give back",
+    takeDueGiveBack: (due: string, back: string) => `Take ${due}, give back ${back}`,
   },
   errors: {
     NEED_TYPE: "Choose the transaction type",

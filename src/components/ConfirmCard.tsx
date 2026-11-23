@@ -30,6 +30,7 @@ export function ConfirmCard({ initial, meta, onDone }: { initial: Card; meta: Ca
 
   const { total, paid, due } = cardTotals(card);
   const problems = cardProblems(card);
+  const [change, setChange] = useState<number | null>(null); // ফেরত: cash handed back, shown only (not saved)
   const taka = (n: number | null) => (n == null ? "—" : formatTaka(n, lang));
   const set = (patch: Partial<Card>) => setCard((prev) => ({ ...prev, ...patch }));
   const setItem = (i: number, patch: Partial<Card["items"][number]>) =>
@@ -147,8 +148,11 @@ export function ConfirmCard({ initial, meta, onDone }: { initial: Card; meta: Ca
           <>
             <dt className="text-muted">{c.amount}</dt>
             <dd className="font-semibold">
-              {editing ? <input aria-label={c.amount} className={input} type="number" inputMode="decimal" min="0" value={card.amount ?? ""} onChange={(e) => set({ amount: num(e.target.value) })} /> : taka(card.amount)}
+              {editing ? <input aria-label={c.amount} className={input} type="number" inputMode="decimal" min="0" value={card.amount ?? ""} onChange={(e) => { set({ amount: num(e.target.value) }); setChange(null); }} /> : taka(card.amount)}
             </dd>
+            {change != null && change > 0 && (
+              <><dt className="text-muted">{c.changeBack}</dt><dd className="font-bold text-amber-700">{taka(change)}</dd></>
+            )}
           </>
         )}
         {card.type === "expense" && (
@@ -182,6 +186,13 @@ export function ConfirmCard({ initial, meta, onDone }: { initial: Card; meta: Ca
         <ul className="list-inside list-disc text-[15px] font-semibold text-danger" aria-live="polite">
           {problems.map((p) => <li key={p}>{t.errors[p]}</li>)}
         </ul>
+      )}
+      {problems.includes("PAYMENT_EXCEEDS_DUE") && card.due_before != null && card.due_before > 0 && card.amount != null && (
+        // Customer handed over more than the due: take only the due, give the rest back
+        <button type="button" onClick={() => { setChange(Math.round((card.amount! - card.due_before!) * 100) / 100); set({ amount: card.due_before }); }}
+          className="min-h-11 rounded-xl border-2 border-amber-600 bg-amber-50 px-4 text-left text-[15px] font-semibold text-amber-800">
+          {c.takeDueGiveBack(taka(card.due_before), taka(card.amount - card.due_before))}
+        </button>
       )}
       {error && <p role="alert" className="font-semibold text-danger">{t.errors[error]}</p>}
 
