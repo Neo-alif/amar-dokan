@@ -8,7 +8,7 @@ import Groq from "groq-sdk";
 export type LLMRequest = { system: string; user: string; jsonSchema: object };
 export type LLMResult<T> = { provider: string; model: string; data: T; latency_ms: number };
 
-const TIMEOUT_MS = 10_000;
+const TIMEOUT_MS = 5_000; // per model; a slow or overloaded one skips to the next
 
 type Provider = {
   name: "gemini" | "groq";

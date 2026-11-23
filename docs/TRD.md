@@ -126,7 +126,7 @@ text ──► normalize.ts (Bangla digits ২→2, দুই→2, "kg/কেজ
 
 ### Provider rules (`lib/ai/provider.ts`)
 - Gemini with **`responseSchema`** (structured output) + `responseMimeType: application/json`, temperature 0.
-- Timeout 10 s, 1 retry on 5xx. On 429 / quota / timeout → **Groq** with the same prompt in JSON mode, then the same Zod parse.
+- Timeout 5 s per model, no retry on 5xx; only a 429 with retry-after ≤ 5 s is retried once. Order: `gemini-3.5-flash-lite` → `gemini-3.1-flash-lite` → **Groq** `qwen/qwen3.8-27b` → `openai/gpt-oss-120b` → `openai/gpt-oss-20b` (Groq in JSON mode), same Zod parse for all.
 - Both fail → UI shows "এখন বুঝতে পারছি না" + the owner can fill the confirm card by hand. **Never** a canned answer.
 - Log `provider`, `model`, `latency_ms` in `ai_logs`.
 - Free tier: only synthetic/consented data goes to the API (free-tier prompts may be used by the provider).
