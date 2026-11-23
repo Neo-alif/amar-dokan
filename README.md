@@ -15,9 +15,12 @@ A Bangla-first AI business assistant for small retailers in Bangladesh. The shop
 
 ## Team
 
+**Team name:** Bro_Code
+
 | Name | GitHub | Role |
 |---|---|---|
-| Alif | [Neo-alif](https://github.com/Neo-alif) | Solo developer |
+| Alif | [Neo-alif](https://github.com/Neo-alif) | Developer |
+| Ariful Haque | — | Video editor & researcher |
 
 ## Problem
 
