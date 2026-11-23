@@ -52,7 +52,7 @@ export function dhakaMonthStart(now: Date, offset = 0): Date {
 }
 
 // Per-product sales/profit/qty for lines with start ≤ t < end.
-function byProduct(lines: SaleLine[], start: number, end: number) {
+export function byProduct(lines: SaleLine[], start: number, end: number) {
   const m = new Map<string, { sales: number; profit: number; qty: number }>();
   for (const l of lines) {
     const t = Date.parse(l.occurred_at);

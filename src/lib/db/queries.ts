@@ -5,6 +5,9 @@ import {
 } from "../logic/summary.ts";
 import { addDays, dailySeries, dhakaDay, forecast, stockOutlook } from "../logic/forecast.ts";
 import { moneyPosition, type Account } from "../logic/money.ts";
+import {
+  businessPosition, dailySales, expenseBreakdown, periodRange, profitAndLoss, topProducts, type Period,
+} from "../logic/business.ts";
 
 const one = <T>(x: T | T[]) => (Array.isArray(x) ? x[0] : x); // PostgREST embeds may come back as arrays
 
@@ -33,8 +36,9 @@ async function loadShopNumbers(now: Date) {
       .eq("transactions.shop_id", shop).eq("transactions.type", "sale").gte("transactions.occurred_at", since)
       .order("id").range(a, b), "sale lines"),
     all((a, b) => db().from("customer_ledger").select("id, customer_id, change, occurred_at").eq("shop_id", shop).order("id").range(a, b), "ledger"),
+    // খরচ = expenses only; a purchase is stock (an asset), not spend (see logic/business.ts)
     all((a, b) => db().from("transactions").select("id, occurred_at, total").eq("shop_id", shop)
-      .in("type", ["purchase", "expense"]).gte("occurred_at", since).order("id").range(a, b), "spend"),
+      .eq("type", "expense").gte("occurred_at", since).order("id").range(a, b), "spend"),
   ]);
   for (const r of [today, shopRow, customers]) if (r.error) throw new Error(`shop numbers: ${r.error.message}`);
 
@@ -222,3 +226,42 @@ export async function loadMoney() {
   };
 }
 export type MoneyData = Awaited<ReturnType<typeof loadMoney>>;
+
+// ব্যবসার অবস্থা: balance sheet now + profit & loss and charts for the period (formulas in logic/business.ts).
+export async function loadBusiness(period: Period, now = new Date()) {
+  const shop = shopId();
+  const r = periodRange(period, now);
+  const since = new Date(r.prevStart).toISOString();
+  const [money, dues, stock, rawLines, txns] = await Promise.all([
+    loadMoney(), loadDues(now), loadStock(now),
+    all((a, b) => db().from("transaction_items")
+      .select("id, product_id, quantity, unit_price, products(cost_price), transactions!inner(occurred_at, type, shop_id)")
+      .eq("transactions.shop_id", shop).eq("transactions.type", "sale").gte("transactions.occurred_at", since)
+      .order("id").range(a, b), "sale lines"),
+    all((a, b) => db().from("transactions").select("id, type, occurred_at, total, expense_category").eq("shop_id", shop)
+      .neq("type", "sale").gte("occurred_at", since).order("id").range(a, b), "transactions"),
+  ]);
+  const lines: SaleLine[] = rawLines.map((l) => ({
+    occurred_at: one(l.transactions).occurred_at, product_id: l.product_id,
+    quantity: Number(l.quantity), unit_price: Number(l.unit_price), cost_price: Number(one(l.products).cost_price),
+  }));
+  const tx = txns.map((x) => ({ type: x.type, occurred_at: x.occurred_at, total: Number(x.total), expense_category: x.expense_category }));
+  const pl = profitAndLoss(lines, tx, r.start, r.end), prev = profitAndLoss(lines, tx, r.prevStart, r.prevEnd);
+  return {
+    period, from: r.days[0], to: r.days[r.days.length - 1], updatedAt: now.toISOString(),
+    position: businessPosition({
+      cash: money.cash.balance, bank: money.bank.balance, bkash: money.bkash.balance,
+      receivable: money.receivable, payable: money.payable, stock: stock.map((p) => ({ qty: p.stock, cost: p.cost_price })),
+    }),
+    cash: money.cash.balance, bankTotal: money.bankTotal,
+    customers: dues.customers.length, oldCustomers: dues.oldCount, suppliers: money.supplierCount,
+    products: stock.length, low: stock.filter((p) => p.status === "low").length, out: stock.filter((p) => p.status === "out").length,
+    pl,
+    salesChangePct: prev.revenue > 0 ? Math.round(((pl.revenue - prev.revenue) / prev.revenue) * 100) : null,
+    marginChange: pl.marginPct !== null && prev.marginPct !== null ? Math.round((pl.marginPct - prev.marginPct) * 10) / 10 : null,
+    daily: dailySales(lines, r.days),
+    expenses: expenseBreakdown(tx, r.start, r.end, ""), // "" = no category → UI shows অন্যান্য
+    top5: topProducts(lines, r.start, r.end).map((p) => ({ ...p, ...namesOf(stock)[p.id] })),
+  };
+}
+export type BusinessData = Awaited<ReturnType<typeof loadBusiness>>;

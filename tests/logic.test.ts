@@ -334,3 +334,74 @@ test("card: credit purchase and supplier payment checks", () => {
   assert.deepEqual(cardProblems({ ...pay, amount: 200 }), []);
   assert.deepEqual(cardProblems({ ...pay, supplier_name: "" }), ["SUPPLIER_REQUIRED"]);
 });
+
+// ── ব্যবসার অবস্থা: formulas and accounting rules (src/lib/logic/business.ts) ──
+import { businessPosition, dailySales, expenseBreakdown, periodRange, profitAndLoss, topProducts } from "../src/lib/logic/business.ts";
+
+const NOW = new Date("2026-11-23T10:00:00+06:00");
+const sold = (at: string, qty: number, price: number, cost: number, product_id = "p1") =>
+  ({ occurred_at: at, quantity: qty, unit_price: price, cost_price: cost, product_id });
+
+test("periodRange: 7d / 30d / month in Dhaka days, previous period ends at the same point", () => {
+  const w = periodRange("7d", NOW);
+  assert.equal(w.days.length, 7);
+  assert.deepEqual([w.days[0], w.days[6]], ["2026-11-17", "2026-11-23"]);
+  assert.equal(new Date(w.start).toISOString(), "2026-11-16T18:00:00.000Z"); // 17 Nov 00:00 Dhaka
+  assert.equal(w.end - w.start, w.prevEnd - w.prevStart);
+  assert.equal(periodRange("30d", NOW).days.length, 30);
+  const m = periodRange("month", NOW);
+  assert.deepEqual([m.days[0], m.days.length], ["2026-11-01", 23]);
+  assert.equal(new Date(m.prevStart).toISOString(), "2026-09-30T18:00:00.000Z"); // 1 Oct 00:00 Dhaka
+  assert.ok(m.prevEnd <= m.start);
+});
+
+test("profitAndLoss: gross = revenue − COGS, net = gross − expenses, margin = net ÷ revenue", () => {
+  const { start, end } = periodRange("month", NOW);
+  const lines = [sold("2026-11-10T12:00:00+06:00", 10, 100, 70), sold("2026-10-31T12:00:00+06:00", 5, 100, 70)]; // 2nd is last month
+  const txns = [
+    { type: "expense", occurred_at: "2026-11-05T12:00:00+06:00", total: 100, expense_category: "বিদ্যুৎ বিল" },
+    { type: "purchase", occurred_at: "2026-11-06T12:00:00+06:00", total: 5000 },  // stock, not an expense
+    { type: "payment", occurred_at: "2026-11-07T12:00:00+06:00", total: 400 },    // due collection / supplier payment, not sale or expense
+  ];
+  assert.deepEqual(profitAndLoss(lines, txns, start, end),
+    { revenue: 1000, cogs: 700, gross: 300, expenses: 100, net: 200, marginPct: 20 });
+  assert.equal(profitAndLoss([], [], start, end).marginPct, null); // no sales → no margin
+});
+
+test("credit sale counts as revenue in full; the later collection adds nothing", () => {
+  const { start, end } = periodRange("month", NOW);
+  const sale = [sold("2026-11-10T12:00:00+06:00", 1, 500, 400)]; // sold for 500, 300 of it on baki
+  const collected = [{ type: "payment", occurred_at: "2026-11-12T12:00:00+06:00", total: 300 }];
+  assert.equal(profitAndLoss(sale, collected, start, end).revenue, 500);
+});
+
+test("businessPosition: net worth = money + receivable + stock at cost − payable; purchases don't change it", () => {
+  const base = { cash: 1000, bank: 500, bkash: 200, receivable: 300, payable: 0, stock: [{ qty: 10, cost: 50 }, { qty: -2, cost: 99 }] };
+  const p = businessPosition(base);
+  assert.deepEqual(p, { available: 1700, receivable: 300, payable: 0, inventory: 500, netWorth: 2500 });
+  // buy 1000 of stock on credit: stock +1000, দেনা +1000 → same net worth (no double counting)
+  const credit = businessPosition({ ...base, payable: 1000, stock: [...base.stock, { qty: 20, cost: 50 }] });
+  assert.equal(credit.netWorth, p.netWorth);
+  // buy it for cash instead: cash −1000, stock +1000 → same net worth
+  assert.equal(businessPosition({ ...base, cash: 0, stock: [...base.stock, { qty: 20, cost: 50 }] }).netWorth, p.netWorth);
+  // sell 1 unit (cost 50) for 80 on baki: stock −50, receivable +80 → net worth rises by the gross profit 30
+  assert.equal(businessPosition({ ...base, receivable: 380, stock: [{ qty: 9, cost: 50 }, base.stock[1]] }).netWorth, p.netWorth + 30);
+});
+
+test("charts: daily sales per Dhaka day, expenses by category, top products", () => {
+  const { start, end, days } = periodRange("7d", NOW);
+  const lines = [
+    sold("2026-11-22T23:30:00+06:00", 2, 100, 80, "a"), // late night is still 22 Nov in Dhaka
+    sold("2026-11-23T09:00:00+06:00", 1, 300, 200, "b"),
+  ];
+  const d = dailySales(lines, days);
+  assert.equal(d.length, 7);
+  assert.deepEqual(d.slice(-2), [{ day: "2026-11-22", sales: 200 }, { day: "2026-11-23", sales: 300 }]);
+  const ex = expenseBreakdown([
+    { type: "expense", occurred_at: "2026-11-20T10:00:00+06:00", total: 80, expense_category: "চা-নাস্তা" },
+    { type: "expense", occurred_at: "2026-11-21T10:00:00+06:00", total: 200, expense_category: null },
+    { type: "purchase", occurred_at: "2026-11-21T10:00:00+06:00", total: 9000 },
+  ], start, end, "অন্যান্য");
+  assert.deepEqual(ex, [{ category: "অন্যান্য", total: 200 }, { category: "চা-নাস্তা", total: 80 }]);
+  assert.deepEqual(topProducts(lines, start, end).map((p) => p.id), ["b", "a"]);
+});

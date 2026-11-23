@@ -89,7 +89,7 @@ export default function ReportPage() {
 
             <section className="flex flex-col gap-2">
               <strong className="text-lg text-primary">{r.nextMonth}</strong>
-              <ul className="flex list-disc flex-col gap-1.5 pl-5">{data.next.items.map((b, i) => <li key={i}>{b}</li>)}</ul>
+              <ul className="flex list-disc flex-col gap-1.5 pl-5">{data.next.items.map((b, i) => <li key={i}>{b.tip} <span className="text-[13px] text-muted">({s.why}: {b.why})</span></li>)}</ul>
             </section>
 
             <p className="text-[13px] text-muted">

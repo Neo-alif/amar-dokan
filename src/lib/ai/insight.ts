@@ -12,7 +12,7 @@ import { formatNumber, formatTaka } from "../format.ts";
 const Reply = z.object({
   today: z.string().min(1).max(400),
   bullets: z.array(z.string().min(1).max(300)).min(3).max(6),
-  next: z.array(z.string().min(1).max(300)).min(1).max(4),
+  next: z.array(z.object({ tip: z.string().min(1).max(300), why: z.string().min(1).max(200) })).min(1).max(4),
 });
 const ReplyJsonSchema = z.toJSONSchema(Reply);
 
@@ -53,9 +53,12 @@ function template(f: Facts, lang: Lang) {
       f.low_stock.length ? t.tLow(list(f.low_stock.slice(0, 3).map((p) => p.name))) : t.tNoLow,
     ],
     next: [
-      ...(f.low_stock.length ? [t.tNextBuy(list(f.low_stock.slice(0, 3).map((p) => p.name)))] : []),
-      ...(f.old_due.total > 0 ? [t.tNextCollect(taka(f.old_due.total))] : []),
-      ...(top ? [t.tNextTop(top.name)] : []),
+      ...(f.low_stock.length ? [{
+        tip: t.tNextBuy(list(f.low_stock.slice(0, 3).map((p) => p.name))),
+        why: t.whyBuy(list(f.low_stock.slice(0, 3).map((p) => (p.days_left === null ? p.name : t.daysLeft(p.name, num(p.days_left)))))),
+      }] : []),
+      ...(f.old_due.total > 0 ? [{ tip: t.tNextCollect(taka(f.old_due.total)), why: t.whyCollect(taka(f.old_due.total), num(f.old_due.customers)) }] : []),
+      ...(top ? [{ tip: t.tNextTop(top.name), why: t.whyTop(top.name, taka(top.profit)) }] : []),
     ],
   };
 }
@@ -79,7 +82,8 @@ export async function insight(n: InsightNumbers, lang: Lang) {
     provider,
     today: section(reply ? [reply.today] : undefined, [fallback.today]),
     bullets: section(reply?.bullets.slice(0, 5), fallback.bullets),
-    next: section(reply?.next.slice(0, 3), fallback.next),
+    // each tip comes with its কেন line (which numbers it is based on); both are number-checked
+    next: reply && reply.next.every((x) => ok([x.tip, x.why])) ? { items: reply.next.slice(0, 3), ai: true } : { items: fallback.next, ai: false },
   };
 }
 export type InsightText = Awaited<ReturnType<typeof insight>>;

@@ -100,7 +100,7 @@ No AI output in this app is hard-coded, cached or pre-recorded. If both provider
 ## Third-party code and assets
 
 - Project scaffolded with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app) (MIT)
-- Libraries: Next.js, React (MIT), Tailwind CSS (MIT), Zod (MIT), `@supabase/supabase-js` (MIT), `@google/genai` (Apache-2.0), `groq-sdk` (Apache-2.0)
+- Libraries: Next.js, React (MIT), Tailwind CSS (MIT), Zod (MIT), `@supabase/supabase-js` (MIT), `@google/genai` (Apache-2.0), `groq-sdk` (Apache-2.0), Recharts (MIT, charts on /business)
 - Fonts: [Hind Siliguri](https://fonts.google.com/specimen/Hind+Siliguri) and [Inter](https://fonts.google.com/specimen/Inter) (SIL Open Font License), loaded with `next/font`
 - Icons: simple inline SVGs drawn for this project (no icon library); logo (`public/amar-dokan-logo*.svg`) made for this project
 
