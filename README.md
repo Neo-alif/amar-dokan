@@ -1,3 +1,5 @@
+<img src="public/amar-dokan-logo.svg" alt="Amar Dokan logo" width="96" />
+
 # আমার দোকান (Amar Dokan)
 
 **Your Business, Understood by AI.**
@@ -100,7 +102,7 @@ No AI output in this app is hard-coded, cached or pre-recorded. If both provider
 - Project scaffolded with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app) (MIT)
 - Libraries: Next.js, React (MIT), Tailwind CSS (MIT), Zod (MIT), `@supabase/supabase-js` (MIT), `@google/genai` (Apache-2.0), `groq-sdk` (Apache-2.0)
 - Fonts: [Hind Siliguri](https://fonts.google.com/specimen/Hind+Siliguri) and [Inter](https://fonts.google.com/specimen/Inter) (SIL Open Font License), loaded with `next/font`
-- Icons: simple inline SVGs drawn for this project (no icon library)
+- Icons: simple inline SVGs drawn for this project (no icon library); logo (`public/amar-dokan-logo*.svg`) made for this project
 
 ## Setup
 

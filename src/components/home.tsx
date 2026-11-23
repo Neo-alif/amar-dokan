@@ -51,9 +51,8 @@ export function TopBar() {
     <header className="relative border-b border-[#27466E] bg-primary">
       <div className="mx-auto flex max-w-[1200px] items-center justify-between gap-4 px-4 py-3.5 sm:px-8">
         <Link href="/" className="flex items-center gap-2.5 text-white">
-          <span className="flex size-10 items-center justify-center rounded-xl bg-[#FBBF24]">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1F3A5F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 9l1.5-5h15L21 9" /><path d="M3 9h18v2a3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-6 0z" /><path d="M5 13v7h14v-7" /><path d="M10 20v-4h4v4" /></svg>
-          </span>
+          {/* eslint-disable-next-line @next/next/no-img-element -- static SVG, nothing for next/image to optimise */}
+          <img src="/amar-dokan-logo-dark.svg" alt="" width={40} height={40} className="size-10" />
           <span className="text-[22px] font-bold">{lang === "bn" ? <>আমার <span className="text-[#FBBF24]">দোকান</span></> : <>Amar <span className="text-[#FBBF24]">Dokan</span></>}</span>
         </Link>
         <div className="flex items-center gap-3">

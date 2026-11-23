@@ -21,6 +21,7 @@ const t = dictionary[DEFAULT_LANG];
 export const metadata: Metadata = {
   title: t.appName,
   description: t.heroTag,
+  icons: { icon: "/amar-dokan-logo.svg" },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
