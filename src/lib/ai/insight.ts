@@ -77,18 +77,21 @@ export async function insight(n: InsightNumbers, lang: Lang, signal?: AbortSigna
   }
   const allowed = allowedNumbers(facts);
   const ok = (xs: string[]) => xs.every((x) => {
+    if (/[a-z]+_[a-z]+/i.test(x)) { console.warn("insight raw key in text:", x); return false; } // e.g. "days_left"
     if (numbersOk(x, allowed)) return true;
     console.warn("insight number check failed:", numbersIn(x).filter((v) => !allowed.has(v)), "in:", x);
     return false;
   });
-  const section = (ai: string[] | undefined, tpl: string[]) => (ai && ok(ai) ? { items: ai, ai: true } : { items: tpl, ai: false });
+  // bn: show any ASCII digits the model slipped in as Bangla digits (same numbers, already checked above)
+  const digits = (x: string) => (lang === "bn" ? x.replace(/[0-9]/g, (d) => "০১২৩৪৫৬৭৮৯"[Number(d)]) : x);
+  const section = (ai: string[] | undefined, tpl: string[]) => (ai && ok(ai) ? { items: ai.map(digits), ai: true } : { items: tpl, ai: false });
   return {
     monthName: facts.month_name,
     provider,
     today: section(reply ? [reply.today] : undefined, [fallback.today]),
     bullets: section(reply?.bullets.slice(0, 5), fallback.bullets),
     // each tip comes with its কেন line (which numbers it is based on); both are number-checked
-    next: reply && reply.next.every((x) => ok([x.tip, x.why])) ? { items: reply.next.slice(0, 3), ai: true } : { items: fallback.next, ai: false },
+    next: reply && reply.next.every((x) => ok([x.tip, x.why])) ? { items: reply.next.slice(0, 3).map((x) => ({ tip: digits(x.tip), why: digits(x.why) })), ai: true } : { items: fallback.next, ai: false },
   };
 }
 export type InsightText = Awaited<ReturnType<typeof insight>>;
