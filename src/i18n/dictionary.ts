@@ -49,7 +49,7 @@ const bn = {
     colDays: "কত দিন চলবে",
     colStatus: "অবস্থা",
     status: { ok: "ঠিক আছে", low: "কম", out: "শেষ" },
-    days: "দিন",
+    days: (n: string) => `${n} দিন`,
     learning: "শিখছি",
     noSales: "বিক্রি নেই",
     next7: "আগামী ৭ দিনের আনুমানিক বিক্রি",
@@ -399,6 +399,7 @@ const bn = {
 };
 
 type Dict = typeof bn;
+const dayN = (n: string) => `${n} ${n === "1" ? "day" : "days"}`; // en plural: "1 day", "3 days"
 
 const en: Dict = {
   appName: "Amar Dokan",
@@ -446,7 +447,7 @@ const en: Dict = {
     colDays: "Days left",
     colStatus: "Status",
     status: { ok: "OK", low: "Low", out: "Out" },
-    days: "days",
+    days: (n: string) => (n === "0" ? "today" : dayN(n)),
     learning: "Learning",
     noSales: "No sales",
     next7: "Expected sales, next 7 days",
@@ -466,7 +467,7 @@ const en: Dict = {
     listTitle: "What to buy (urgent first)",
     outNow: "Already out",
     today: "Runs out today",
-    endsIn: (n: string) => `Runs out in ${n} days`,
+    endsIn: (n: string) => `Runs out in ${dayN(n)}`,
     partial: (n: string) => `budget covers ${n}`,
     skipped: "Didn't fit the budget:",
     nothing: "Nothing urgent to buy right now. Every product lasts more than 7 days.",
@@ -477,9 +478,9 @@ const en: Dict = {
     urgent: "Urgent",
     watch: "Watch",
     tip: "Tip",
-    urgentText: (name: string, days: string | null) => (days === null ? `${name} runs out today, buy now` : `${name} runs out in ${days} day(s), buy today`),
+    urgentText: (name: string, days: string | null) => (days === null ? `${name} runs out today, buy now` : `${name} runs out in ${dayN(days)}, buy today`),
     outText: (name: string) => `${name} is out of stock, buy today`,
-    watchText: (customer: string, due: string, days: string) => `${customer} owes ${due}, for ${days} days`,
+    watchText: (customer: string, due: string, days: string) => `${customer} owes ${due}, for ${dayN(days)}`,
     tipText: (names: string) => `${names} selling more this week`,
     none: "Nothing urgent right now.",
     restockLink: "See the buying list →",
@@ -572,7 +573,7 @@ const en: Dict = {
     colStock: "Stock",
     colWeek: "Sold this week",
     detail: "Product details (tap a row)",
-    lasts: (d: string) => `lasts ${d} days`,
+    lasts: (d: string) => (d === "0" ? "runs out today" : `lasts ${dayN(d)}`),
     names: "Names it understands",
     none: "No product matches",
     loadError: "Couldn't load products. Try again in a moment.",
@@ -631,7 +632,7 @@ const en: Dict = {
     people: (n: string) => `${n} customers`,
     paidWeek: "Paid this week",
     listTitle: "Customers (biggest due first)",
-    lastTx: (n: string) => `last activity ${n} days ago`,
+    lastTx: (n: string) => `last activity ${dayN(n)} ago`,
     lastToday: "last activity today",
     ledger: "Ledger",
     current: "Current due",

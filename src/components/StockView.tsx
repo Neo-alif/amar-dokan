@@ -82,7 +82,7 @@ export function StockView({ rows }: { rows: StockRow[] | null }) {
                     <td className="px-5 py-3.5">{num(r.stock)} {unit(r.unit)}</td>
                     <td className="px-5 py-3.5">{r.avg === null ? <span className="text-muted">{s.learning}</span> : `${num(r.avg)} ${unit(r.unit)}`}</td>
                     <td className={`px-5 py-3.5 font-semibold ${daysColor}`}>
-                      {r.daysLeft !== null ? `${num(Math.floor(r.daysLeft))} ${s.days}` : r.avg === null ? "—" : s.noSales}
+                      {r.daysLeft !== null ? s.days(num(Math.floor(r.daysLeft))) : r.avg === null ? "—" : s.noSales}
                     </td>
                     <td className="px-5 py-3.5"><span className={`rounded-full px-2.5 py-0.5 text-[13px] font-bold whitespace-nowrap ${CHIP[r.status]}`}>{s.status[r.status]}</span></td>
                   </tr>,
