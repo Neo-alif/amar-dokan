@@ -160,6 +160,10 @@ const bn = {
     send: "পাঠান",
     thinking: "বুঝছি…",
     manualStart: "নিজে লিখুন",
+    clarifyTitle: "AI জানতে চায়",
+    clarifyPlaceholder: "যেমন: ১৫০ টাকা",
+    clarifyAnswer: "উত্তর দিন",
+    clarifySkip: "কার্ডে নিজে ঠিক করুন",
   },
   card: {
     types: { sale: "বিক্রি", purchase: "কেনা", expense: "খরচ", payment: "জমা", unknown: "বোঝা যায়নি" },
@@ -380,6 +384,10 @@ const en: Dict = {
     send: "Send",
     thinking: "Understanding…",
     manualStart: "Fill in myself",
+    clarifyTitle: "The AI needs to know",
+    clarifyPlaceholder: "e.g. 150 taka",
+    clarifyAnswer: "Answer",
+    clarifySkip: "Fix it on the card myself",
   },
   card: {
     types: { sale: "Sale", purchase: "Purchase", expense: "Expense", payment: "Payment", unknown: "Not understood" },

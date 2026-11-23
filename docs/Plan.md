@@ -76,7 +76,7 @@
 - [x] `restock.ts` + `/restock` (budget input → ranked list + reasons + budget bar) (**P0**); two-pass greedy so one item can't eat the budget
 - [x] `summary.ts` + `insight.ts` (number check) → মাসিক অডিট রিপোর্ট box (first line আজকের সারাংশ) + `/report` print page (PDF) (**P0**); month compared with the same point last month
 - [ ] Best/worst seller lists on home (P1)
-- [ ] Clarification bubble for missing price/amount (P1)
+- [x] Clarification bubble for missing price/amount (P1): AI question → answer by text or mic → re-extract → confirm card
 - [ ] `npm run test:logic`
 - Optional (only after every P0/P1 works locally): Products page + detail, Expenses page, Transactions page, charts
 

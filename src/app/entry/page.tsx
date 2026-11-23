@@ -35,6 +35,8 @@ const EMPTY_CARD: Card = {
   due: 0, all_due: false, received: null, amount: null, expense_category: "",
 };
 
+type Opened = { key: number; card: Card; meta: CardMeta };
+
 export default function EntryPage() {
   const { t, lang } = useLanguage();
   const e = t.entry;
@@ -42,10 +44,13 @@ export default function EntryPage() {
   const [thinking, setThinking] = useState(false);
   const [error, setError] = useState<ErrorCode | null>(null);
   const [saved, setSaved] = useState(false);
-  const [open, setOpen] = useState<{ key: number; card: Card; meta: CardMeta } | null>(null);
+  const [open, setOpen] = useState<Opened | null>(null);
+  const [clarify, setClarify] = useState<{ question: string; base: string; draft: Opened } | null>(null);
+  const [answer, setAnswer] = useState("");
 
-  async function send() {
-    if (!text.trim() || thinking) return;
+  // first ask: a missing price/amount shows the AI's question; the answer is sent with the sentence and goes to the card
+  async function extract(input: string, allowClarify: boolean) {
+    if (!input.trim() || thinking) return;
     setThinking(true);
     setError(null);
     setSaved(false);
@@ -54,14 +59,16 @@ export default function EntryPage() {
       const res = await fetch("/api/extract", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ text, lang }),
+        body: JSON.stringify({ text: input, lang }),
       });
       const body = await res.json().catch(() => ({}));
       if (res.ok) {
-        setOpen({ key: Date.now(), card: toCard(body.draft), meta: { log_id: body.log_id, raw_text: text, manual: false, clarify_question: body.draft.clarify_question } });
+        const next = { key: Date.now(), card: toCard(body.draft), meta: { log_id: body.log_id, raw_text: input, manual: false, clarify_question: body.draft.clarify_question } };
+        if (allowClarify && body.draft.clarify_question) { setAnswer(""); setClarify({ question: body.draft.clarify_question, base: input, draft: next }); }
+        else { setClarify(null); setOpen(next); }
       } else {
         setError((body.error as ErrorCode) ?? "SERVER_ERROR");
-        if (body.error === "AI_UNAVAILABLE") openManual(); // owner fills the card by hand, clearly labelled
+        if (body.error === "AI_UNAVAILABLE") { setClarify(null); openManual(); } // owner fills the card by hand, clearly labelled
       }
     } catch {
       setError("NETWORK");
@@ -69,6 +76,9 @@ export default function EntryPage() {
       setThinking(false);
     }
   }
+
+  const send = () => extract(text, true);
+  const sendAnswer = () => clarify && answer.trim() && extract(`${clarify.base}, ${answer.trim()}`.slice(0, MAX_INPUT_CHARS), false);
 
   function openManual() {
     setOpen({ key: Date.now(), card: EMPTY_CARD, meta: { log_id: null, raw_text: text || null, manual: true, clarify_question: null } });
@@ -120,12 +130,29 @@ export default function EntryPage() {
             {error && <p className="font-semibold text-danger">{t.errors[error]}</p>}
             {saved && <p className="font-semibold text-success">{t.card.saved}</p>}
           </div>
-          {!open && !thinking && (
+          {!open && !clarify && !thinking && (
             <button type="button" onClick={openManual} className="min-h-11 self-start text-sm text-muted underline">{e.manualStart}</button>
           )}
         </section>
 
         <section className="flex min-w-0 flex-[1_1_460px] flex-col gap-4">
+          {clarify && (
+            <div className="flex flex-col gap-3 rounded-2xl border border-amber-200 border-l-4 border-l-warning bg-amber-50 px-5 py-4.5">
+              <span className="text-sm font-bold text-amber-900">{e.clarifyTitle}</span>
+              <p className="text-lg font-semibold text-text">{clarify.question}</p>
+              <form className="flex gap-2" onSubmit={(ev) => { ev.preventDefault(); sendAnswer(); }}>
+                <input autoFocus aria-label={clarify.question} value={answer} placeholder={e.clarifyPlaceholder} maxLength={100}
+                  onChange={(ev) => setAnswer(ev.target.value)}
+                  className="h-11 min-w-0 flex-1 rounded-xl border border-border bg-white px-3.5 text-base" />
+                <MicButton small disabled={thinking} onError={setError} onText={setAnswer} />
+                <button type="submit" disabled={!answer.trim() || thinking}
+                  className="h-11 shrink-0 rounded-xl bg-primary px-4.5 font-semibold text-white disabled:opacity-50">
+                  {thinking ? e.thinking : e.clarifyAnswer}
+                </button>
+              </form>
+              <button type="button" onClick={() => { setOpen(clarify.draft); setClarify(null); }} className="min-h-11 self-start text-sm text-muted underline">{e.clarifySkip}</button>
+            </div>
+          )}
           {open && <ConfirmCard key={open.key} initial={open.card} meta={open.meta} onDone={done} />}
         </section>
       </main>

@@ -23,10 +23,11 @@ function errorCode(error: string): ErrorCode {
   return "VOICE_FAILED";
 }
 
-export function MicButton({ onText, onError, disabled }: {
+export function MicButton({ onText, onError, disabled, small }: {
   onText: (text: string) => void;
   onError: (code: ErrorCode | null) => void;
   disabled?: boolean;
+  small?: boolean; // 44px button without the hint, for the clarify answer row
 }) {
   const { t } = useLanguage();
   const [listening, setListening] = useState(false);
@@ -57,6 +58,16 @@ export function MicButton({ onText, onError, disabled }: {
       onError("VOICE_FAILED");
     }
   }
+
+  if (small) return (
+    <button type="button" onClick={toggle} disabled={disabled}
+      aria-label={listening ? t.entry.micStop : t.entry.mic} aria-pressed={listening}
+      className={`flex size-11 shrink-0 items-center justify-center rounded-xl bg-accent disabled:opacity-50 ${listening ? "animate-pulse" : ""}`}>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        {listening ? <rect x="7" y="7" width="10" height="10" rx="2" /> : <><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0" /><path d="M12 18v3" /></>}
+      </svg>
+    </button>
+  );
 
   return (
     <div className="flex flex-col items-center gap-3.5">
