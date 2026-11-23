@@ -5,7 +5,7 @@ import { useEffect, useRef } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { InsightError, useInsight } from "@/components/insightCards";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { formatTaka } from "@/lib/format";
+import { formatTaka, modelName } from "@/lib/format";
 
 export default function ReportPage() {
   const { t, lang } = useLanguage();
@@ -82,7 +82,10 @@ export default function ReportPage() {
             </section>
 
             <section className="flex flex-col gap-2">
-              <strong className="text-lg text-primary">{r.nextMonth}</strong>
+              <div className="flex flex-wrap items-center gap-2">
+                <strong className="text-lg text-primary">{r.nextMonth}</strong>
+                <span className="rounded-full bg-violet-100 px-2 py-0.5 text-xs font-semibold text-accent">{s.aiBy(modelName(data.model))}</span>
+              </div>
               <ul className="flex list-disc flex-col gap-1.5 pl-5">{data.next.map((b, i) => <li key={i}>{b.tip} <span className="text-[13px] text-muted">({s.why}: {b.why})</span></li>)}</ul>
             </section>
 

@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useLanguage } from "@/i18n/LanguageContext";
 import type { BusinessData } from "@/lib/db/queries";
 import { PERIODS, type Period } from "@/lib/logic/business";
-import { formatNumber, formatTaka } from "@/lib/format";
+import { formatNumber, formatTaka, modelName } from "@/lib/format";
 import { InsightError, useInsight } from "@/components/insightCards";
 import { BarList, DailySalesChart } from "@/components/BusinessCharts";
 
@@ -64,7 +64,10 @@ function Advice() {
               </div>
             ))}
           </div>
-          <span className="text-[13px] text-muted">{`${s.verified} · ${b.aiNote}`}</span>
+          <div className="flex flex-wrap items-center gap-2 text-[13px] text-muted">
+            <span className="rounded-full bg-violet-100 px-2 py-0.5 text-xs font-semibold text-accent">{s.aiBy(modelName(data.model))}</span>
+            <span>{`${s.verified} · ${b.aiNote}`}</span>
+          </div>
         </>
       )}
     </>
