@@ -29,9 +29,14 @@ export function insightFacts(n: InsightNumbers, lang: Lang) {
       sales: R(n.month.sales), last_month_same_point_sales: R(n.month.lastMonthSales), sales_change_pct: n.month.salesChangePct,
       profit: R(n.month.profit), margin_pct: n.month.marginPct, spend: R(n.month.spend),
       top_products: n.month.top5.map((p) => ({ name: name(p.id), sales: R(p.sales), profit: R(p.profit) })),
+      lowest_profit_products: n.month.bottom3.map((p) => ({ name: name(p.id), sales: R(p.sales), profit: R(p.profit) })),
     },
+    // week starts Saturday; last week is cut at the same point so a Sunday isn't compared with a whole week
+    week: { sales: R(n.week.sales), profit: R(n.week.profit), last_week_same_point_profit: R(n.week.lastWeek), profit_change_pct: n.week.changePct },
     total_due: R(n.totalDue),
     old_due: { older_than_days: 7, customers: n.oldDue.customers, total: R(n.oldDue.total) },
+    dues_by_age: n.dueAges.map((b) => ({ age: b.upto_days === 7 ? "0-7 days" : b.upto_days === 30 ? "8-30 days" : "over 30 days", customers: b.customers, total: R(b.total) })),
+    money: { cash: R(n.money.cash), bank: R(n.money.bank), bkash: R(n.money.bkash), customers_owe_us: R(n.money.receivable), we_owe_suppliers: R(n.money.payable), net_total: R(n.money.total) },
     // 5 most urgent only: keeps the prompt small (~650 tokens) for Groq's free token limits
     low_stock: n.lowStock.slice(0, 5).map((p) => ({ name: name(p.id), days_left: p.daysLeft })),
   };

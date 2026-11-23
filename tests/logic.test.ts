@@ -232,7 +232,7 @@ test("stockOutlook: days left and status", () => {
   assert.deepEqual(stockOutlook(4, 5, 0), { daysLeft: null, status: "low" });    // no sales, below reorder
 });
 
-import { dhakaMonthStart, monthSummary, oldestDueDays, pickActions, todayNumbers } from "../src/lib/logic/summary.ts";
+import { dhakaMonthStart, dueAges, monthSummary, oldestDueDays, pickActions, todayNumbers } from "../src/lib/logic/summary.ts";
 
 test("dhakaMonthStart: 1st 00:00 Dhaka", () => {
   assert.equal(dhakaMonthStart(new Date("2026-11-23T06:00:00Z")).toISOString(), "2026-10-31T18:00:00.000Z");
@@ -249,6 +249,12 @@ test("monthSummary: same point last month, top products", () => {
   ], [{ occurred_at: "2026-11-03T04:00:00Z", total: 1200 }], new Date("2026-11-10T06:00:00Z"));
   assert.deepEqual([m.sales, m.profit, m.spend, m.lastMonthSales, m.salesChangePct, m.marginPct], [1440, 140, 1200, 380, 279, 9.7]);
   assert.deepEqual(m.top5.map((p) => p.id), ["rice", "oil"]);
+  assert.deepEqual(m.bottom3.map((p) => [p.id, p.profit]), [["oil", 60], ["rice", 80]]);
+});
+
+test("dueAges: baki split into 0-7, 8-30, over 30 days", () => {
+  const b = dueAges([{ due: 100, days: 3 }, { due: 50, days: null }, { due: 200, days: 8 }, { due: 300, days: 31 }]);
+  assert.deepEqual(b.map((x) => [x.customers, x.total]), [[2, 150], [1, 200], [1, 300]]);
 });
 
 test("todayNumbers: today vs yesterday up to the same time", () => {

@@ -1,7 +1,7 @@
 import { db, shopId } from "./client.ts";
 import type { ShopContext } from "../ai/extract.ts";
 import {
-  byProduct, dhakaMonthStart, dhakaWeekStart, monthSummary, oldestDueDays, pickActions, todayNumbers, weekSellers, weeklyProfit, type SaleLine,
+  byProduct, dhakaMonthStart, dhakaWeekStart, dueAges, monthSummary, oldestDueDays, pickActions, todayNumbers, weekSellers, weeklyProfit, type SaleLine,
 } from "../logic/summary.ts";
 import { addDays, dailySeries, dhakaDay, forecast, stockOutlook } from "../logic/forecast.ts";
 import { moneyPosition, type Account } from "../logic/money.ts";
@@ -82,7 +82,7 @@ export type HomeData = Awaited<ReturnType<typeof loadHomeData>>;
 
 // Verified numbers for the AI insight + monthly audit (the LLM sees only these).
 export async function loadInsightNumbers(now = new Date()) {
-  const n = await loadShopNumbers(now);
+  const [n, money] = await Promise.all([loadShopNumbers(now), loadMoney()]);
   const oldDues = n.dues.filter((d) => d.days !== null && d.days > 7);
   return {
     shopName: n.shopName,
@@ -91,6 +91,9 @@ export async function loadInsightNumbers(now = new Date()) {
     month: monthSummary(n.lines, n.spend, now),
     totalDue: n.totalDue,
     oldDue: { customers: oldDues.length, total: oldDues.reduce((s, d) => s + d.due, 0) },
+    dueAges: dueAges(n.dues),
+    week: weeklyProfit(n.lines, now),
+    money: { cash: money.cash.balance, bank: money.bank.balance, bkash: money.bkash.balance, receivable: money.receivable, payable: money.payable, total: money.total },
     lowStock: n.stock.filter((p) => p.status !== "ok").sort((a, b) => (a.daysLeft ?? 1e9) - (b.daysLeft ?? 1e9))
       .map((p) => ({ id: p.id, daysLeft: p.daysLeft === null ? null : Math.floor(p.daysLeft) })),
   };

@@ -84,6 +84,8 @@ export function monthSummary(lines: SaleLine[], spend: { occurred_at: string; to
     salesChangePct: pct(sales, lastMonthSales),
     top5: [...cur].sort((a, b) => b[1].sales - a[1].sales).slice(0, 5)
       .map(([id, p]) => ({ id, sales: r2(p.sales), profit: r2(p.profit) })),
+    bottom3: [...cur].sort((a, b) => a[1].profit - b[1].profit).slice(0, 3) // lowest profit this month (may be a loss)
+      .map(([id, p]) => ({ id, sales: r2(p.sales), profit: r2(p.profit) })),
   };
 }
 
@@ -114,6 +116,16 @@ export function oldestDueDays(ledger: { change: number; occurred_at: string }[],
     }
   }
   return lots.length ? Math.floor((now.getTime() - lots[0].t) / DAY_MS) : null;
+}
+
+// Baki split by age of the oldest unpaid part: ≤7 days, 8–30, over 30 (null age counts as new).
+export function dueAges(dues: { due: number; days: number | null }[]) {
+  const b = [{ upto_days: 7, customers: 0, total: 0 }, { upto_days: 30, customers: 0, total: 0 }, { upto_days: null as number | null, customers: 0, total: 0 }];
+  for (const d of dues) {
+    const x = b[(d.days ?? 0) <= 7 ? 0 : (d.days ?? 0) <= 30 ? 1 : 2];
+    x.customers++; x.total = r2(x.total + d.due);
+  }
+  return b;
 }
 
 export const URGENT_DAYS = 2;  // জরুরি: runs out within 2 days

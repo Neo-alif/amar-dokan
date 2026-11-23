@@ -49,7 +49,7 @@ Never calculate, round to lakh/thousand, estimate or invent any number. If a num
 Return JSON with:
 - "today": ONE sentence about today (sales vs yesterday by this time, best product, or what to buy). If today's sales are 0, say there are no sales yet today.
 - "bullets": exactly 5 short points about this month (sales vs the same point last month, profit and margin, best sellers, dues, low stock).
-- "next": exactly 3 objects {"tip", "why"}: "tip" = a short, practical tip for the coming days; "why" = a short line naming the exact facts from the JSON the tip is based on (e.g. which numbers, which product), without the word "why".
+- "next": exactly 3 objects {"tip", "why"}. Look at ALL the facts (low stock and days left, dues by age, lowest-profit products, this week vs last week, money position) and choose the 3 that matter most for the shop right now, most important first (e.g. a product running out in 1 day or old dues beats a small sales dip). "tip" = a short, practical action for the coming days; "why" = a short line saying why it matters, naming the exact facts it is based on (which numbers, which product), without the word "why".
 Write for the owner in plain words: never write JSON key names (like days_left, old_due, margin_pct) — say what they mean${lang === "bn"
     ? `, e.g. "৩ জনের বাকি ৭ দিনের বেশি পুরনো", "সয়াবিন তেল আর ১ দিন চলবে". Every number in Bangla digits (৩, ১৭,৬৬০), never 3 or 17,660.`
     : `, e.g. "3 customers owe for over 7 days", "soybean oil lasts 1 more day".`}
