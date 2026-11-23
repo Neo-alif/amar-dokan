@@ -1,13 +1,12 @@
 // Verified numbers → AI wording (today line, 5 month bullets, 3 tips) → number check.
-// Any section whose numbers don't match, or all of it if both AIs fail, falls back to a template from
-// the same real numbers, marked ai: false so the UI labels it "not AI". Never a canned AI answer.
+// A reply with a wrong number or a raw JSON key counts as that model failing, so the next model is tried.
+// If every model fails we return null and the UI says AI is unavailable. No template, no canned answer.
 import { z } from "zod";
 import { callLLM } from "./provider.ts";
 import { insightSystemPrompt } from "./prompts.ts";
-import { allowedNumbers, numbersIn, numbersOk } from "../logic/numberCheck.ts";
+import { allowedNumbers, numbersIn } from "../logic/numberCheck.ts";
 import type { InsightNumbers } from "../db/queries.ts";
-import { dictionary, type Lang } from "../../i18n/dictionary.ts";
-import { formatNumber, formatTaka } from "../format.ts";
+import type { Lang } from "../../i18n/dictionary.ts";
 
 const Reply = z.object({
   today: z.string().min(1).max(400),
@@ -37,61 +36,38 @@ export function insightFacts(n: InsightNumbers, lang: Lang) {
     low_stock: n.lowStock.slice(0, 5).map((p) => ({ name: name(p.id), days_left: p.daysLeft })),
   };
 }
-type Facts = ReturnType<typeof insightFacts>;
 
-function template(f: Facts, lang: Lang) {
-  const t = dictionary[lang].insight, taka = (x: number) => formatTaka(x, lang), num = (x: number) => formatNumber(x, lang);
-  const list = (xs: string[]) => xs.join(t.and);
-  const pct = f.month.sales_change_pct;
-  const top = [...f.month.top_products].sort((a, b) => b.profit - a.profit)[0];
-  return {
-    today: f.today.sales > 0 ? t.tTodaySales(taka(f.today.sales), taka(f.today.yesterday_same_time_sales)) : t.tTodayNone,
-    bullets: [
-      t.tSales(taka(f.month.sales), pct === null ? null : num(Math.abs(pct)), (pct ?? 0) >= 0),
-      t.tProfit(taka(f.month.profit), num(f.month.margin_pct ?? 0)),
-      t.tTop(list(f.month.top_products.slice(0, 2).map((p) => p.name))),
-      t.tDue(taka(f.total_due), taka(f.old_due.total), num(f.old_due.customers)),
-      f.low_stock.length ? t.tLow(list(f.low_stock.slice(0, 3).map((p) => p.name))) : t.tNoLow,
-    ],
-    next: [
-      ...(f.low_stock.length ? [{
-        tip: t.tNextBuy(list(f.low_stock.slice(0, 3).map((p) => p.name))),
-        why: t.whyBuy(list(f.low_stock.slice(0, 3).map((p) => (p.days_left === null ? p.name : t.daysLeft(p.name, num(p.days_left)))))),
-      }] : []),
-      ...(f.old_due.total > 0 ? [{ tip: t.tNextCollect(taka(f.old_due.total)), why: t.whyCollect(taka(f.old_due.total), num(f.old_due.customers)) }] : []),
-      ...(top ? [{ tip: t.tNextTop(top.name), why: t.whyTop(top.name, taka(top.profit)) }] : []),
-    ],
-  };
+// Throws (→ next model) if any line has a number not in the facts or a raw key like "days_left".
+function checkLines(lines: string[], allowed: Set<number>) {
+  for (const x of lines) {
+    if (/[a-z]+_[a-z]+/i.test(x)) throw new Error(`raw key in text: ${x}`);
+    const bad = numbersIn(x).filter((v) => !allowed.has(v));
+    if (bad.length) throw new Error(`number check failed: ${bad.join(",")} in: ${x}`);
+  }
 }
 
 export async function insight(n: InsightNumbers, lang: Lang, signal?: AbortSignal) {
   const facts = insightFacts(n, lang);
-  const fallback = template(facts, lang);
-  let reply: z.infer<typeof Reply> | null = null, provider: string | null = null;
-  try {
-    const r = await callLLM({ system: insightSystemPrompt(lang), user: JSON.stringify(facts), jsonSchema: ReplyJsonSchema },
-      (raw) => Reply.parse(JSON.parse(raw)), signal);
-    reply = r.data; provider = `${r.provider}/${r.model}`;
-  } catch (e) {
-    console.error("insight AI failed:", (e as Error).message); // falls back to the template below
-  }
   const allowed = allowedNumbers(facts);
-  const ok = (xs: string[]) => xs.every((x) => {
-    if (/[a-z]+_[a-z]+/i.test(x)) { console.warn("insight raw key in text:", x); return false; } // e.g. "days_left"
-    if (numbersOk(x, allowed)) return true;
-    console.warn("insight number check failed:", numbersIn(x).filter((v) => !allowed.has(v)), "in:", x);
-    return false;
-  });
-  // bn: show any ASCII digits the model slipped in as Bangla digits (same numbers, already checked above)
-  const digits = (x: string) => (lang === "bn" ? x.replace(/[0-9]/g, (d) => "০১২৩৪৫৬৭৮৯"[Number(d)]) : x);
-  const section = (ai: string[] | undefined, tpl: string[]) => (ai && ok(ai) ? { items: ai.map(digits), ai: true } : { items: tpl, ai: false });
-  return {
-    monthName: facts.month_name,
-    provider,
-    today: section(reply ? [reply.today] : undefined, [fallback.today]),
-    bullets: section(reply?.bullets.slice(0, 5), fallback.bullets),
-    // each tip comes with its কেন line (which numbers it is based on); both are number-checked
-    next: reply && reply.next.every((x) => ok([x.tip, x.why])) ? { items: reply.next.slice(0, 3).map((x) => ({ tip: digits(x.tip), why: digits(x.why) })), ai: true } : { items: fallback.next, ai: false },
+  const parse = (raw: string) => {
+    const r = Reply.parse(JSON.parse(raw));
+    checkLines([r.today, ...r.bullets.slice(0, 5), ...r.next.slice(0, 3).flatMap((x) => [x.tip, x.why])], allowed);
+    return r;
   };
+  try {
+    const r = await callLLM({ system: insightSystemPrompt(lang), user: JSON.stringify(facts), jsonSchema: ReplyJsonSchema }, parse, signal);
+    // bn: show any ASCII digits the model slipped in as Bangla digits (same numbers, already checked)
+    const digits = (x: string) => (lang === "bn" ? x.replace(/[0-9]/g, (d) => "০১২৩৪৫৬৭৮৯"[Number(d)]) : x);
+    return {
+      monthName: facts.month_name,
+      model: r.model,
+      today: digits(r.data.today),
+      bullets: r.data.bullets.slice(0, 5).map(digits),
+      next: r.data.next.slice(0, 3).map((x) => ({ tip: digits(x.tip), why: digits(x.why) })),
+    };
+  } catch (e) {
+    console.error("insight AI failed:", (e as Error).message);
+    return null;
+  }
 }
-export type InsightText = Awaited<ReturnType<typeof insight>>;
+export type InsightText = NonNullable<Awaited<ReturnType<typeof insight>>>;

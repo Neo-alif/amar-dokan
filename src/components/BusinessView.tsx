@@ -7,7 +7,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import type { BusinessData } from "@/lib/db/queries";
 import { PERIODS, type Period } from "@/lib/logic/business";
 import { formatNumber, formatTaka } from "@/lib/format";
-import { useInsight } from "@/components/insightCards";
+import { InsightError, useInsight } from "@/components/insightCards";
 import { BarList, DailySalesChart } from "@/components/BusinessCharts";
 
 const TONE = {
@@ -53,23 +53,18 @@ function Advice() {
     <>
       <Section bg="bg-violet-50" title={b.aiTitle} sub={b.aiSub} icon={icon("#6D28D9", <path d="M12 3l1.8 4.6L18 9l-4.2 1.4L12 15l-1.8-4.6L6 9l4.2-1.4z" />)} />
       {loading && <p className="animate-pulse text-muted" aria-live="polite">{s.writing}</p>}
-      {error && (
-        <div role="alert" className="flex flex-col items-start gap-2">
-          <p className="text-danger">{s.loadError}</p>
-          <button type="button" onClick={retry} className="min-h-11 rounded-xl border border-border px-4 text-sm font-semibold text-primary">{s.retry}</button>
-        </div>
-      )}
+      {error && <InsightError error={error} retry={retry} />}
       {data && (
         <>
           <div className="grid gap-4 md:grid-cols-3">
-            {data.next.items.map((x, i) => (
+            {data.next.map((x, i) => (
               <div key={i} className="flex flex-col gap-1 rounded-[14px] border-2 border-border bg-white px-4 py-3.5">
                 <span className="text-[15.5px] leading-relaxed">{x.tip}</span>
                 <span className="text-[13px] text-muted">{s.why}: {x.why}</span>
               </div>
             ))}
           </div>
-          <span className="text-[13px] text-muted">{data.next.ai ? `${s.verified} · ${b.aiNote}` : s.templateNote}</span>
+          <span className="text-[13px] text-muted">{`${s.verified} · ${b.aiNote}`}</span>
         </>
       )}
     </>

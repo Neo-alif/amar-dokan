@@ -15,20 +15,35 @@ export type Insight = InsightText & { numbers: InsightNumbers };
 export function useInsight() {
   const { lang } = useLanguage();
   const [tries, setTries] = useState(0);
-  const [res, setRes] = useState<{ key: string; data?: Insight; error?: boolean } | null>(null);
+  const [res, setRes] = useState<{ key: string; data?: Insight; error?: "ai" | "server" } | null>(null);
   const key = `${lang}:${tries}`;
   useEffect(() => {
     let alive = true;
     // Abort on cleanup (StrictMode remount, language switch, leaving the page) so the server stops that AI call.
     const ctrl = new AbortController();
     fetch("/api/insight", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ lang }), signal: ctrl.signal })
-      .then(async (r) => { if (!r.ok) throw new Error(String(r.status)); return (await r.json()) as Insight; })
-      .then((data) => alive && setRes({ key, data }))
-      .catch(() => alive && setRes({ key, error: true }));
+      .then(async (r) => {
+        if (r.status === 503) return alive && setRes({ key, error: "ai" }); // every AI model failed
+        if (!r.ok) throw new Error(String(r.status));
+        const data = (await r.json()) as Insight;
+        if (alive) setRes({ key, data });
+      })
+      .catch(() => alive && setRes({ key, error: "server" }));
     return () => { alive = false; ctrl.abort(); };
   }, [key, lang]);
   const current = res?.key === key ? res : null;
-  return { data: current?.data ?? null, error: !!current?.error, loading: !current, retry: () => setTries((n) => n + 1) };
+  return { data: current?.data ?? null, error: current?.error ?? null, loading: !current, retry: () => setTries((n) => n + 1) };
+}
+
+// AI unavailable (or server error) + retry. No rule-written stand-in.
+export function InsightError({ error, retry, center }: { error: "ai" | "server"; retry: () => void; center?: boolean }) {
+  const s = useLanguage().t.insight;
+  return (
+    <div role="alert" className={`flex flex-col gap-2 ${center ? "items-center" : "items-start"}`}>
+      <p className="text-danger">{error === "ai" ? s.aiUnavailable : s.loadError}</p>
+      <button type="button" onClick={retry} className="min-h-11 rounded-xl border border-border px-4 text-sm font-semibold text-primary">{s.retry}</button>
+    </div>
+  );
 }
 
 const Sparkle = () => (
@@ -76,7 +91,6 @@ export function AuditCard() {
   const { t } = useLanguage();
   const s = t.insight;
   const { data, error, loading, retry } = useInsight();
-  const allAi = data && data.today.ai && data.bullets.ai;
   return (
     <article className="flex flex-col gap-3 rounded-[20px] border-[1.5px] border-t-[6px] border-violet-200 border-t-accent bg-white p-6 shadow-[0_10px_28px_rgba(109,40,217,0.10)]">
       <div className="flex items-center gap-2">
@@ -85,19 +99,14 @@ export function AuditCard() {
         {data && <span className="ml-auto text-[13px] text-muted">{data.monthName}</span>}
       </div>
       {loading && <p className="animate-pulse text-muted" aria-live="polite">{s.writing}</p>}
-      {error && (
-        <div role="alert" className="flex flex-col items-start gap-2">
-          <p className="text-danger">{s.loadError}</p>
-          <button type="button" onClick={retry} className="min-h-11 rounded-xl border border-border px-4 text-sm font-semibold text-primary">{s.retry}</button>
-        </div>
-      )}
+      {error && <InsightError error={error} retry={retry} />}
       {data && (
         <>
-          <p className="rounded-xl bg-violet-50 p-3 text-[15px]"><strong>{s.todayLabel}:</strong> {data.today.items[0]}</p>
+          <p className="rounded-xl bg-violet-50 p-3 text-[15px]"><strong>{s.todayLabel}:</strong> {data.today}</p>
           <ul className="flex list-disc flex-col gap-1.5 pl-5 text-[15px] leading-relaxed">
-            {data.bullets.items.map((b, i) => <li key={i}>{b}</li>)}
+            {data.bullets.map((b, i) => <li key={i}>{b}</li>)}
           </ul>
-          <span className="text-[13px] text-muted">{allAi ? s.verified : s.templateNote}</span>
+          <span className="text-[13px] text-muted">{s.verified}</span>
         </>
       )}
       <div className="mt-auto flex flex-wrap gap-2.5">

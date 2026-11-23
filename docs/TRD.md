@@ -209,7 +209,7 @@ Constants (`HORIZON_DAYS = 7`, `SAFETY_DAYS = 2`) at the top of the file.
 ### Monthly audit (`lib/logic/summary.ts` → `lib/ai/insight.ts`, home box + `/report`)
 - Month = calendar month, Asia/Dhaka; compared with the previous month.
 - Numbers (deterministic): total sales, profit (same formula as weekly), expenses (purchase + expense), total due, top 5 products (sales + profit), products that hit zero stock this month.
-- LLM gets only that JSON → 5 short Bangla bullet points (মূল কথা). Same number check as the insight below; on failure, show deterministic template bullets (clearly not AI).
+- LLM gets only that JSON → 5 short Bangla bullet points (মূল কথা). Same number check as the insight below; on failure, the next model is tried; if all fail, the UI shows "AI এখন পাওয়া যাচ্ছে না" with a retry button (no template).
 
 ### Home stat strip (`lib/logic/summary.ts`, deterministic)
 - আজকের বিক্রি = `today_summary.sales`; আজকের খরচ = `today_summary.spend` (purchase + expense); মোট বাকি = `Σ customers.due_balance`; স্টক কম = count of products with `stock_qty ≤ reorder_level`. All "today" in Asia/Dhaka.
@@ -218,7 +218,7 @@ Constants (`HORIZON_DAYS = 7`, `SAFETY_DAYS = 2`) at the top of the file.
 - Shown as the **first line of the monthly audit card**.
 - `summary.ts` computes: today sales vs yesterday (%), top 3 products, due change, low-stock items.
 - LLM gets only that JSON: "write **one** short Bangla sentence, use only these numbers."
-- **Number check:** every number in the LLM text must exist in the summary JSON; otherwise show a deterministic template sentence instead (still from real data, clearly not AI).
+- **Number check:** every number in the LLM text must exist in the summary JSON; otherwise that reply counts as a failed model and the next one is tried; if all fail, "AI unavailable" + retry.
 
 ## 7. Security
 

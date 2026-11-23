@@ -54,7 +54,7 @@ voice/text ─► normalize (Bangla digits, number words, units, max 500 chars)
               (one atomic function: recomputes money, moves stock and dues, idempotency key)
 ```
 
-Core rule: **the LLM only understands language; the backend and database do all money and stock math.** Nothing is saved until the owner confirms. The daily/monthly insight works the same way: code computes the numbers, the LLM writes the sentence, and a number check rejects any sentence that contains a number not in the data (then a plain template is shown, labelled as not AI).
+Core rule: **the LLM only understands language; the backend and database do all money and stock math.** Nothing is saved until the owner confirms. The daily/monthly insight works the same way: code computes the numbers, the LLM writes the sentence, and a number check rejects any sentence that contains a number not in the data (then the next model is tried; if every model fails, the card says AI is unavailable, with a retry button).
 
 If both LLMs fail, the app says AI is unavailable and the owner fills the card by hand. No AI output is ever hard-coded, cached or pre-recorded.
 

@@ -3,7 +3,7 @@
 
 import { useEffect, useRef } from "react";
 import { PageHeader } from "@/components/PageHeader";
-import { useInsight } from "@/components/insightCards";
+import { InsightError, useInsight } from "@/components/insightCards";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { formatTaka } from "@/lib/format";
 
@@ -25,7 +25,6 @@ export default function ReportPage() {
 
   const n = data?.numbers;
   const name = (id: string) => n?.names[id]?.[lang] ?? "";
-  const allAi = data && data.bullets.ai && data.next.ai;
   const box = (label: string, value: number, tone: string) => (
     <div className={`flex flex-col rounded-[14px] border-2 bg-white px-4 py-3.5 ${tone}`}>
       <span className="text-[13px] text-muted">{label}</span>
@@ -43,12 +42,7 @@ export default function ReportPage() {
         </div>
 
         {loading && <p className="text-center text-muted animate-pulse" aria-live="polite">{s.writing}</p>}
-        {error && (
-          <div role="alert" className="flex flex-col items-center gap-2">
-            <p className="text-danger">{s.loadError}</p>
-            <button type="button" onClick={retry} className="min-h-11 rounded-xl border border-border px-4 text-sm font-semibold text-primary">{s.retry}</button>
-          </div>
-        )}
+        {error && <InsightError error={error} retry={retry} center />}
 
         {data && n && (
           <article className="mx-auto flex w-full max-w-[820px] flex-col gap-5.5 rounded-lg border-2 border-teal-700 bg-white p-6 shadow-[0_16px_40px_rgba(15,23,42,0.08)] sm:px-14 sm:py-12 print:border-0 print:shadow-none">
@@ -71,8 +65,8 @@ export default function ReportPage() {
 
             <section className="flex flex-col gap-2">
               <strong className="text-lg text-primary">{r.keyPoints}</strong>
-              <p className="rounded-xl bg-violet-50 p-3"><strong>{s.todayLabel}:</strong> {data.today.items[0]}</p>
-              <ul className="flex list-disc flex-col gap-1.5 pl-5">{data.bullets.items.map((b, i) => <li key={i}>{b}</li>)}</ul>
+              <p className="rounded-xl bg-violet-50 p-3"><strong>{s.todayLabel}:</strong> {data.today}</p>
+              <ul className="flex list-disc flex-col gap-1.5 pl-5">{data.bullets.map((b, i) => <li key={i}>{b}</li>)}</ul>
             </section>
 
             <section className="flex flex-col gap-2">
@@ -89,11 +83,11 @@ export default function ReportPage() {
 
             <section className="flex flex-col gap-2">
               <strong className="text-lg text-primary">{r.nextMonth}</strong>
-              <ul className="flex list-disc flex-col gap-1.5 pl-5">{data.next.items.map((b, i) => <li key={i}>{b.tip} <span className="text-[13px] text-muted">({s.why}: {b.why})</span></li>)}</ul>
+              <ul className="flex list-disc flex-col gap-1.5 pl-5">{data.next.map((b, i) => <li key={i}>{b.tip} <span className="text-[13px] text-muted">({s.why}: {b.why})</span></li>)}</ul>
             </section>
 
             <p className="text-[13px] text-muted">
-              {(allAi ? r.footer : r.footerTemplate)(new Intl.DateTimeFormat(locale, { dateStyle: "long", timeZone: "Asia/Dhaka" }).format(new Date()))}
+              {r.footer(new Intl.DateTimeFormat(locale, { dateStyle: "long", timeZone: "Asia/Dhaka" }).format(new Date()))}
             </p>
           </article>
         )}

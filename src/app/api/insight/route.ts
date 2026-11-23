@@ -13,6 +13,7 @@ export async function POST(req: Request) {
   try {
     const numbers = await loadInsightNumbers();
     const text = await insight(numbers, body.data.lang, req.signal);
+    if (!text) return Response.json({ error: "AI_UNAVAILABLE" }, { status: 503 }); // every model failed
     return Response.json({ numbers, ...text });
   } catch (e) {
     console.error("insight failed:", e);
