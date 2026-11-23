@@ -4,7 +4,7 @@
 import { z } from "zod";
 import { callLLM } from "./provider.ts";
 import { insightSystemPrompt } from "./prompts.ts";
-import { allowedNumbers, numbersOk } from "../logic/numberCheck.ts";
+import { allowedNumbers, numbersIn, numbersOk } from "../logic/numberCheck.ts";
 import type { InsightNumbers } from "../db/queries.ts";
 import { dictionary, type Lang } from "../../i18n/dictionary.ts";
 import { formatNumber, formatTaka } from "../format.ts";
@@ -75,7 +75,11 @@ export async function insight(n: InsightNumbers, lang: Lang) {
     console.error("insight AI failed:", (e as Error).message); // falls back to the template below
   }
   const allowed = allowedNumbers(facts);
-  const ok = (xs: string[]) => xs.every((x) => numbersOk(x, allowed));
+  const ok = (xs: string[]) => xs.every((x) => {
+    if (numbersOk(x, allowed)) return true;
+    console.warn("insight number check failed:", numbersIn(x).filter((v) => !allowed.has(v)), "in:", x);
+    return false;
+  });
   const section = (ai: string[] | undefined, tpl: string[]) => (ai && ok(ai) ? { items: ai, ai: true } : { items: tpl, ai: false });
   return {
     monthName: facts.month_name,

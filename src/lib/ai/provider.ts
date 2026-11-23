@@ -80,7 +80,9 @@ export async function callLLM<T>(req: LLMRequest, parse: (text: string) => T): P
         return { provider: p.name, model: p.model, data: parse(text), latency_ms: Date.now() - started };
       } catch (e) {
         const status = (e as { status?: number }).status;
-        attempts.push(`${p.name}#${attempt}: ${status ?? ""} ${(e as Error).message}`.slice(0, 200));
+        const line = `${p.name}#${attempt}: ${status ?? ""} ${Date.now() - started}ms ${(e as Error).message}`.slice(0, 200);
+        console.warn("LLM attempt failed:", line); // logged even when a later provider succeeds
+        attempts.push(line);
         if (!(status && status >= 500 && attempt === 1)) break; // only a 5xx earns a retry
       }
     }
