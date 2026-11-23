@@ -21,6 +21,15 @@ const LOW_STOCK_WINDOW = 1;    // low-stock products: small top-up deliveries, t
 const LOW_STOCK_TARGET_DAYS = 2; // …sized to leave ~2 days of stock today (reorder level is ~3 days)
 const WEEKDAY_FACTOR = [0.95, 0.9, 0.95, 1.0, 1.15, 1.25, 1.0]; // Sun..Sat; Thu/Fri busier
 const CUSTOMERS = ["রহিম ভাই", "করিম", "জসিম", "সালমা আপা", "রফিক", "নাসির", "শাহানা", "বাবুল", "মিজান"];
+const SUPPLIERS = ["রহমান ট্রেডার্স", "মেঘনা ডিস্ট্রিবিউটর", "তাজ ফুডস"];
+// দেনা: from `day` on, the next morning restock leaves `due` unpaid (capped by its total); `pay` = paid back that day.
+const SUPPLIER_PLAN: { day: number; supplier: number; due?: number; pay?: number }[] = [
+  { day: -40, supplier: 0, due: 5000 },
+  { day: -22, supplier: 1, due: 2500 },
+  { day: -18, supplier: 0, pay: 3000 },
+  { day: -8, supplier: 0, due: 2000 },
+  { day: -4, supplier: 2, due: 1000 },
+];
 
 const url = process.env.SUPABASE_URL;
 const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -75,8 +84,8 @@ async function apply(payload: Record<string, unknown>) {
 const shopId = process.env.DEMO_SHOP_ID || randomUUID();
 if (process.env.DEMO_SHOP_ID) {
   // Order matters: a single cascade from shops trips the transaction_items → products FK.
-  // transactions cascade to items, stock_movements and customer_ledger; shops then cascade
-  // to products and customers. Every step is limited to this shop.
+  // transactions cascade to items, stock_movements, customer_ledger and supplier_ledger; shops then cascade
+  // to products, customers and suppliers. Every step is limited to this shop.
   for (const [table, column] of [["ai_logs", "shop_id"], ["transactions", "shop_id"], ["shops", "id"]]) {
     const { error } = await db.from(table).delete().eq(column, shopId);
     if (error) throw new Error(`delete demo ${table} failed: ${error.message}`);
@@ -103,6 +112,12 @@ const { data: custRows, error: cErr } = await db.from("customers")
   .insert(CUSTOMERS.map((name) => ({ shop_id: shopId, name }))).select("id, name");
 if (cErr || !custRows) throw new Error(`insert customers failed: ${cErr?.message}`);
 const customers = custRows.map((c) => ({ ...c, due: 0 }));
+
+const { data: suppRows, error: sErr } = await db.from("suppliers")
+  .insert(SUPPLIERS.map((name) => ({ shop_id: shopId, name }))).select("id, name");
+if (sErr || !suppRows) throw new Error(`insert suppliers failed: ${sErr?.message}`);
+const suppliers = SUPPLIERS.map((name) => ({ id: suppRows.find((r) => r.name === name)!.id, name, due: 0 }));
+const supplierPlan = [...SUPPLIER_PLAN]; // consumed in order as the days pass
 
 // Opening money (টাকার অবস্থা): the owner's first "মিলিয়ে নিন" on day 1, before any transaction.
 // Without it every account would start at 0 and cash would go negative over 60 days of stock buying.
@@ -143,7 +158,24 @@ for (let offset = -(DAYS - 1); offset <= 0; offset++) {
   }
   if (buy.length) {
     const total = buy.reduce((s, i) => s + i.quantity * i.unit_price, 0);
-    await apply({ type: "purchase", items: buy, paid: total, occurred_at: at(iso, 8, 30), raw_text: "seed: পাইকারি কেনা" });
+    const credit = supplierPlan[0]?.due && supplierPlan[0].day <= offset ? supplierPlan.shift()! : null;
+    const supplier = credit ? suppliers[credit.supplier] : null;
+    const due = supplier ? Math.min(credit!.due!, total) : 0;
+    if (supplier) supplier.due += due;
+    await apply({
+      type: "purchase", items: buy, paid: total - due, supplier_id: supplier?.id ?? null,
+      occurred_at: at(iso, 8, 30), raw_text: supplier ? `seed: ${supplier.name} থেকে বাকিতে কেনা` : "seed: পাইকারি কেনা",
+    });
+    txnCount++;
+  }
+
+  // Paying a supplier back (দেনা শোধ), never more than what is owed.
+  while (supplierPlan[0]?.pay && supplierPlan[0].day <= offset) {
+    const { supplier: i, pay } = supplierPlan.shift()!;
+    const amount = Math.min(pay!, suppliers[i].due);
+    if (amount <= 0) continue;
+    suppliers[i].due -= amount;
+    await apply({ type: "payment", supplier_id: suppliers[i].id, paid: amount, occurred_at: at(iso, 11), raw_text: `seed: ${suppliers[i].name}-কে দেনা শোধ` });
     txnCount++;
   }
 
@@ -201,17 +233,21 @@ for (let offset = -(DAYS - 1); offset <= 0; offset++) {
 const { data: dbProducts } = await db.from("products").select("id, name_bn, stock_qty, reorder_level").eq("shop_id", shopId);
 const { data: dbCustomers } = await db.from("customers").select("id, name, due_balance").eq("shop_id", shopId);
 const stockMismatch = products.filter((p) => Number(dbProducts?.find((d) => d.id === p.id)?.stock_qty) !== p.stock);
+const { data: dbSuppliers } = await db.from("suppliers").select("id, due_balance").eq("shop_id", shopId);
 const dueMismatch = customers.filter((c) => Number(dbCustomers?.find((d) => d.id === c.id)?.due_balance) !== c.due);
-if (stockMismatch.length || dueMismatch.length) {
-  throw new Error(`Self-check FAILED: stock ${stockMismatch.map((p) => p.name_bn)}, due ${dueMismatch.map((c) => c.name)}`);
+const payableMismatch = suppliers.filter((s) => Number(dbSuppliers?.find((d) => d.id === s.id)?.due_balance) !== s.due);
+if (supplierPlan.length) throw new Error(`Self-check FAILED: supplier plan not used: ${JSON.stringify(supplierPlan)}`);
+if (stockMismatch.length || dueMismatch.length || payableMismatch.length) {
+  throw new Error(`Self-check FAILED: stock ${stockMismatch.map((p) => p.name_bn)}, due ${dueMismatch.map((c) => c.name)}, দেনা ${payableMismatch.map((s) => s.name)}`);
 }
 
 const low = products.filter((p) => p.stock <= p.reorder_level)
   .map((p) => `${p.name_bn} ${p.stock} (≈${(p.stock / p.seed_avg_daily_sales).toFixed(1)} দিন)`);
 const { data: today } = await db.from("today_summary").select("*").eq("shop_id", shopId).maybeSingle();
-console.log(`Seeded ${products.length} products, ${customers.length} customers, ${txnCount} transactions over ${DAYS} days`);
-console.log(`Self-check passed: stock and dues in the DB match the simulation`);
+console.log(`Seeded ${products.length} products, ${customers.length} customers, ${suppliers.length} suppliers, ${txnCount} transactions over ${DAYS} days`);
+console.log(`Self-check passed: stock, dues and দেনা in the DB match the simulation`);
 console.log(`Total due: ৳${customers.reduce((s, c) => s + c.due, 0)}`);
+console.log(`Total দেনা: ৳${suppliers.reduce((s, x) => s + x.due, 0)} (${suppliers.map((x) => `${x.name} ${x.due}`).join(", ")})`);
 console.log(`Low stock: ${low.join(", ") || "none"}`);
 console.log(`today_summary: ${JSON.stringify(today)}`);
 if (!process.env.DEMO_SHOP_ID) console.log(`\nNEW DEMO_SHOP_ID=${shopId}  ← put this in .env.local (and in Vercel)`);
