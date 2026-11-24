@@ -41,15 +41,15 @@ export type StarterItem = {
   name_bn: string; name_en: string; unit: string; cost_price: number;
   starter_qty: number; daily_demand: number; priority: (typeof PRIORITIES)[number];
 };
-export type StarterLine = StarterItem & { qty: number; cost: number };
+export type StarterLine<T extends StarterItem = StarterItem> = T & { qty: number; cost: number };
 
 // Same two-pass greedy as restock(), one priority tier at a time: every item in the tier first gets
 // FIRST_PASS_DAYS of typical demand, then tops up to starter_qty. The next tier starts only once the
 // current one is fully stocked, so optional items never take money an essential still needs.
-export function planNewShop(items: StarterItem[], budget: number) {
+export function planNewShop<T extends StarterItem>(items: T[], budget: number) {
   let left = Math.max(0, budget);
-  const qty = new Map<StarterItem, number>();
-  const buy = (p: StarterItem, want: number) => {
+  const qty = new Map<T, number>();
+  const buy = (p: T, want: number) => {
     const q = Math.min(want, Math.floor(left / p.cost_price)); // scaled down when the budget runs short
     if (q <= 0) return;
     qty.set(p, (qty.get(p) ?? 0) + q);
@@ -61,6 +61,6 @@ export function planNewShop(items: StarterItem[], budget: number) {
     for (const p of group) buy(p, p.starter_qty - (qty.get(p) ?? 0));
     if (group.some((p) => (qty.get(p) ?? 0) < p.starter_qty)) break;
   }
-  const lines: StarterLine[] = [...qty].map(([p, q]) => ({ ...p, qty: q, cost: Math.round(q * p.cost_price * 100) / 100 }));
+  const lines: StarterLine<T>[] = [...qty].map(([p, q]) => ({ ...p, qty: q, cost: Math.round(q * p.cost_price * 100) / 100 }));
   return { items: lines, total: Math.round((Math.max(0, budget) - left) * 100) / 100, remaining: left };
 }
