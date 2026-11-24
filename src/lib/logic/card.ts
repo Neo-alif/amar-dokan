@@ -14,6 +14,7 @@ export type CardItem = {
   unit_price: number | null;
   stock_before: number | null;
   product_unit?: string | null; // the shop's unit for a matched product (stock is counted in it)
+  ask_count?: "bottle" | "packet" | null; // said litres/kg didn't divide by the pack size → "কত বোতল?"
   price_from_list?: boolean; // owner picked "তালিকার দাম" (not said, not AI) → small label on the card
 };
 export type Card = {
@@ -56,7 +57,7 @@ export function cardChange(c: Card): number | null {
 
 // Spoken unit vs the product's unit. pcs/packet are both counts ("2 ta biskut" = 2 packets); anything
 // else that differs (packet vs kg, pcs vs dozen, g vs kg) is asked, never converted silently.
-const COUNT = ["pcs", "packet"];
+const COUNT = ["pcs", "packet", "bottle"];
 export function unitMismatch(it: { unit: string | null; product_unit?: string | null }): boolean {
   const { unit, product_unit } = it;
   return Boolean(unit && product_unit && unit !== product_unit && !(COUNT.includes(unit) && COUNT.includes(product_unit)));

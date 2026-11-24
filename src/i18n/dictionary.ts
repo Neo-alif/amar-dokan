@@ -36,7 +36,7 @@ const bn = {
     loading: "হিসাব আনছি…",
   },
 
-  units: { pcs: "টি", kg: "কেজি", g: "গ্রাম", litre: "লি.", ml: "মি.লি.", dozen: "ডজন", packet: "প্যাকেট" } as Record<string, string>,
+  units: { pcs: "টি", kg: "কেজি", g: "গ্রাম", litre: "লি.", ml: "মি.লি.", dozen: "ডজন", packet: "প্যাকেট", bottle: "বোতল" } as Record<string, string>,
   stock: {
     title: "স্টক",
     totalProducts: "মোট পণ্য",
@@ -373,7 +373,8 @@ const bn = {
     listPrice: "তালিকার দাম",
     // said = unit key; Bangla needs the locative form (প্যাকেটে, টিতে, ডজনে)
     askPerUnit: (said: string, unit: string) =>
-      `এক ${({ pcs: "টিতে", packet: "প্যাকেটে", dozen: "ডজনে", kg: "কেজিতে", g: "গ্রামে", litre: "লিটারে", ml: "মি.লি.-তে" } as Record<string, string>)[said] ?? said} কত ${unit}?`,
+      `এক ${({ pcs: "টিতে", packet: "প্যাকেটে", bottle: "বোতলে", dozen: "ডজনে", kg: "কেজিতে", g: "গ্রামে", litre: "লিটারে", ml: "মি.লি.-তে" } as Record<string, string>)[said] ?? said} কত ${unit}?`,
+    askCount: (unit: string) => `কত ${unit}?`, // "৩ লিটার" of a 2 L bottle doesn't divide
     method: "টাকা কীভাবে",
     methods: { cash: "নগদ", bkash: "বিকাশ", bank: "ব্যাংক" },
   },
@@ -441,7 +442,7 @@ const en: Dict = {
     loading: "Loading numbers…",
   },
 
-  units: { pcs: "pcs", kg: "kg", g: "g", litre: "L", ml: "ml", dozen: "dozen", packet: "packet" } as Record<string, string>,
+  units: { pcs: "pcs", kg: "kg", g: "g", litre: "L", ml: "ml", dozen: "dozen", packet: "packet", bottle: "bottle" } as Record<string, string>,
   stock: {
     title: "Stock",
     totalProducts: "Total products",
@@ -777,6 +778,7 @@ const en: Dict = {
     paidOk: "Set",
     listPrice: "List price",
     askPerUnit: (said: string, unit: string) => `How many ${unit} in one ${said}?`, // said = unit key
+    askCount: (unit: string) => `How many ${unit}s?`,
     method: "Paid by",
     methods: { cash: "Cash", bkash: "bKash", bank: "Bank" },
   },

@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { normalizeInput, normalizePersonName } from "../src/lib/logic/normalize.ts";
 import { deriveAmounts } from "../src/lib/logic/amounts.ts";
 import { matchCustomer, matchProduct } from "../src/lib/logic/matchProduct.ts";
+import { resolveUnit } from "../src/lib/logic/units.ts";
 import type { Extraction } from "../src/lib/schema.ts";
 
 const base: Extraction = {
@@ -565,4 +566,14 @@ test("formatDateTime: Asia/Dhaka, Bangla period words", async () => {
   assert.equal(formatDateTime("2026-11-23T19:15:00Z", "bn"), "২৪ নভে, রাত ১:১৫");
   assert.equal(formatDateTime("2026-11-23T19:15:00Z", "en"), "24 Nov, 1:15 am");
   assert.equal(formatDateTime("2026-11-24T08:05:00Z", "bn"), "২৪ নভে, দুপুর ২:০৫");
+});
+
+test("units: container words count the product's unit; litres/kg convert by pack size", () => {
+  const oil = { unit: "pcs", names: ["সয়াবিন তেল ২ লিটার", "Soybean oil 2L"] };
+  const rice = { unit: "kg", names: ["মিনিকেট চাল", "Miniket rice"] };
+  assert.deepEqual(resolveUnit(2, "bottle", oil), { quantity: 2, unit: "pcs", scale: 1, ask_count: null }); // ২ বোতল
+  assert.deepEqual(resolveUnit(4, "litre", oil), { quantity: 2, unit: "pcs", scale: 2, ask_count: null }); // ৪ লিটার
+  assert.deepEqual(resolveUnit(3, "litre", oil), { quantity: null, unit: "pcs", scale: 2, ask_count: "bottle" }); // ৩ লিটার → কত বোতল?
+  assert.equal(resolveUnit(5, "kg", rice), null); // ৫ কেজি চাল: loose, stays kg
+  assert.equal(resolveUnit(2, "pcs", { unit: "dozen", names: ["ডিম"] }), null); // ২টা ডিম: still asked, not 2 dozen
 });

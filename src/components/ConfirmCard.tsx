@@ -162,6 +162,10 @@ export function ConfirmCard({ initial, meta, onDone }: { initial: Card; meta: Ca
                 <PerUnitQuestion question={c.askPerUnit(it.unit!, t.units[it.product_unit!] ?? it.product_unit!)} unit={t.units[it.product_unit!] ?? ""}
                   onAnswer={(n) => setItem(i, answerUnit(it, n))} />
               )}
+              {it.ask_count && it.quantity == null && (
+                <PerUnitQuestion question={c.askCount(t.units[it.ask_count])} unit={t.units[it.ask_count]}
+                  onAnswer={(n) => setItem(i, { quantity: n, ask_count: null })} />
+              )}
               {card.type === "sale" && it.stock_before != null && it.quantity != null && it.quantity > it.stock_before && (
                 <span className="block text-sm font-normal text-warning">{c.stockWarn} {formatNumber(it.stock_before, lang)}</span>
               )}
