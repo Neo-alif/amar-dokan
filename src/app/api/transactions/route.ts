@@ -6,10 +6,16 @@ import { db, shopId } from "@/lib/db/client";
 import { loadShopContext, updateAiLog } from "@/lib/db/queries";
 import { matchCustomer, matchProduct } from "@/lib/logic/matchProduct";
 import { MAX_INPUT_CHARS } from "@/lib/logic/normalize";
+import { entryKey, occurredAt } from "@/lib/logic/entries";
+import { MAX_DAYS_AGO } from "@/lib/schema";
 
 const money = z.number().nonnegative().max(10_000_000);
 const Body = z.object({
-  idempotency_key: z.uuid(),
+  // single card: its own key · one card of a multi-event message: batch_key + index → entryKey()
+  idempotency_key: z.uuid().optional(),
+  batch_key: z.uuid().optional(),
+  index: z.number().int().min(0).max(9).optional(),
+  days_ago: z.number().int().min(0).max(MAX_DAYS_AGO).default(0), // what the owner said/confirmed; the server makes the date
   log_id: z.uuid().nullable(),
   edited: z.boolean(),
   type: z.enum(["sale", "purchase", "expense", "payment", "supplier_payment"]),
@@ -29,7 +35,7 @@ const Body = z.object({
   total: money.nullable(), // only used for expense; sale/purchase totals come from the items
   expense_category: z.string().trim().max(60).nullable(),
   raw_text: z.string().max(MAX_INPUT_CHARS).nullable(),
-});
+}).refine((b) => Boolean(b.idempotency_key) !== (b.batch_key !== undefined && b.index !== undefined), "one key");
 
 // Error codes raised inside apply_transaction (Schema §4); the UI shows the Bangla text.
 const DB_CODES = [
@@ -88,10 +94,11 @@ export async function POST(req: Request) {
       items.push({ product_id: productId, quantity: it.quantity, unit_price: it.unit_price });
     }
 
-    // No occurred_at here: the DB stamps now(); only the seed may backdate.
+    // occurred_at from the said days ago (Asia/Dhaka); today → omitted, the DB stamps now()
     const { data: transactionId, error } = await db().rpc("apply_transaction", {
       p: {
-        idempotency_key: b.idempotency_key, shop_id: shop, type: b.type === "supplier_payment" ? "payment" : b.type,
+        idempotency_key: b.idempotency_key ?? entryKey(b.batch_key!, b.index!),
+        occurred_at: occurredAt(b.days_ago) ?? undefined, shop_id: shop, type: b.type === "supplier_payment" ? "payment" : b.type,
         method: b.method, customer_id: customerId, supplier_id: supplierId,
         paid: b.paid, total: b.total, items, expense_category: b.expense_category, raw_text: b.raw_text,
       },
