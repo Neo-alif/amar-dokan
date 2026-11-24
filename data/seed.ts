@@ -86,7 +86,8 @@ if (process.env.DEMO_SHOP_ID) {
   // Order matters: a single cascade from shops trips the transaction_items → products FK.
   // transactions cascade to items, stock_movements, customer_ledger and supplier_ledger; shops then cascade
   // to products, customers and suppliers. Every step is limited to this shop.
-  for (const [table, column] of [["ai_logs", "shop_id"], ["transactions", "shop_id"], ["shops", "id"]]) {
+  // stock_movements is deleted directly too: stock-count adjustments (004) have no transaction to cascade from.
+  for (const [table, column] of [["ai_logs", "shop_id"], ["transactions", "shop_id"], ["stock_movements", "shop_id"], ["shops", "id"]]) {
     const { error } = await db.from(table).delete().eq(column, shopId);
     if (error) throw new Error(`delete demo ${table} failed: ${error.message}`);
   }
