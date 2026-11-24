@@ -319,6 +319,46 @@ test("restock: tie on days left → bigger margin first; zero budget → nothing
   assert.deepEqual(restock([rp("a", 4, 2, 10, 11)], 0).lines, []);
 });
 
+// ── New shop, zero sales history: starter templates ──
+import { readFileSync } from "node:fs";
+import { planNewShop, PRIORITIES, type StarterItem } from "../src/lib/logic/restock.ts";
+import { UNITS } from "../src/lib/schema.ts";
+
+const starter = (cat: string): StarterItem[] => JSON.parse(readFileSync(`data/starter/${cat}.json`, "utf8")).items;
+const rank = (p: StarterItem) => PRIORITIES.indexOf(p.priority);
+const fits = (r: ReturnType<typeof planNewShop>, budget: number) => {
+  assert.ok(r.total <= budget && r.remaining >= 0);
+  assert.equal(Math.round((r.total + r.remaining) * 100) / 100, budget);
+  assert.equal(r.total, r.items.reduce((s, l) => Math.round((s + l.qty * l.cost_price) * 100) / 100, 0)); // total = Σ qty × cost
+};
+
+test("planNewShop: grocery ৳20,000 fits the budget, essentials first, never above starter qty", () => {
+  const r = planNewShop(starter("grocery"), 20000);
+  fits(r, 20000);
+  assert.deepEqual(r.items.map(rank), [...r.items.map(rank)].sort((a, b) => a - b)); // essential → normal → optional
+  assert.equal(r.items[0].priority, "essential");
+  assert.ok(r.items.every((l) => l.qty > 0 && l.qty <= l.starter_qty));
+});
+
+test("planNewShop: ৳2,000 buys essentials only, scaled down; ৳0 buys nothing", () => {
+  const r = planNewShop(starter("grocery"), 2000);
+  fits(r, 2000);
+  assert.ok(r.items.length > 0 && r.items.every((l) => l.priority === "essential"));
+  assert.ok(r.items.some((l) => l.qty < l.starter_qty)); // scaled down to fit
+  assert.deepEqual(planNewShop(starter("grocery"), 0), { items: [], total: 0, remaining: 0 });
+});
+
+test("planNewShop: every category template is valid and returns items", () => {
+  for (const cat of ["grocery", "cosmetics", "stationery", "clothing"]) {
+    const items = starter(cat);
+    assert.ok(items.length >= 8 && items.length <= 12, cat);
+    assert.ok(items.every((p) => (UNITS as readonly string[]).includes(p.unit) && PRIORITIES.includes(p.priority) && p.cost_price > 0 && p.starter_qty > 0 && p.daily_demand > 0), cat);
+    const r = planNewShop(items, 10000);
+    fits(r, 10000);
+    assert.ok(r.items.length > 0, cat);
+  }
+});
+
 import { countDifference, moneyPosition } from "../src/lib/logic/money.ts";
 
 test("moneyPosition: total = cash + bank + bkash + receivable − payable", () => {

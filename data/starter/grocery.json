@@ -1,0 +1,18 @@
+{
+  "category_bn": "মুদি",
+  "category_en": "Grocery",
+  "items": [
+    { "name_bn": "মিনিকেট চাল", "name_en": "Miniket rice", "unit": "kg", "cost_price": 65, "starter_qty": 50, "daily_demand": 8, "priority": "essential" },
+    { "name_bn": "আটা", "name_en": "Atta (flour)", "unit": "kg", "cost_price": 55, "starter_qty": 20, "daily_demand": 3, "priority": "essential" },
+    { "name_bn": "মসুর ডাল", "name_en": "Lentils", "unit": "kg", "cost_price": 110, "starter_qty": 15, "daily_demand": 2, "priority": "essential" },
+    { "name_bn": "সয়াবিন তেল ১ লিটার", "name_en": "Soybean oil 1L", "unit": "pcs", "cost_price": 180, "starter_qty": 12, "daily_demand": 2, "priority": "essential" },
+    { "name_bn": "চিনি", "name_en": "Sugar", "unit": "kg", "cost_price": 125, "starter_qty": 10, "daily_demand": 1.5, "priority": "essential" },
+    { "name_bn": "লবণ", "name_en": "Salt", "unit": "packet", "cost_price": 40, "starter_qty": 15, "daily_demand": 2, "priority": "essential" },
+    { "name_bn": "আলু", "name_en": "Potato", "unit": "kg", "cost_price": 40, "starter_qty": 20, "daily_demand": 3, "priority": "normal" },
+    { "name_bn": "পেঁয়াজ", "name_en": "Onion", "unit": "kg", "cost_price": 90, "starter_qty": 10, "daily_demand": 2, "priority": "normal" },
+    { "name_bn": "ডিম", "name_en": "Egg", "unit": "pcs", "cost_price": 13, "starter_qty": 60, "daily_demand": 15, "priority": "normal" },
+    { "name_bn": "গায়ে মাখা সাবান", "name_en": "Bath soap", "unit": "pcs", "cost_price": 45, "starter_qty": 12, "daily_demand": 2, "priority": "normal" },
+    { "name_bn": "বিস্কুট", "name_en": "Biscuits", "unit": "packet", "cost_price": 20, "starter_qty": 24, "daily_demand": 4, "priority": "optional" },
+    { "name_bn": "চানাচুর", "name_en": "Chanachur", "unit": "packet", "cost_price": 25, "starter_qty": 20, "daily_demand": 3, "priority": "optional" }
+  ]
+}

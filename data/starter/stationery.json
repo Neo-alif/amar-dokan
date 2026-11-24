@@ -1,0 +1,18 @@
+{
+  "category_bn": "স্টেশনারি",
+  "category_en": "Stationery",
+  "items": [
+    { "name_bn": "খাতা", "name_en": "Exercise book", "unit": "pcs", "cost_price": 40, "starter_qty": 40, "daily_demand": 5, "priority": "essential" },
+    { "name_bn": "বলপেন", "name_en": "Ballpoint pen", "unit": "pcs", "cost_price": 10, "starter_qty": 100, "daily_demand": 12, "priority": "essential" },
+    { "name_bn": "পেন্সিল", "name_en": "Pencil", "unit": "pcs", "cost_price": 8, "starter_qty": 60, "daily_demand": 6, "priority": "essential" },
+    { "name_bn": "ইরেজার", "name_en": "Eraser", "unit": "pcs", "cost_price": 5, "starter_qty": 50, "daily_demand": 4, "priority": "essential" },
+    { "name_bn": "শার্পনার", "name_en": "Sharpener", "unit": "pcs", "cost_price": 8, "starter_qty": 40, "daily_demand": 3, "priority": "essential" },
+    { "name_bn": "স্কেল", "name_en": "Ruler", "unit": "pcs", "cost_price": 15, "starter_qty": 20, "daily_demand": 1.5, "priority": "normal" },
+    { "name_bn": "A4 কাগজ", "name_en": "A4 paper ream", "unit": "packet", "cost_price": 550, "starter_qty": 3, "daily_demand": 0.2, "priority": "normal" },
+    { "name_bn": "জ্যামিতি বক্স", "name_en": "Geometry box", "unit": "pcs", "cost_price": 120, "starter_qty": 6, "daily_demand": 0.4, "priority": "normal" },
+    { "name_bn": "মার্কার", "name_en": "Marker", "unit": "pcs", "cost_price": 35, "starter_qty": 12, "daily_demand": 1, "priority": "normal" },
+    { "name_bn": "রঙ পেন্সিল", "name_en": "Colour pencils", "unit": "packet", "cost_price": 120, "starter_qty": 8, "daily_demand": 0.5, "priority": "optional" },
+    { "name_bn": "আঠা", "name_en": "Glue", "unit": "pcs", "cost_price": 30, "starter_qty": 12, "daily_demand": 1, "priority": "optional" },
+    { "name_bn": "স্টেপলার", "name_en": "Stapler", "unit": "pcs", "cost_price": 150, "starter_qty": 3, "daily_demand": 0.1, "priority": "optional" }
+  ]
+}

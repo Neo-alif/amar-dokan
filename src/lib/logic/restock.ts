@@ -34,3 +34,33 @@ export function restock(items: RestockInput[], budget: number) {
   const skipped = candidates.filter((p) => !qty.has(p.id)).map((p) => p.id);
   return { lines, skipped, spent: Math.round((Math.max(0, budget) - left) * 100) / 100, left };
 }
+
+// Brand-new shop, zero sales history: plan from a starter template (data/starter/*.json) instead.
+export const PRIORITIES = ["essential", "normal", "optional"] as const;
+export type StarterItem = {
+  name_bn: string; name_en: string; unit: string; cost_price: number;
+  starter_qty: number; daily_demand: number; priority: (typeof PRIORITIES)[number];
+};
+export type StarterLine = StarterItem & { qty: number; cost: number };
+
+// Same two-pass greedy as restock(), one priority tier at a time: every item in the tier first gets
+// FIRST_PASS_DAYS of typical demand, then tops up to starter_qty. The next tier starts only once the
+// current one is fully stocked, so optional items never take money an essential still needs.
+export function planNewShop(items: StarterItem[], budget: number) {
+  let left = Math.max(0, budget);
+  const qty = new Map<StarterItem, number>();
+  const buy = (p: StarterItem, want: number) => {
+    const q = Math.min(want, Math.floor(left / p.cost_price)); // scaled down when the budget runs short
+    if (q <= 0) return;
+    qty.set(p, (qty.get(p) ?? 0) + q);
+    left = Math.round((left - q * p.cost_price) * 100) / 100;
+  };
+  for (const tier of PRIORITIES) {
+    const group = items.filter((p) => p.priority === tier && p.cost_price > 0 && p.starter_qty > 0);
+    for (const p of group) buy(p, Math.min(p.starter_qty, Math.max(1, Math.ceil(p.daily_demand * FIRST_PASS_DAYS))));
+    for (const p of group) buy(p, p.starter_qty - (qty.get(p) ?? 0));
+    if (group.some((p) => (qty.get(p) ?? 0) < p.starter_qty)) break;
+  }
+  const lines: StarterLine[] = [...qty].map(([p, q]) => ({ ...p, qty: q, cost: Math.round(q * p.cost_price * 100) / 100 }));
+  return { items: lines, total: Math.round((Math.max(0, budget) - left) * 100) / 100, remaining: left };
+}
