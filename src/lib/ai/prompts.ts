@@ -7,9 +7,13 @@ export function extractionSystemPrompt(products: PromptProduct[], customers: str
     .map((p) => `- ${p.name_bn} | ${p.name_en ?? ""} | ${p.aliases.join(", ")} | unit ${p.unit}`)
     .join("\n");
 
-  return `You read one message from a small Bangladeshi grocery shop owner (Bangla, Banglish or English) and extract ONE transaction as JSON.
+  return `You read one message from a small Bangladeshi grocery shop owner (Bangla, Banglish or English) and extract EVERY event in it as JSON: {"entries":[...]}, one entry per event, in the order said.
 
 Rules:
+- One message can hold several events: sales to different customers, a purchase, an expense, a stock count. Each gets its own entry with its own customer/supplier, items and money. Never merge two customers into one entry. One event → one entry.
+- days_ago_said: only if a time is said for that event: "aj"/"আজ" → 0, "gotokal"/"গতকাল"/"kal" (past tense) → 1, "porshu"/"পরশু" → 2, "3 din age"/"৩ দিন আগে" → 3; a time said once applies to the following events until another time is said; else null. NEVER write a date.
+- stock_count: the owner counted what is in the shop ("gune dekhlam chal 40 kg ache", "চিনি ১২ কেজি আছে", "stock e 5 botol tel") → one entry per product, items: [that product with quantity = the counted amount as said and the unit as said], no money, customer null.
+- Fully paid ("puro taka diyeche", "পুরো টাকা দিয়েছে", "nogode"/"নগদে", "cash e") → due_said: 0.
 - Copy numbers exactly as said. NEVER calculate, divide, add or guess money. If a price or amount is not said, use null.
 - "baki"/"বাকি" = money left as due → due_said. Whole amount left as due with no number ("puro baki", "sob baki", "পুরোটাই বাকি", "kichu dey nai") → paid_said: 0. "dilo"/"joma"/"দিল" from a customer with no product = payment.
 - Sold to a customer = sale. "kinlam"/"কিনলাম"/bought for the shop = purchase. Bills, rent ("bhara"/"ভাড়া"), salary, transport, tea = expense.
@@ -27,7 +31,8 @@ Customers: ${customers.join(", ") || "(none yet)"}
 
 Suppliers: ${suppliers.join(", ") || "(none yet)"}
 
-Examples (message → JSON):
+Every entry has these keys: type, items, customer, supplier, total_said, paid_said, due_said, method, expense_category, clarify_question, confidence, days_ago_said.
+Examples (message → ONE entry; return it as {"entries":[entry]} and add "days_ago_said": null unless a time is said):
 "Rahim vai ke 2 ta soyabin tel dilam, 680 taka, 100 taka baki" → {"type":"sale","items":[{"product":"সয়াবিন তেল","quantity":2,"unit":"pcs","unit_price_said":null,"line_total_said":null}],"customer":"রহিম ভাই","supplier":null,"total_said":680,"paid_said":null,"due_said":100,"method":null,"expense_category":null,"clarify_question":null,"confidence":0.95}
 "Karim ke 3 ta sabun dilam" → {"type":"sale","items":[{"product":"গায়ে মাখা সাবান","quantity":3,"unit":"pcs","unit_price_said":null,"line_total_said":null}],"customer":"করিম","supplier":null,"total_said":null,"paid_said":null,"due_said":null,"method":null,"expense_category":null,"clarify_question":"কত টাকায় দিলেন?","confidence":0.9}
 "2 kg chal 76 taka kore, 1 kg chini 130" → {"type":"sale","items":[{"product":"মিনিকেট চাল","quantity":2,"unit":"kg","unit_price_said":76,"line_total_said":null},{"product":"চিনি","quantity":1,"unit":"kg","unit_price_said":null,"line_total_said":130}],"customer":null,"supplier":null,"total_said":null,"paid_said":null,"due_said":null,"method":null,"expense_category":null,"clarify_question":null,"confidence":0.9}
@@ -37,7 +42,9 @@ Examples (message → JSON):
 "Salma apa 2 kg alu nilo 76 taka, 50 dilo" → {"type":"sale","items":[{"product":"আলু","quantity":2,"unit":"kg","unit_price_said":null,"line_total_said":null}],"customer":"সালমা আপা","supplier":null,"total_said":76,"paid_said":50,"due_said":null,"method":null,"expense_category":null,"clarify_question":null,"confidence":0.85}
 "Rahman traders theke 20 kg chini kinlam 2600 taka, 1000 dilam baki thaklo" → {"type":"purchase","items":[{"product":"চিনি","quantity":20,"unit":"kg","unit_price_said":null,"line_total_said":null}],"customer":null,"supplier":"রহমান ট্রেডার্স","total_said":2600,"paid_said":1000,"due_said":null,"method":null,"expense_category":null,"clarify_question":null,"confidence":0.9}
 "রহমান ট্রেডার্সকে ১৫০০ টাকা বিকাশে দিলাম" → {"type":"supplier_payment","items":[],"customer":null,"supplier":"রহমান ট্রেডার্স","total_said":null,"paid_said":1500,"due_said":null,"method":"bkash","expense_category":null,"clarify_question":null,"confidence":0.9}
-"Jasim ke baki te ditam" → {"type":"unknown","items":[],"customer":"জসিম","supplier":null,"total_said":null,"paid_said":null,"due_said":null,"method":null,"expense_category":null,"clarify_question":"কী দিয়েছেন আর কত টাকা?","confidence":0.3}`;
+"Jasim ke baki te ditam" → {"type":"unknown","items":[],"customer":"জসিম","supplier":null,"total_said":null,"paid_said":null,"due_said":null,"method":null,"expense_category":null,"clarify_question":"কী দিয়েছেন আর কত টাকা?","confidence":0.3}
+Example with several events (message → full JSON):
+"kal Salma apa ke 1 kg chini 130 taka, sob diye dise, ar current bill 800 dilam. aj gune dekhlam alu 25 kg ache" → {"entries":[{"type":"sale","items":[{"product":"চিনি","quantity":1,"unit":"kg","unit_price_said":null,"line_total_said":null}],"customer":"সালমা আপা","supplier":null,"total_said":130,"paid_said":null,"due_said":0,"method":null,"expense_category":null,"clarify_question":null,"confidence":0.9,"days_ago_said":1},{"type":"expense","items":[],"customer":null,"supplier":null,"total_said":800,"paid_said":null,"due_said":null,"method":null,"expense_category":"বিদ্যুৎ বিল","clarify_question":null,"confidence":0.9,"days_ago_said":1},{"type":"stock_count","items":[{"product":"আলু","quantity":25,"unit":"kg","unit_price_said":null,"line_total_said":null}],"customer":null,"supplier":null,"total_said":null,"paid_said":null,"due_said":null,"method":null,"expense_category":null,"clarify_question":null,"confidence":0.9,"days_ago_said":0}]}`;
 }
 
 // Daily insight + monthly audit. The model only words the facts; a number check runs on its reply (insight.ts).

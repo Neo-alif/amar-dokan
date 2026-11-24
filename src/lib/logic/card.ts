@@ -33,6 +33,7 @@ export type Card = {
   paid_unknown: boolean;   // sale/purchase: payment not said → owner answers "কত টাকা দিয়েছে?" before saving
   amount: number | null;  // expense / payment
   expense_category: string;
+  days_ago?: number;       // when it happened, as said (0 = today); the server turns it into a Dhaka date
 };
 
 const r2 = (n: number) => Math.round(n * 100) / 100;

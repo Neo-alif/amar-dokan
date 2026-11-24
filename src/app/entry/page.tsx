@@ -4,15 +4,16 @@ import { useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { ConfirmCard, type CardMeta } from "@/components/ConfirmCard";
 import { MicButton } from "@/components/MicButton";
+import { StockCountCard, type StockCountDraft } from "@/components/StockCountCard";
 import { useLanguage } from "@/i18n/LanguageContext";
 import type { ErrorCode } from "@/i18n/dictionary";
 import { isAmountType, listPriceChoice, type Card, type CardType } from "@/lib/logic/card";
-import { formatTaka } from "@/lib/format";
+import { formatNumber, formatTaka } from "@/lib/format";
 import { MAX_INPUT_CHARS } from "@/lib/logic/normalize";
 
 // Shape returned by POST /api/extract (src/lib/ai/extract.ts → draft)
 type Draft = {
-  type: CardType; customer: string | null; customer_id: string | null; due_before: number | null;
+  type: CardType; days_ago: number; customer: string | null; customer_id: string | null; due_before: number | null;
   supplier: string | null; supplier_id: string | null; supplier_due_before: number | null;
   items: { product: string; product_id: string | null; unit: string | null; quantity: number | null; unit_price: number | null; stock_before: number | null; list_price: number | null; product_unit: string | null; ask_count: "bottle" | "packet" | null }[];
   missing: string[];
@@ -35,6 +36,7 @@ const toCard = (d: Draft): Card => ({
   paid_unknown: d.ask_paid,
   amount: isAmountType(d.type) ? d.total : null,
   expense_category: d.expense_category ?? "",
+  days_ago: d.days_ago,
 });
 
 const EMPTY_CARD: Card = {
@@ -45,6 +47,8 @@ const EMPTY_CARD: Card = {
 };
 
 type Opened = { key: number; card: Card; meta: CardMeta };
+// Several events in one message: one card each, saved one by one with batch_key + index.
+type Batch = { key: number; batch_key: string; log_id: string | null; raw_text: string; drafts: (Draft | StockCountDraft)[]; done: boolean[]; saved: number };
 
 export default function EntryPage() {
   const { t, lang } = useLanguage();
@@ -54,6 +58,7 @@ export default function EntryPage() {
   const [error, setError] = useState<ErrorCode | null>(null);
   const [saved, setSaved] = useState(false);
   const [open, setOpen] = useState<Opened | null>(null);
+  const [batch, setBatch] = useState<Batch | null>(null);
   const [clarify, setClarify] = useState<{ question: string; base: string; draft: Opened; list: { index: number; price: number } | null } | null>(null);
   const [otherPrice, setOtherPrice] = useState(false);
   const [answer, setAnswer] = useState("");
@@ -65,6 +70,7 @@ export default function EntryPage() {
     setError(null);
     setSaved(false);
     setOpen(null);
+    setBatch(null);
     try {
       const res = await fetch("/api/extract", {
         method: "POST",
@@ -73,7 +79,13 @@ export default function EntryPage() {
       });
       const body = await res.json().catch(() => ({}));
       if (res.ok) {
-        const d: Draft = body.draft;
+        const drafts: (Draft | StockCountDraft)[] = body.drafts;
+        if (drafts.length > 1 || drafts[0].type === "stock_count") {
+          setClarify(null);
+          setBatch({ key: Date.now(), batch_key: crypto.randomUUID(), log_id: body.log_id, raw_text: input, drafts, done: drafts.map(() => false), saved: 0 });
+          return;
+        }
+        const d = drafts[0] as Draft; // one transaction: the existing single-card flow, unchanged
         const priceMissing = d.missing.includes("price") || d.missing.includes("amount");
         // the guard can drop a price the LLM invented; then the LLM wrote no question, so ask ourselves
         const question = d.clarify_question ?? (priceMissing ? e.askPrice : null);
@@ -108,6 +120,14 @@ export default function EntryPage() {
 
   function openManual() {
     setOpen({ key: Date.now(), card: EMPTY_CARD, meta: { log_id: null, raw_text: text || null, manual: true, clarify_question: null } });
+  }
+
+  // a batch is finished when every card is saved or cancelled
+  function batchDone(i: number, wasSaved: boolean) {
+    if (!batch) return;
+    const next = { ...batch, done: batch.done.map((d, j) => d || j === i), saved: batch.saved + (wasSaved ? 1 : 0) };
+    if (next.done.every(Boolean)) { setBatch(null); setSaved(next.saved > 0); if (next.saved > 0) setText(""); }
+    else setBatch(next);
   }
 
   function done(wasSaved: boolean) {
@@ -156,7 +176,7 @@ export default function EntryPage() {
             {error && <p className="font-semibold text-danger">{t.errors[error]}</p>}
             {saved && <p className="font-semibold text-success">{t.card.saved}</p>}
           </div>
-          {!open && !clarify && !thinking && (
+          {!open && !clarify && !batch && !thinking && (
             <button type="button" onClick={openManual} className="min-h-11 self-start text-sm text-muted underline">{e.manualStart}</button>
           )}
         </section>
@@ -190,6 +210,17 @@ export default function EntryPage() {
             </div>
           )}
           {open && <ConfirmCard key={open.key} initial={open.card} meta={open.meta} onDone={done} />}
+          {batch && (
+            <>
+              <p className="font-semibold text-primary">{e.multiTitle(formatNumber(batch.drafts.length, lang))}</p>
+              {batch.drafts.map((d, i) => batch.done[i] ? null : d.type === "stock_count" ? (
+                <StockCountCard key={`${batch.key}-${i}`} draft={d} entry={{ batch_key: batch.batch_key, index: i }} log_id={batch.log_id} onDone={(s) => batchDone(i, s)} />
+              ) : (
+                <ConfirmCard key={`${batch.key}-${i}`} initial={toCard(d)} onDone={(s) => batchDone(i, s)}
+                  meta={{ log_id: batch.log_id, raw_text: batch.raw_text, manual: false, clarify_question: d.clarify_question, entry: { batch_key: batch.batch_key, index: i } }} />
+              ))}
+            </>
+          )}
         </section>
       </main>
     </div>

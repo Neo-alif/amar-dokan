@@ -1,4 +1,4 @@
-// POST /api/extract { text, lang } → draft transaction for the ConfirmCard. No transaction is saved here.
+// POST /api/extract { text, lang } → one draft per event said (ConfirmCard / stock count card). No transaction is saved here.
 import { z } from "zod";
 import { extract } from "@/lib/ai/extract";
 import { AllProvidersFailed } from "@/lib/ai/provider";
@@ -25,7 +25,7 @@ export async function POST(req: Request) {
       input_text: r.input, lang, provider: r.provider, model: r.model,
       extracted: r.extracted, status: "extracted", latency_ms: r.latency_ms,
     });
-    return Response.json({ draft: r.draft, log_id, provider: r.provider });
+    return Response.json({ drafts: r.drafts, log_id, provider: r.provider });
   } catch (e) {
     if (e instanceof AllProvidersFailed) {
       await logAi({ input_text: text, lang, status: "failed", extracted: { errors: e.attempts } });

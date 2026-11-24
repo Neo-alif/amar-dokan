@@ -325,6 +325,7 @@ const bn = {
     askPrice: "কত টাকায় দিলেন?",
     listPriceBtn: (price: string) => `তালিকার দাম ${price}`,
     otherPrice: "অন্য দাম",
+    multiTitle: (n: string) => `${n}টি হিসাব পাওয়া গেছে · প্রতিটা আলাদা নিশ্চিত করুন`,
   },
   card: {
     types: { sale: "বিক্রি", purchase: "কেনা", expense: "খরচ", payment: "জমা", supplier_payment: "দেনা শোধ", unknown: "বোঝা যায়নি" },
@@ -374,6 +375,13 @@ const bn = {
     // said = unit key; Bangla needs the locative form (প্যাকেটে, টিতে, ডজনে)
     askPerUnit: (said: string, unit: string) =>
       `এক ${({ pcs: "টিতে", packet: "প্যাকেটে", bottle: "বোতলে", dozen: "ডজনে", kg: "কেজিতে", g: "গ্রামে", litre: "লিটারে", ml: "মি.লি.-তে" } as Record<string, string>)[said] ?? said} কত ${unit}?`,
+    when: "কবে",
+    today: "আজ",
+    daysAgo: (n: number, shown: string) => (n === 1 ? "গতকাল" : n === 2 ? "পরশু" : `${shown} দিন আগে`),
+    stockCount: "স্টক গোনা",
+    counted: "গুনে পাওয়া",
+    inBooks: "খাতায় আছে",
+    stockAfter: "সেভ করলে স্টক হবে",
     askCount: (unit: string) => `কত ${unit}?`, // "৩ লিটার" of a 2 L bottle doesn't divide
     method: "টাকা কীভাবে",
     methods: { cash: "নগদ", bkash: "বিকাশ", bank: "ব্যাংক" },
@@ -398,6 +406,9 @@ const bn = {
     SUPPLIER_REQUIRED: "সাপ্লায়ারের নাম লাগবে",
     SUPPLIER_PAYMENT_EXCEEDS_DUE: "সাপ্লায়ারের দেনার চেয়ে বেশি টাকা",
     SUPPLIER_NOT_FOUND: "সাপ্লায়ার পাওয়া যায়নি",
+    BAD_COUNT: "গোনা পরিমাণ ঠিক নয়",
+    NEED_COUNT: "কত আছে লিখুন",
+    NEED_PRODUCT: "দোকানের তালিকা থেকে পণ্যটা মেলেনি",
     INVALID_INPUT: "লেখাটা ঠিকমতো পাঠানো যায়নি, আবার চেষ্টা করুন",
     RATE_LIMITED: "একটু থামুন, এক মিনিট পর আবার চেষ্টা করুন",
     AI_UNAVAILABLE: "এখন বুঝতে পারছি না। নিচে নিজে লিখে নিন।",
@@ -731,6 +742,7 @@ const en: Dict = {
     askPrice: "What price?",
     listPriceBtn: (price: string) => `List price ${price}`,
     otherPrice: "Other price",
+    multiTitle: (n: string) => `${n} entries found · confirm each one`,
   },
   card: {
     types: { sale: "Sale", purchase: "Purchase", expense: "Expense", payment: "Payment", supplier_payment: "Supplier payment", unknown: "Not understood" },
@@ -778,6 +790,13 @@ const en: Dict = {
     paidOk: "Set",
     listPrice: "List price",
     askPerUnit: (said: string, unit: string) => `How many ${unit} in one ${said}?`, // said = unit key
+    when: "When",
+    today: "Today",
+    daysAgo: (n: number, shown: string) => (n === 1 ? "Yesterday" : `${shown} days ago`),
+    stockCount: "Stock count",
+    counted: "Counted",
+    inBooks: "In the books",
+    stockAfter: "Stock after saving",
     askCount: (unit: string) => `How many ${unit}s?`,
     method: "Paid by",
     methods: { cash: "Cash", bkash: "bKash", bank: "Bank" },
@@ -801,6 +820,9 @@ const en: Dict = {
     SUPPLIER_REQUIRED: "Supplier name needed",
     SUPPLIER_PAYMENT_EXCEEDS_DUE: "More than what you owe this supplier",
     SUPPLIER_NOT_FOUND: "Supplier not found",
+    BAD_COUNT: "The counted amount is not valid",
+    NEED_COUNT: "Enter how much is there",
+    NEED_PRODUCT: "This product is not in the shop list",
     INVALID_INPUT: "The text could not be sent, please try again",
     RATE_LIMITED: "Please wait a minute and try again",
     AI_UNAVAILABLE: "Can't understand right now. Fill it in yourself below.",

@@ -8,7 +8,8 @@ import { numbersIn } from "@/lib/logic/numberCheck";
 import { formatNumber, formatTaka } from "@/lib/format";
 import { MicButton } from "@/components/MicButton";
 
-export type CardMeta = { log_id: string | null; raw_text: string | null; manual: boolean; clarify_question: string | null };
+// entry: one card of a multi-event message → saved with batch_key + index (server derives the idempotency key)
+export type CardMeta = { log_id: string | null; raw_text: string | null; manual: boolean; clarify_question: string | null; entry?: { batch_key: string; index: number } };
 
 const BADGE: Record<CardType, string> = {
   sale: "bg-green-100 text-green-700",
@@ -50,7 +51,8 @@ export function ConfirmCard({ initial, meta, onDone }: { initial: Card; meta: Ca
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          idempotency_key: idempotencyKey,
+          ...(meta.entry ?? { idempotency_key: idempotencyKey }),
+          days_ago: card.days_ago ?? 0,
           log_id: meta.log_id,
           edited: JSON.stringify(card) !== JSON.stringify(initial),
           type: card.type,
@@ -95,6 +97,7 @@ export function ConfirmCard({ initial, meta, onDone }: { initial: Card; meta: Ca
         ) : (
           <span className={`rounded-full px-3.5 py-1 text-[15px] font-bold ${BADGE[card.type]}`}>{c.types[card.type]}</span>
         )}
+        <DaysAgo value={card.days_ago ?? 0} editing={editing} onChange={(d) => set({ days_ago: d })} />
         <span className={`text-[13px] ${meta.manual ? "font-semibold text-danger" : "text-muted"}`}>{meta.manual ? c.manualNote : c.aiNote}</span>
       </div>
 
@@ -329,8 +332,9 @@ function Changes({ card, total, paid, due }: { card: Card; total: number | null;
   const c = t.card;
   const lines: string[] = [];
   const n = (v: number) => formatNumber(v, lang);
-  if (card.type === "sale" && total != null) lines.push(`${c.changeSales} +${formatTaka(total, lang)}`);
-  if ((card.type === "purchase" && total != null) || (card.type === "expense" && card.amount)) {
+  const today = !card.days_ago; // a past-dated entry doesn't move today's totals
+  if (today && card.type === "sale" && total != null) lines.push(`${c.changeSales} +${formatTaka(total, lang)}`);
+  if (today && ((card.type === "purchase" && total != null) || (card.type === "expense" && card.amount))) {
     lines.push(`${c.changeSpend} +${formatTaka(card.type === "expense" ? card.amount! : total!, lang)}`);
   }
   if (card.type === "sale" || card.type === "purchase") {
@@ -355,4 +359,18 @@ function Changes({ card, total, paid, due }: { card: Card; total: number | null;
       <span>{lines.map((l) => `• ${l}`).join(" · ")}</span>
     </div>
   );
+}
+
+// "গতকাল" chip; editable as a small select (today … 7 days ago). Said dates only go back, never forward.
+export function DaysAgo({ value, editing, onChange }: { value: number; editing: boolean; onChange: (d: number) => void }) {
+  const { t, lang } = useLanguage();
+  const label = (d: number) => (d === 0 ? t.card.today : t.card.daysAgo(d, formatNumber(d, lang)));
+  if (editing) {
+    return (
+      <select aria-label={t.card.when} value={value} onChange={(e) => onChange(Number(e.target.value))} className="min-h-11 rounded-xl border border-border bg-white px-3 text-base text-text">
+        {Array.from({ length: Math.max(8, value + 1) }, (_, d) => <option key={d} value={d}>{label(d)}</option>)}
+      </select>
+    );
+  }
+  return value > 0 ? <span className="rounded-full bg-amber-100 px-3 py-1 text-sm font-bold text-amber-900">{label(value)}</span> : null;
 }
