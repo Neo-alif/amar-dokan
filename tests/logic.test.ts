@@ -577,3 +577,67 @@ test("units: container words count the product's unit; litres/kg convert by pack
   assert.equal(resolveUnit(5, "kg", rice), null); // ৫ কেজি চাল: loose, stays kg
   assert.equal(resolveUnit(2, "pcs", { unit: "dozen", names: ["ডিম"] }), null); // ২টা ডিম: still asked, not 2 dozen
 });
+
+// ── Multi-entry messages: date_said, stock_count, two customers in one sentence ──
+import { buildDraft, stockCountDraft, type ShopContext, type StockCountDraft, type TransactionDraft } from "../src/lib/logic/drafts.ts";
+import { entryKey, occurredAt } from "../src/lib/logic/entries.ts";
+import type { Entry } from "../src/lib/schema.ts";
+
+const shop: ShopContext = {
+  lang: "bn",
+  products: [
+    { id: "oil", name_bn: "সয়াবিন তেল ২ লিটার", name_en: "Soybean oil 2L", aliases: ["তেল"], unit: "pcs", sell_price: 340, cost_price: 300, stock_qty: 20 },
+    { id: "rice", name_bn: "মিনিকেট চাল", name_en: "Miniket rice", aliases: ["চাল"], unit: "kg", sell_price: 75, cost_price: 65, stock_qty: 52 },
+    { id: "sugar", name_bn: "চিনি", name_en: "Sugar", aliases: [], unit: "kg", sell_price: 130, cost_price: 115, stock_qty: 10 },
+  ],
+  customers: [{ id: "rahim", name: "রহিম ভাই", due_balance: 200 }, { id: "karim", name: "করিম", due_balance: 0 }],
+  suppliers: [],
+};
+const entry = (over: Partial<Entry>): Entry => ({ ...base, days_ago_said: null, ...over });
+
+test("date_said: today → DB now(); yesterday at Dhaka 00:30 is the previous Dhaka day", () => {
+  assert.equal(occurredAt(0), null);
+  const now = new Date("2026-11-24T18:30:00Z"); // 25 Nov 00:30 in Dhaka
+  const dhakaDay = (iso: string) => new Date(iso).toLocaleDateString("en-CA", { timeZone: "Asia/Dhaka" });
+  assert.equal(dhakaDay(occurredAt(1, now)!), "2026-11-24");
+  assert.equal(dhakaDay(occurredAt(3, now)!), "2026-11-22");
+  assert.equal(buildDraft(entry({ items: [item("চাল", 1, { unit_price_said: 75 })], days_ago_said: 1 }), shop, "1 চাল 75").draft.days_ago, 1);
+  assert.equal(buildDraft(entry({ items: [item("চাল", 1, { unit_price_said: 75 })] }), shop, "1 চাল 75").draft.days_ago, 0); // not said → today
+});
+
+test("entryKey: batchKey:index → stable uuid, different per entry", () => {
+  const b = "6f1c3a3e-0000-4000-8000-000000000001";
+  assert.equal(entryKey(b, 0), entryKey(b, 0));
+  assert.notEqual(entryKey(b, 0), entryKey(b, 1));
+  assert.match(entryKey(b, 2), /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
+});
+
+test("stock_count: counted qty and change vs stock; unknown product or bottle question blocks", () => {
+  const rice = stockCountDraft(entry({ type: "stock_count", items: [item("চাল", 40, { unit: "kg" })], days_ago_said: 0 }), shop);
+  assert.deepEqual([rice.product_id, rice.counted, rice.stock_before, rice.change, rice.missing], ["rice", 40, 52, -12, []]);
+  const oil = stockCountDraft(entry({ type: "stock_count", items: [item("সয়াবিন তেল ২ লিটার", 8, { unit: "litre" })] }), shop);
+  assert.deepEqual([oil.counted, oil.unit, oil.change], [4, "pcs", -16]); // 8 L of 2 L bottles = 4 bottles
+  const odd = stockCountDraft(entry({ type: "stock_count", items: [item("সয়াবিন তেল ২ লিটার", 5, { unit: "litre" })] }), shop);
+  assert.deepEqual([odd.counted, odd.ask_count, odd.missing], [null, "bottle", ["quantity"]]);
+  const unknown = stockCountDraft(entry({ type: "stock_count", items: [item("ঘি", 3, { unit: "kg" })] }), shop);
+  assert.deepEqual([unknown.product_id, unknown.missing], [null, ["items"]]);
+});
+
+test("judge sentence: two customers yesterday + two counts today → four separate drafts", () => {
+  const input = normalizeInput("গতকাল রহিম ভাইকে ২ বোতল সয়াবিন তেল ৩৪০ টাকা করে দিয়েছি, পুরো টাকা দিয়েছে, আর করিমকে ৫ কেজি চাল নগদে ৭০০ টাকা। আজ সকালে গুনে দেখলাম চাল ৪০ কেজি আর চিনি ১২ কেজি আছে।");
+  // what the LLM is expected to SAY (no totals, no dates): the backend does the rest
+  const entries: Entry[] = [
+    entry({ customer: "রহিম ভাই", items: [item("সয়াবিন তেল ২ লিটার", 2, { unit: "bottle", unit_price_said: 340 })], due_said: 0, days_ago_said: 1 }),
+    entry({ customer: "করিম", items: [item("মিনিকেট চাল", 5, { unit: "kg" })], total_said: 700, due_said: 0, days_ago_said: 1 }),
+    entry({ type: "stock_count", items: [item("মিনিকেট চাল", 40, { unit: "kg" })], days_ago_said: 0 }),
+    entry({ type: "stock_count", items: [item("চিনি", 12, { unit: "kg" })], days_ago_said: 0 }),
+  ];
+  const [rahim, karim, rice, sugar] = entries.map((e) => buildDraft(e, shop, input).draft) as [TransactionDraft, TransactionDraft, StockCountDraft, StockCountDraft];
+  assert.deepEqual([rahim.customer_id, rahim.days_ago, rahim.total, rahim.paid, rahim.due, rahim.ask_paid], ["rahim", 1, 680, 680, 0, false]);
+  assert.deepEqual([karim.customer_id, karim.days_ago, karim.items[0].unit_price, karim.total, karim.paid, karim.due], ["karim", 1, 140, 700, 700, 0]);
+  assert.deepEqual([rice.type, rice.days_ago, rice.counted, rice.change], ["stock_count", 0, 40, -12]);
+  assert.deepEqual([sugar.counted, sugar.change], [12, 2]);
+  // a price the owner never said is dropped even inside a multi-entry message
+  const invented = buildDraft(entry({ customer: "করিম", items: [item("চিনি", 1)], total_said: 999 }), shop, input).draft as TransactionDraft;
+  assert.equal(invented.total, null);
+});

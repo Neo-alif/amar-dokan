@@ -6,6 +6,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { extract } from "../src/lib/ai/extract.ts";
 import { loadShopContext } from "../src/lib/db/queries.ts";
 import { unitMismatch } from "../src/lib/logic/card.ts";
+import type { TransactionDraft } from "../src/lib/logic/drafts.ts";
 
 type ExpectItem = { product: string; quantity: number; unit_price: number | null };
 type Case = {
@@ -32,8 +33,10 @@ for (const [i, c] of selected.entries()) {
   if (i > 0) await new Promise((r) => setTimeout(r, THROTTLE_MS));
   try {
     const r = await extract(c.text, ctx);
-    const d = r.draft;
+    // every case is one event → exactly one transaction entry
+    const d = r.drafts[0] as TransactionDraft;
     const problems: string[] = [];
+    if (r.drafts.length !== 1) problems.push(`entries ${r.drafts.length}≠1`);
     if (d.type !== c.expect.type) problems.push(`type ${d.type}≠${c.expect.type}`);
     const cust = d.customer_id ? customerName.get(d.customer_id) : null;
     if ((cust ?? null) !== c.expect.customer) problems.push(`customer ${cust ?? d.customer}≠${c.expect.customer}`);

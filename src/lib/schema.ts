@@ -32,7 +32,19 @@ export const Extraction = z.object({
   confidence: z.number().min(0).max(1),
 });
 
+// One message can hold several events ("kal Rahim ke…, ar Karim ke…, aj gune dekhlam chal 40 kg"):
+// each is one entry. stock_count = the owner counted a product; items[].quantity is the counted qty.
+export const MAX_DAYS_AGO = 31;
+export const ENTRY_TYPES = [...TXN_TYPES, "stock_count"] as const;
+export const Entry = Extraction.extend({
+  type: z.enum(ENTRY_TYPES),
+  days_ago_said: z.number().int().min(0).max(MAX_DAYS_AGO).nullable()
+    .describe("when it happened, only if said: aj/আজ → 0, gotokal/গতকাল/kal (past) → 1, porshu/পরশু → 2, '3 din age' → 3; else null"),
+});
+export const MultiExtraction = z.object({ entries: z.array(Entry).min(1).max(10) });
+
 export type ExtractedItem = z.infer<typeof ExtractedItem>;
 export type Extraction = z.infer<typeof Extraction>;
+export type Entry = z.infer<typeof Entry>;
 
-export const ExtractionJsonSchema = z.toJSONSchema(Extraction);
+export const ExtractionJsonSchema = z.toJSONSchema(MultiExtraction);
