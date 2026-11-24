@@ -1,4 +1,7 @@
 // Budget restock list (TRD §6). Pure, no DB, no AI: the same input always gives the same list.
+import { MIN_DAYS } from "./forecast.ts";
+import { matchProduct } from "./matchProduct.ts";
+
 export const HORIZON_DAYS = 7; // buy enough for the next week…
 export const SAFETY_DAYS = 2;  // …plus two days of buffer
 export const FIRST_PASS_DAYS = 3; // short budget: every urgent item gets 3 days before any gets a full week
@@ -6,10 +9,11 @@ export const FIRST_PASS_DAYS = 3; // short budget: every urgent item gets 3 days
 export type RestockInput = { id: string; stock: number; avg: number | null; daysLeft: number | null; cost_price: number; sell_price: number };
 export type RestockLine = { id: string; qty: number; need: number; cost: number; daysLeft: number };
 
-export function restock(items: RestockInput[], budget: number) {
+// within = only items that run out within this many days; cover = days of demand to buy.
+export function restock(items: RestockInput[], budget: number, cover = HORIZON_DAYS + SAFETY_DAYS, within = HORIZON_DAYS) {
   const candidates = items
-    .filter((p) => p.daysLeft !== null && p.daysLeft <= HORIZON_DAYS && p.avg !== null && p.cost_price > 0)
-    .map((p) => ({ ...p, need: Math.max(0, Math.ceil(p.avg! * (HORIZON_DAYS + SAFETY_DAYS) - p.stock)) }))
+    .filter((p) => p.daysLeft !== null && p.daysLeft <= within && p.avg !== null && p.cost_price > 0)
+    .map((p) => ({ ...p, need: Math.max(0, Math.ceil(p.avg! * cover - p.stock)) }))
     .filter((p) => p.need > 0)
     // runs out first → first; same day → bigger margin first
     .sort((a, b) => a.daysLeft! - b.daysLeft! || (b.sell_price - b.cost_price) - (a.sell_price - a.cost_price));
@@ -33,6 +37,28 @@ export function restock(items: RestockInput[], budget: number) {
   }));
   const skipped = candidates.filter((p) => !qty.has(p.id)).map((p) => p.id);
   return { lines, skipped, spent: Math.round((Math.max(0, budget) - left) * 100) / 100, left };
+}
+
+// Young shop (< MIN_DAYS of sales): no forecast yet, so blend the shop's own daily average with the
+// starter template's typical demand. w = days/14 grows to 1 as history builds; at 14+ days restock() as before.
+export const YOUNG_COVER_DAYS = 4; // short horizon while demand is half guessed
+export type YoungInput = RestockInput & { name_bn: string; name_en: string | null; unit: string; own_avg: number };
+
+export function blendedDemand(own: number, template: number | null, days: number) {
+  const w = Math.min(1, Math.max(0, days) / MIN_DAYS);
+  return Math.round((template === null ? own : w * own + (1 - w) * template) * 100) / 100;
+}
+
+export function planRunningShop<T extends YoungInput>(rows: T[], budget: number, days: number, template: StarterItem[]) {
+  if (days >= MIN_DAYS) return { ...restock(rows, budget), young: false };
+  const cands = template.map((t, i) => ({ id: String(i), names: [t.name_bn, t.name_en] }));
+  const blended = rows.map((p) => {
+    const i = matchProduct(p.name_bn, cands) ?? (p.name_en ? matchProduct(p.name_en, cands) : null);
+    const t = i !== null && template[Number(i)].unit === p.unit ? template[Number(i)] : null; // kg ≠ pcs: no match
+    const avg = blendedDemand(p.own_avg, t?.daily_demand ?? null, days);
+    return { ...p, avg: avg > 0 ? avg : null, daysLeft: p.stock <= 0 ? 0 : avg > 0 ? Math.round((p.stock / avg) * 100) / 100 : null };
+  });
+  return { ...restock(blended, budget, YOUNG_COVER_DAYS, YOUNG_COVER_DAYS), young: true };
 }
 
 // Brand-new shop, zero sales history: plan from a starter template (data/starter/*.json) instead.

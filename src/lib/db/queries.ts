@@ -148,15 +148,21 @@ export async function loadStock(now = new Date()) {
     sales.get(r.product_id)!.push({ day: r.day, qty: Number(r.qty_sold) });
   }
 
+  // shop history = shop's first sale → yesterday; a young shop (< 14 days) gets a blended restock plan
+  const shopFirst = rows.reduce<string | null>((m, r) => (m === null || r.day < m ? r.day : m), null);
+  const historyDays = shopFirst ? dailySeries([], shopFirst, yesterday).length : 0;
+
   return products.map((p) => {
     const hist = sales.get(p.id) ?? [];
     const first = hist[0]?.day; // history starts at the product's first sale
     const f = first ? forecast(dailySeries(hist, first, yesterday), first) : null;
     const stock = Number(p.stock_qty), reorder = Number(p.reorder_level);
+    const sold = hist.reduce((s, h) => s + h.qty, 0);
     return {
       id: p.id, name_bn: p.name_bn, name_en: p.name_en as string | null, unit: p.unit,
       stock, reorder_level: reorder, cost_price: Number(p.cost_price), sell_price: Number(p.sell_price),
       forecast: f?.daily ?? null, avg: f?.avg ?? null,
+      history_days: historyDays, own_avg: historyDays ? Math.round((sold / historyDays) * 100) / 100 : 0,
       ...stockOutlook(stock, reorder, f?.avg ?? null),
     };
   });

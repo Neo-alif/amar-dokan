@@ -321,10 +321,44 @@ test("restock: tie on days left → bigger margin first; zero budget → nothing
 
 // ── New shop, zero sales history: starter templates ──
 import { readFileSync } from "node:fs";
-import { planNewShop, PRIORITIES, type StarterItem } from "../src/lib/logic/restock.ts";
+import { blendedDemand, planNewShop, planRunningShop, PRIORITIES, type StarterItem } from "../src/lib/logic/restock.ts";
 import { UNITS } from "../src/lib/schema.ts";
 
 const starter = (cat: string): StarterItem[] => JSON.parse(readFileSync(`data/starter/${cat}.json`, "utf8")).items;
+
+// fake young-shop rows: rice + sugar match the মুদি template (8 and 1.5 kg/day), ঘি has no template row
+const yr = (id: string, name_bn: string, stock: number, own_avg: number, cost: number, avg: number | null = null) =>
+  ({ id, name_bn, name_en: null, unit: "kg", stock, own_avg, cost_price: cost, sell_price: cost + 10, avg, daysLeft: avg ? stock / avg : null });
+const youngRows = [yr("rice", "মিনিকেট চাল", 10, 14, 65), yr("sugar", "চিনি", 3, 1, 125), yr("ghee", "ঘি", 1, 2, 900)];
+const plan = (days: number) => planRunningShop(days ? youngRows : youngRows.map((p) => ({ ...p, own_avg: 0 })), 100000, days, starter("grocery")); // day 0: no sales yet
+const needOf = (r: ReturnType<typeof plan>) => Object.fromEntries(r.lines.map((l) => [l.id, l.need]));
+
+test("young shop: w = days/14 blends own average with template demand; no template → own only", () => {
+  assert.equal(blendedDemand(14, 8, 0), 8);     // day 0: template only
+  assert.equal(blendedDemand(14, 8, 3), 9.29);  // 3/14·14 + 11/14·8
+  assert.equal(blendedDemand(14, 8, 7), 11);    // half and half
+  assert.equal(blendedDemand(14, 8, 14), 14);   // own only
+  assert.equal(blendedDemand(2, null, 3), 2);   // no template match
+});
+
+test("young shop 0/3/7 days: 4-day horizon on blended demand, reason flag set", () => {
+  // day 0: rice 8/day → need ceil(32 − 10) = 22; sugar 1.5/day → ceil(6 − 3) = 3; ghee own 0 → nothing to plan
+  assert.deepEqual([plan(0).young, needOf(plan(0))], [true, { rice: 22, sugar: 3 }]);
+  // day 3: rice 9.29 → ceil(37.16 − 10) = 28; sugar 3/14·1 + 11/14·1.5 = 1.39 → ceil(5.56 − 3) = 3; ghee own 2 → 0.5 days → ceil(8 − 1) = 7
+  assert.deepEqual(needOf(plan(3)), { rice: 28, sugar: 3, ghee: 7 });
+  // day 7: rice 11 → 34; sugar 1.25 → 2; ghee 7
+  assert.deepEqual(needOf(plan(7)), { rice: 34, sugar: 2, ghee: 7 });
+  assert.ok(plan(7).lines.every((l) => l.daysLeft <= 4));
+});
+
+test("young shop 14/20 days: exactly the normal restock() plan", () => {
+  const rows = [yr("rice", "মিনিকেট চাল", 10, 14, 65, 13), yr("sugar", "চিনি", 12, 1, 118, 7), yr("ghee", "ঘি", 40, 2, 900, 2)];
+  for (const days of [14, 20]) {
+    const r = planRunningShop(rows, 5000, days, starter("grocery"));
+    assert.equal(r.young, false);
+    assert.deepEqual({ lines: r.lines, skipped: r.skipped, spent: r.spent, left: r.left }, restock(rows, 5000));
+  }
+});
 const rank = (p: StarterItem) => PRIORITIES.indexOf(p.priority);
 const fits = (r: ReturnType<typeof planNewShop>, budget: number) => {
   assert.ok(r.total <= budget && r.remaining >= 0);

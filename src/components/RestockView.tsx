@@ -6,7 +6,7 @@
 import { useState } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import type { StockRow } from "@/lib/db/queries";
-import { planNewShop, restock, PRIORITIES, type StarterItem } from "@/lib/logic/restock";
+import { planNewShop, planRunningShop, PRIORITIES, type StarterItem } from "@/lib/logic/restock";
 import { UNITS } from "@/lib/schema";
 import { formatNumber, formatTaka } from "@/lib/format";
 import grocery from "../../data/starter/grocery.json";
@@ -44,7 +44,7 @@ export function RestockView({ rows }: { rows: StockRow[] | null }) {
 
   if (!isNew && !rows) return <p role="alert" className="rounded-2xl border border-red-200 bg-red-50 p-5 font-semibold text-danger">{t.stock.loadError}</p>;
 
-  let table: TableRow[], spent: number, left: number, skipped: string[] = [];
+  let table: TableRow[], spent: number, left: number, skipped: string[] = [], rule = r.rule;
   if (isNew) {
     const plan = planNewShop(items, budget);
     const bought = new Map(plan.items.map((l) => [l.key, l]));
@@ -60,14 +60,17 @@ export function RestockView({ rows }: { rows: StockRow[] | null }) {
   } else {
     const byId = new Map(rows!.map((p) => [p.id, p]));
     const name = (id: string) => { const p = byId.get(id)!; return (lang === "en" && p.name_en) || p.name_bn; };
-    const plan = restock(rows!, budget);
+    const days = rows![0]?.history_days ?? 0;
+    const plan = planRunningShop(rows!, budget, days, grocery.items as StarterItem[]);
+    if (plan.young) rule = r.ruleYoung;
+    const reason = plan.young ? r.reasonBlend(num(days)) : r.reasonSales;
     table = plan.lines.map((l) => {
       const p = byId.get(l.id)!;
       const days = Math.floor(l.daysLeft);
       const when = l.daysLeft === 0 ? r.outNow : days === 0 ? r.today : r.endsIn(num(days));
       return {
         key: l.id, name: name(l.id), unit: p.unit, stock: p.stock, qty: l.qty, cost: l.cost, priority: days <= 2 ? "essential" : "normal",
-        reason: r.reasonSales, detail: when + (l.qty < l.need ? ` · ${r.partial(`${num(l.qty)}/${num(l.need)}`)}` : ""),
+        reason, detail: when + (l.qty < l.need ? ` · ${r.partial(`${num(l.qty)}/${num(l.need)}`)}` : ""),
       };
     });
     spent = plan.spent; left = plan.left; skipped = plan.skipped.map(name);
@@ -218,7 +221,7 @@ export function RestockView({ rows }: { rows: StockRow[] | null }) {
           </div>
         )}
       </section>
-      <p className="text-sm text-muted">{isNew ? r.newRule : r.rule}</p>
+      <p className="text-sm text-muted">{isNew ? r.newRule : rule}</p>
     </>
   );
 }
