@@ -780,3 +780,31 @@ test("loose oil in litres: ৩ লিটার = 3 L; ২ বোতল × ½ L =
   const tot = answerUnit({ ...line, quantity: 2, unit_price: said.items[0].unit_price }, 0.5);
   assert.deepEqual([tot.quantity, tot.unit_price, tot.quantity! * tot.unit_price!], [1, 170, 170]);
 });
+
+test("similarProducts: no exact match → close shop products to pick from, unrelated → none", async () => {
+  const { similarProducts } = await import("../src/lib/logic/matchProduct.ts");
+  const shop = [
+    { id: "mug", names: ["মুগ ডাল", "Mung dal"] },
+    { id: "masur", names: ["মসুর ডাল", "Lentil"] },
+    { id: "oil", names: ["সয়াবিন তেল ২ লিটার"] },
+    { id: "sugar", names: ["চিনি"] },
+  ];
+  assert.deepEqual(similarProducts("মুগের ডাল", shop), ["mug", "masur"]); // closest first
+  assert.deepEqual(similarProducts("খোলা তেল", shop), ["oil"]);           // shares তেল
+  assert.deepEqual(similarProducts("ডিম", shop), []);                    // nothing close → new product
+  assert.ok(similarProducts("x", shop, 3).length <= 3);
+});
+
+test("pick product: suggestions block saving until the owner picks one or 'new'", async () => {
+  const { pickProduct } = await import("../src/lib/logic/card.ts");
+  const s = { product_id: "mug", name: "মুগ ডাল", product_unit: "kg", stock_before: 12 };
+  const line = { product_id: null, name: "মুগের ডাল", unit: "kg", quantity: 10, unit_price: 140, stock_before: null, suggestions: [s] };
+  const c = card({ type: "purchase", items: [line] });
+  assert.ok(cardProblems(c).includes("PICK_PRODUCT"));
+  const picked = { ...line, ...pickProduct(line, s) };
+  assert.deepEqual([picked.product_id, picked.name, picked.stock_before, picked.unit], ["mug", "মুগ ডাল", 12, "kg"]);
+  assert.ok(!cardProblems({ ...c, items: [picked] }).includes("PICK_PRODUCT"));
+  const asNew = { ...line, ...pickProduct(line, null) };
+  assert.deepEqual([asNew.product_id, asNew.name], [null, "মুগের ডাল"]);
+  assert.ok(!cardProblems({ ...c, items: [asNew] }).includes("PICK_PRODUCT"));
+});

@@ -408,6 +408,8 @@ const bn = {
     paidOk: "বসান",
     listPrice: "তালিকার দাম",
     perUnitOther: "অন্য", // "এক বোতলে কত লিটার?" → custom size
+    pickProduct: (name: string) => `“${name}” দোকানের তালিকায় নেই। এটা কি এর একটা?`,
+    pickNew: "না, নতুন পণ্য",
     // said = unit key; Bangla needs the locative form (প্যাকেটে, টিতে, ডজনে)
     askPerUnit: (said: string, unit: string) =>
       `এক ${({ pcs: "টিতে", packet: "প্যাকেটে", bottle: "বোতলে", dozen: "ডজনে", kg: "কেজিতে", g: "গ্রামে", litre: "লিটারে", ml: "মি.লি.-তে" } as Record<string, string>)[said] ?? said} কত ${unit}?`,
@@ -450,6 +452,7 @@ const bn = {
     AI_UNAVAILABLE: "এখন বুঝতে পারছি না। নিচে নিজে লিখে নিন।",
     SERVER_ERROR: "সমস্যা হয়েছে, আবার চেষ্টা করুন",
     PRODUCT_EXISTS: "এই নামে পণ্য আগেই আছে",
+    PICK_PRODUCT: "পণ্যটা মিলিয়ে নিন: তালিকার একটা বাছুন, না হলে “নতুন পণ্য”",
     NETWORK: "ইন্টারনেট নেই বা সংযোগ ধীর, আবার চেষ্টা করুন",
     MIC_DENIED: "মাইক চালু করুন, অথবা লিখে দিন",
     NO_SPEECH: "কিছু শুনতে পাইনি, আবার বলুন বা লিখে দিন",
@@ -862,6 +865,8 @@ const en: Dict = {
     paidOk: "Set",
     listPrice: "List price",
     perUnitOther: "Other",
+    pickProduct: (name: string) => `“${name}” is not in the shop list. Is it one of these?`,
+    pickNew: "No, a new product",
     askPerUnit: (said: string, unit: string) => `How many ${unit} in one ${said}?`, // said = unit key
     when: "When",
     today: "Today",
@@ -901,6 +906,7 @@ const en: Dict = {
     AI_UNAVAILABLE: "Can't understand right now. Fill it in yourself below.",
     SERVER_ERROR: "Something went wrong, please try again",
     PRODUCT_EXISTS: "A product with this name already exists",
+    PICK_PRODUCT: "Match the product: pick one from the list, or “new product”",
     NETWORK: "No internet or a slow connection, please try again",
     MIC_DENIED: "Allow the microphone, or type it",
     NO_SPEECH: "Didn't hear anything, speak again or type it",

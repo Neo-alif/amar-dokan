@@ -2,7 +2,7 @@
 // values; every amount, unit conversion and stock change here is computed, and the DB recomputes on save.
 import type { Entry, Extraction } from "../schema.ts";
 import { deriveAmounts, keepSaidMoney, perUnitSaid } from "./amounts.ts";
-import { matchCustomer, matchProduct } from "./matchProduct.ts";
+import { matchCustomer, matchProduct, similarProducts } from "./matchProduct.ts";
 import { resolveUnit, saidContainer } from "./units.ts";
 
 export type ShopContext = {
@@ -83,6 +83,11 @@ export function transactionDraft(entry: Entry & { type: Extraction["type"] }, ct
         ask_count: asks[i], // "৩ লিটার" of a 2 L bottle → the card asks "কত বোতল?"
         // offered as a quick answer when the price wasn't said; never filled in silently
         list_price: product ? Number(x.type === "purchase" ? product.cost_price : product.sell_price) : null,
+        // no match → close shop products for "এটা কি…?", so a typo/variant doesn't become a duplicate product
+        suggestions: product ? [] : similarProducts(it.product, candidates).map((id) => {
+          const p = ctx.products.find((q) => q.id === id)!;
+          return { product_id: p.id, name: p.name_bn, product_unit: p.unit, stock_before: Number(p.stock_qty) };
+        }),
       };
     }),
     customer: customerId ? ctx.customers.find((c) => c.id === customerId)!.name : x.customer,

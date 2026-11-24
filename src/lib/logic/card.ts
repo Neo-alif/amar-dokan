@@ -16,7 +16,15 @@ export type CardItem = {
   product_unit?: string | null; // the shop's unit for a matched product (stock is counted in it)
   ask_count?: "bottle" | "packet" | null; // said litres/kg didn't divide by the pack size → "কত বোতল?"
   price_from_list?: boolean; // owner picked "তালিকার দাম" (not said, not AI) → small label on the card
+  suggestions?: Suggestion[]; // name didn't match: "এটা কি…?" until the owner picks one or "নতুন পণ্য"
 };
+export type Suggestion = { product_id: string; name: string; product_unit: string; stock_before: number };
+
+// Owner's answer to "এটা কি…?": an existing product (its name, unit, stock) or null = keep as a new product.
+export function pickProduct(it: CardItem, s: Suggestion | null): Partial<CardItem> {
+  if (!s) return { suggestions: [] };
+  return { suggestions: [], product_id: s.product_id, name: s.name, product_unit: s.product_unit, stock_before: s.stock_before, unit: it.unit ?? s.product_unit };
+}
 export type Card = {
   type: CardType;
   method: Method;          // cash (default) · bkash · bank: which money account moves
@@ -97,6 +105,7 @@ export function cardProblems(c: Card): ErrorCode[] {
   if (c.type === "unknown") p.push("NEED_TYPE");
   if (c.type === "sale" || c.type === "purchase") {
     if (!itemsComplete(c)) p.push("NEED_ITEM_DETAILS");
+    if (c.items.some((i) => i.suggestions?.length)) p.push("PICK_PRODUCT");
     if (c.items.some(unitMismatch)) p.push("UNIT_MISMATCH");
     if (c.paid_unknown) p.push("NEED_PAID");
     const { total, due } = cardTotals(c);

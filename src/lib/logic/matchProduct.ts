@@ -53,3 +53,22 @@ export function matchProduct(spoken: string, products: Candidate[]): string | nu
   return hits.length === 1 ? hits[0].id : null;
 }
 export const matchCustomer = (spoken: string, customers: Candidate[]) => bestMatch(spoken, customers, normalizePersonName);
+
+// No match → "এটা কি…?" on the card: up to 3 shop products that look close ("মুগের ডাল" → মুগ ডাল, মসুর ডাল),
+// so the owner picks one instead of creating a duplicate. Close = shares a word (মুগের ~ মুগ) or ≤ half the letters differ.
+export function similarProducts(spoken: string, products: Candidate[], k = 3): string[] {
+  const q = normalizeName(spoken);
+  if (!q) return [];
+  const words = (s: string) => s.split(/[^\p{L}\p{M}]+/u).filter((w) => w.length >= 2);
+  const qw = words(q);
+  const scored = products.flatMap((c) => {
+    let best = Infinity;
+    for (const name of c.names.map(normalizeName).filter(Boolean)) {
+      const ratio = levenshtein(q, name) / Math.max(q.length, name.length);
+      const shared = words(name).some((w) => qw.some((v) => v.startsWith(w) || w.startsWith(v)));
+      if (shared || ratio <= 0.5) best = Math.min(best, ratio);
+    }
+    return best < Infinity ? [{ id: c.id, best }] : [];
+  });
+  return scored.sort((a, b) => a.best - b.best).slice(0, k).map((s) => s.id);
+}

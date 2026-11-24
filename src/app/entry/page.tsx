@@ -7,7 +7,7 @@ import { MicButton } from "@/components/MicButton";
 import { StockCountCard, type StockCountDraft } from "@/components/StockCountCard";
 import { useLanguage } from "@/i18n/LanguageContext";
 import type { ErrorCode } from "@/i18n/dictionary";
-import { isAmountType, listPriceChoice, type Card, type CardType } from "@/lib/logic/card";
+import { isAmountType, listPriceChoice, type Card, type CardType, type Suggestion } from "@/lib/logic/card";
 import { formatNumber, formatTaka } from "@/lib/format";
 import { MAX_INPUT_CHARS } from "@/lib/logic/normalize";
 
@@ -15,7 +15,7 @@ import { MAX_INPUT_CHARS } from "@/lib/logic/normalize";
 type Draft = {
   type: CardType; days_ago: number; customer: string | null; customer_id: string | null; due_before: number | null;
   supplier: string | null; supplier_id: string | null; supplier_due_before: number | null;
-  items: { product: string; product_id: string | null; unit: string | null; quantity: number | null; unit_price: number | null; stock_before: number | null; list_price: number | null; product_unit: string | null; ask_count: "bottle" | "packet" | null }[];
+  items: { product: string; product_id: string | null; unit: string | null; quantity: number | null; unit_price: number | null; stock_before: number | null; list_price: number | null; product_unit: string | null; ask_count: "bottle" | "packet" | null; suggestions: Suggestion[] }[];
   missing: string[];
   total: number | null; paid: number | null; received: number | null; due: number; ask_paid: boolean; method: Card["method"] | null; expense_category: string | null; clarify_question: string | null;
 };
@@ -29,7 +29,7 @@ const toCard = (d: Draft): Card => ({
   supplier_id: d.supplier_id,
   supplier_name: d.supplier ?? "",
   supplier_due_before: d.supplier_due_before,
-  items: d.items.map((i) => ({ product_id: i.product_id, name: i.product, unit: i.unit, quantity: i.quantity, unit_price: i.unit_price, stock_before: i.stock_before, product_unit: i.product_unit, ask_count: i.ask_count })),
+  items: d.items.map((i) => ({ product_id: i.product_id, name: i.product, unit: i.unit, quantity: i.quantity, unit_price: i.unit_price, stock_before: i.stock_before, product_unit: i.product_unit, ask_count: i.ask_count, suggestions: i.suggestions })),
   due: d.due,
   all_due: (d.type === "sale" || d.type === "purchase") && d.paid === 0, // "পুরোটাই বাকি": nothing paid
   received: d.type === "sale" ? d.received : null,

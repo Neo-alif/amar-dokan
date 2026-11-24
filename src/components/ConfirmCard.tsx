@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import type { ErrorCode } from "@/i18n/dictionary";
-import { answerPaid, answerUnit, unitMismatch, cardChange, cardProblems, cardTotals, isAmountType, type Card, type CardType, type Method } from "@/lib/logic/card";
+import { answerPaid, answerUnit, pickProduct, unitMismatch, cardChange, cardProblems, cardTotals, isAmountType, type Card, type CardType, type Method } from "@/lib/logic/card";
 import { numbersIn } from "@/lib/logic/numberCheck";
 import { formatNumber, formatTaka } from "@/lib/format";
 import { MicButton } from "@/components/MicButton";
@@ -146,7 +146,7 @@ export function ConfirmCard({ initial, meta, onDone }: { initial: Card; meta: Ca
             <dd className="font-semibold">
               {editing ? (
                 <div className="grid grid-cols-[1fr_80px_100px_auto] gap-2">
-                  <input aria-label={c.product} className={input} value={it.name} onChange={(e) => setItem(i, { name: e.target.value, product_id: null, stock_before: null })} />
+                  <input aria-label={c.product} className={input} value={it.name} onChange={(e) => setItem(i, { name: e.target.value, product_id: null, stock_before: null, suggestions: [] })} />
                   <input aria-label={c.quantity} className={`${input} ${unitMismatch(it) ? "border-2 border-amber-500 bg-amber-50" : ""}`} type="number" inputMode="decimal" min="0" value={it.quantity ?? ""} onChange={(e) => setItem(i, { quantity: num(e.target.value) })} />
                   <input aria-label={c.unitPrice} placeholder={c.unitPrice} className={input} type="number" inputMode="decimal" min="0" value={it.unit_price ?? ""} onChange={(e) => setItem(i, { unit_price: num(e.target.value), price_from_list: false })} />
                   <button type="button" onClick={() => set({ items: card.items.filter((_, j) => j !== i) })} className="min-h-11 px-2 text-sm text-danger">{c.removeItem}</button>
@@ -160,6 +160,19 @@ export function ConfirmCard({ initial, meta, onDone }: { initial: Card; meta: Ca
                     {it.price_from_list && <ListLabel label={c.listPrice} />}
                   </span>
                 </>
+              )}
+              {!!it.suggestions?.length && (
+                <span className="mt-2 flex flex-col gap-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-base font-normal">
+                  <span className="font-semibold text-amber-900">{c.pickProduct(it.name)}</span>
+                  <span className="flex flex-wrap gap-2">
+                    {it.suggestions.map((s) => (
+                      <button key={s.product_id} type="button" onClick={() => setItem(i, pickProduct(it, s))}
+                        className="min-h-11 rounded-xl border border-amber-300 bg-white px-4 font-semibold text-amber-900">{s.name}</button>
+                    ))}
+                    <button type="button" onClick={() => setItem(i, pickProduct(it, null))}
+                      className="min-h-11 rounded-xl border-2 border-amber-700 bg-white px-4 font-semibold text-primary">{c.pickNew}</button>
+                  </span>
+                </span>
               )}
               {unitMismatch(it) && (
                 <PerUnitQuestion question={c.askPerUnit(it.unit!, t.units[it.product_unit!] ?? it.product_unit!)} unit={t.units[it.product_unit!] ?? ""}
