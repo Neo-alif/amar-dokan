@@ -3,7 +3,10 @@
 // 7-day forecast for the tapped product. All numbers come from the server; search and sort happen here.
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useLanguage } from "@/i18n/LanguageContext";
+import type { ErrorCode } from "@/i18n/dictionary";
+import { UNITS } from "@/lib/schema";
 import type { ProductRow } from "@/lib/db/queries";
 import { marginPct, PRODUCT_SORTS, sortProducts, type ProductSort } from "@/lib/logic/products";
 import { addDays, dhakaDay } from "@/lib/logic/forecast";
@@ -31,6 +34,7 @@ export function ProductsView({ rows }: { rows: ProductRow[] | null }) {
 
   return (
     <>
+      <NewProduct />
       <div className="flex flex-wrap items-center gap-3">
         <label className="flex h-[46px] flex-[1_1_320px] items-center gap-2 rounded-xl border-2 border-amber-700 bg-white px-3.5">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
@@ -102,5 +106,92 @@ export function ProductsView({ rows }: { rows: ProductRow[] | null }) {
         </section>
       )}
     </>
+  );
+}
+
+// "+ নতুন পণ্য": the owner adds a product by hand (e.g. loose oil in litres). Saved via POST /api/products;
+// stock starts at 0 and moves only through purchases and stock counts.
+function NewProduct() {
+  const { t } = useLanguage();
+  const x = t.products;
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [aliases, setAliases] = useState("");
+  const [unit, setUnit] = useState<(typeof UNITS)[number]>("pcs");
+  const [sell, setSell] = useState("");
+  const [cost, setCost] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<ErrorCode | null>(null);
+  const [saved, setSaved] = useState<string | null>(null);
+  const money = (v: string) => (v.trim() === "" ? 0 : Number(v.replace(/[০-৯]/g, (d) => String("০১২৩৪৫৬৭৮৯".indexOf(d)))));
+  const valid = name.trim() !== "" && money(sell) >= 0 && money(cost) >= 0;
+  const field = "min-h-11 w-full rounded-xl border border-border bg-white px-3 text-base";
+
+  async function save(ev: React.FormEvent) {
+    ev.preventDefault();
+    if (!valid || saving) return;
+    setSaving(true); setError(null);
+    try {
+      const res = await fetch("/api/products", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          name_bn: name.trim(), unit, sell_price: money(sell), cost_price: money(cost),
+          aliases: aliases.split(/[,،]/).map((a) => a.trim()).filter(Boolean),
+        }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) { setError((body.error as ErrorCode) ?? "SERVER_ERROR"); return; }
+      setSaved(x.saved(name.trim()));
+      setName(""); setAliases(""); setUnit("pcs"); setSell(""); setCost(""); setOpen(false);
+      router.refresh(); // the new product shows up in the table
+    } catch {
+      setError("NETWORK");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (!open) {
+    return (
+      <div className="flex flex-wrap items-center gap-3">
+        <button type="button" onClick={() => { setOpen(true); setSaved(null); }}
+          className="min-h-11 rounded-xl bg-primary px-5 font-semibold text-white">{x.add}</button>
+        {saved && <span role="status" className="font-semibold text-green-700">{saved}</span>}
+      </div>
+    );
+  }
+  return (
+    <form onSubmit={save} className="flex flex-col gap-3 rounded-[20px] border-2 border-amber-700 bg-white p-6 shadow-[0_8px_22px_rgba(15,23,42,0.07)]">
+      <strong className="text-xl text-primary">{x.addTitle}</strong>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <label className="flex flex-col gap-1 text-[15px]">{x.name}
+          <input required maxLength={80} value={name} onChange={(e) => setName(e.target.value)} placeholder={x.namePlaceholder} className={field} />
+        </label>
+        <label className="flex flex-col gap-1 text-[15px]">{x.aliases}
+          <input value={aliases} onChange={(e) => setAliases(e.target.value)} placeholder={x.aliasesPlaceholder} className={field} />
+        </label>
+        <label className="flex flex-col gap-1 text-[15px]">{x.unit}
+          <select value={unit} onChange={(e) => setUnit(e.target.value as (typeof UNITS)[number])} className={field}>
+            {UNITS.map((u) => <option key={u} value={u}>{t.units[u]}</option>)}
+          </select>
+        </label>
+        <div className="grid grid-cols-2 gap-3">
+          <label className="flex flex-col gap-1 text-[15px]">{x.colSell}
+            <input type="number" inputMode="decimal" min="0" step="any" value={sell} onChange={(e) => setSell(e.target.value)} className={field} />
+          </label>
+          <label className="flex flex-col gap-1 text-[15px]">{x.colCost}
+            <input type="number" inputMode="decimal" min="0" step="any" value={cost} onChange={(e) => setCost(e.target.value)} className={field} />
+          </label>
+        </div>
+      </div>
+      <p className="text-sm text-muted">{x.stockNote}</p>
+      {error && <p role="alert" className="text-danger">{t.errors[error]}</p>}
+      <div className="flex flex-wrap gap-3">
+        <button type="submit" disabled={!valid || saving} className="min-h-11 rounded-xl bg-primary px-5 font-semibold text-white disabled:opacity-50">{x.save}</button>
+        <button type="button" onClick={() => { setOpen(false); setError(null); }} className="min-h-11 rounded-xl border-2 border-amber-700 bg-white px-5 font-semibold text-primary">{x.cancel}</button>
+      </div>
+    </form>
   );
 }
