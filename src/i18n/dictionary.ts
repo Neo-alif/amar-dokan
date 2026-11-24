@@ -396,6 +396,7 @@ const bn = {
     paidAmount: "টাকার পরিমাণ",
     paidOk: "বসান",
     listPrice: "তালিকার দাম",
+    perUnitOther: "অন্য", // "এক বোতলে কত লিটার?" → custom size
     // said = unit key; Bangla needs the locative form (প্যাকেটে, টিতে, ডজনে)
     askPerUnit: (said: string, unit: string) =>
       `এক ${({ pcs: "টিতে", packet: "প্যাকেটে", bottle: "বোতলে", dozen: "ডজনে", kg: "কেজিতে", g: "গ্রামে", litre: "লিটারে", ml: "মি.লি.-তে" } as Record<string, string>)[said] ?? said} কত ${unit}?`,
@@ -837,6 +838,7 @@ const en: Dict = {
     paidAmount: "Amount",
     paidOk: "Set",
     listPrice: "List price",
+    perUnitOther: "Other",
     askPerUnit: (said: string, unit: string) => `How many ${unit} in one ${said}?`, // said = unit key
     when: "When",
     today: "Today",

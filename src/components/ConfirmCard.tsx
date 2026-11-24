@@ -163,7 +163,7 @@ export function ConfirmCard({ initial, meta, onDone }: { initial: Card; meta: Ca
               )}
               {unitMismatch(it) && (
                 <PerUnitQuestion question={c.askPerUnit(it.unit!, t.units[it.product_unit!] ?? it.product_unit!)} unit={t.units[it.product_unit!] ?? ""}
-                  onAnswer={(n) => setItem(i, answerUnit(it, n))} />
+                  presets={it.product_unit === "litre" ? LITRE_PRESETS : undefined} onAnswer={(n) => setItem(i, answerUnit(it, n))} />
               )}
               {it.ask_count && it.quantity == null && (
                 <PerUnitQuestion question={c.askCount(t.units[it.ask_count])} unit={t.units[it.ask_count]}
@@ -301,19 +301,33 @@ function PaidQuestion({ question, onAnswer, onError }: {
 }
 
 // "এক প্যাকেটে কত কেজি?" when the spoken unit isn't the product's unit: stock is counted in the product's unit.
-function PerUnitQuestion({ question, unit, onAnswer }: { question: string; unit: string; onAnswer: (n: number) => void }) {
-  const { t } = useLanguage();
+// Loose oil (litre): "এক বোতলে কত লিটার?" offers common bottle sizes first, "অন্য" opens the number box.
+const LITRE_PRESETS = [0.5, 1, 2, 5];
+function PerUnitQuestion({ question, unit, presets, onAnswer }: { question: string; unit: string; presets?: number[]; onAnswer: (n: number) => void }) {
+  const { t, lang } = useLanguage();
   const [value, setValue] = useState("");
+  const [custom, setCustom] = useState(!presets);
   const n = num(value);
+  const chip = "min-h-11 rounded-xl border border-amber-300 bg-white px-4 font-semibold text-amber-900";
   return (
     <span className="mt-2 flex flex-col gap-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-base font-normal">
       <span className="font-semibold text-amber-900">{question}</span>
-      <span className="flex items-center gap-2">
-        <input aria-label={question} className={input} type="number" inputMode="decimal" min="0" step="any" value={value} onChange={(e) => setValue(e.target.value)} />
-        <span className="text-muted">{unit}</span>
-        <button type="button" disabled={n == null || n <= 0} onClick={() => onAnswer(n!)}
-          className="min-h-11 rounded-xl bg-primary px-4 font-semibold text-white disabled:opacity-50">{t.card.paidOk}</button>
-      </span>
+      {presets && (
+        <span className="flex flex-wrap gap-2">
+          {presets.map((p) => (
+            <button key={p} type="button" className={chip} onClick={() => onAnswer(p)}>{p === 0.5 ? "½" : formatNumber(p, lang)} {unit}</button>
+          ))}
+          {!custom && <button type="button" className={chip} onClick={() => setCustom(true)}>{t.card.perUnitOther}</button>}
+        </span>
+      )}
+      {custom && (
+        <span className="flex items-center gap-2">
+          <input aria-label={question} className={input} type="number" inputMode="decimal" min="0" step="any" value={value} onChange={(e) => setValue(e.target.value)} />
+          <span className="text-muted">{unit}</span>
+          <button type="button" disabled={n == null || n <= 0} onClick={() => onAnswer(n!)}
+            className="min-h-11 rounded-xl bg-primary px-4 font-semibold text-white disabled:opacity-50">{t.card.paidOk}</button>
+        </span>
+      )}
     </span>
   );
 }

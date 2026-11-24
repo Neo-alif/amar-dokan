@@ -749,3 +749,34 @@ test("করে = per-unit price: ২ বোতল × ৳৩৪০ = ৳৬৮�
   assert.deepEqual([...perUnitNumbers("প্রতি বোতল ৩৪০ টাকা")], [340]);
   assert.equal(perUnitNumbers(total).size, 0);
 });
+
+test("loose oil: খোলা matches the loose product, the ২ লিটার name stays the bottle", () => {
+  const shop = [
+    { id: "bottle", names: ["সয়াবিন তেল ২ লিটার", "Soybean oil 2L"] },
+    { id: "loose", names: ["সয়াবিন তেল (খোলা)", "Soybean oil (loose)"] },
+    ...products.slice(1),
+  ];
+  assert.equal(matchProduct("খোলা তেল", shop), "loose");
+  assert.equal(matchProduct("সয়াবিন তেল (খোলা)", shop), "loose");
+  assert.equal(matchProduct("khola soyabin tel", shop), null); // Banglish words aren't in the Bangla name → ask, don't guess
+  assert.equal(matchProduct("সয়াবিন তেল ২ লিটার", shop), "bottle");
+  assert.equal(matchProduct("সয়াবিন তেল ২ লিটার", [shop[1]]), null); // never the loose one by typo distance
+  assert.equal(matchProduct("খোলা চিনি", shop), null);
+});
+
+test("loose oil in litres: ৩ লিটার = 3 L; ২ বোতল × ½ L = 1 L at price per litre", async () => {
+  const { unitMismatch, answerUnit } = await import("../src/lib/logic/card.ts");
+  const oil = { unit: "litre", names: ["সয়াবিন তেল (খোলা)"] };
+  assert.equal(resolveUnit(3, "litre", oil), null); // already litres → kept as 3 L
+  assert.deepEqual(resolveUnit(500, "ml", oil), { quantity: 0.5, unit: "litre", scale: 1000, ask_count: null });
+  assert.equal(resolveUnit(2, "bottle", oil), null); // bottle size unknown → card asks "এক বোতলে কত লিটার?"
+  const line = { product_id: "loose", name: "সয়াবিন তেল (খোলা)", unit: "bottle", product_unit: "litre", stock_before: 20 };
+  assert.equal(unitMismatch(line), true);
+  // "২ বোতল ৮৫ টাকা করে", ½ L bottles → 1 L at ৳170/L, total ৳170
+  const kore = answerUnit({ ...line, quantity: 2, unit_price: 85 }, 0.5);
+  assert.deepEqual([kore.unit, kore.quantity, kore.unit_price], ["litre", 1, 170]);
+  // "২ বোতল ১৭০ টাকা" (total) → ৳85/bottle from deriveAmounts → same ৳170/L
+  const said = deriveAmounts({ ...base, items: [item("সয়াবিন তেল (খোলা)", 2)], total_said: 170 });
+  const tot = answerUnit({ ...line, quantity: 2, unit_price: said.items[0].unit_price }, 0.5);
+  assert.deepEqual([tot.quantity, tot.unit_price, tot.quantity! * tot.unit_price!], [1, 170, 170]);
+});

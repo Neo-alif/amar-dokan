@@ -36,5 +36,20 @@ function bestMatch(query: string, candidates: Candidate[], norm: (s: string) => 
   return best && !tie ? best.id : null; // two different products equally close → don't guess
 }
 
-export const matchProduct = (spoken: string, products: Candidate[]) => bestMatch(spoken, products, normalizeName);
+// Loose (খোলা) vs bottled: "খোলা তেল" / "সয়াবিন তেল (খোলা)" → the loose product, never the "২ লিটার" bottle;
+// a name without খোলা never goes to the loose one.
+const LOOSE = /খোলা|khola|loose/;
+const isLoose = (c: Candidate) => c.names.some((n) => LOOSE.test(normalizeName(n)));
+
+export function matchProduct(spoken: string, products: Candidate[]): string | null {
+  const q = normalizeName(spoken);
+  if (!LOOSE.test(q)) return bestMatch(spoken, products.filter((c) => !isLoose(c)), normalizeName) ?? bestMatch(spoken, products, normalizeName);
+  const loose = products.filter(isLoose);
+  const exact = bestMatch(spoken, loose, normalizeName);
+  if (exact) return exact;
+  // "খোলা তেল": the other words must all appear in one loose product's name
+  const words = q.replace(LOOSE, " ").split(/[^\p{L}\p{M}0-9]+/u).filter(Boolean);
+  const hits = loose.filter((c) => c.names.some((n) => words.every((w) => normalizeName(n).includes(w))));
+  return hits.length === 1 ? hits[0].id : null;
+}
 export const matchCustomer = (spoken: string, customers: Candidate[]) => bestMatch(spoken, customers, normalizePersonName);
