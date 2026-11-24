@@ -10,14 +10,13 @@ import { planNewShop, restock, PRIORITIES, type StarterItem } from "@/lib/logic/
 import { UNITS } from "@/lib/schema";
 import { formatNumber, formatTaka } from "@/lib/format";
 import grocery from "../../data/starter/grocery.json";
-import cosmetics from "../../data/starter/cosmetics.json";
 import stationery from "../../data/starter/stationery.json";
-import clothing from "../../data/starter/clothing.json";
 
 const DEFAULT_BUDGET = 5000;
 const toNumber = (s: string) => Number(s.replace(/[০-৯]/g, (d) => String("০১২৩৪৫৬৭৮৯".indexOf(d))).replace(/[^\d.]/g, "")) || 0;
 
-const TEMPLATES = { grocery, cosmetics, stationery, clothing };
+// cosmetics.json and clothing.json exist but are hidden from the selector for now
+const TEMPLATES = { grocery, stationery };
 type Category = keyof typeof TEMPLATES;
 type Priority = StarterItem["priority"];
 type Row = StarterItem & { key: string; custom?: boolean };
