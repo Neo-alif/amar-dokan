@@ -3,7 +3,7 @@
 import type { Entry, Extraction } from "../schema.ts";
 import { deriveAmounts, keepSaidMoney } from "./amounts.ts";
 import { matchCustomer, matchProduct } from "./matchProduct.ts";
-import { resolveUnit } from "./units.ts";
+import { resolveUnit, saidContainer } from "./units.ts";
 
 export type ShopContext = {
   products: { id: string; name_bn: string; name_en: string | null; aliases: string[]; unit: string; sell_price: number; cost_price: number; stock_qty: number }[];
@@ -12,12 +12,20 @@ export type ShopContext = {
   lang: "bn" | "en";
 };
 
-const productCandidates = (ctx: ShopContext) => ctx.products.map((p) => ({ id: p.id, names: [p.name_bn, p.name_en ?? "", ...p.aliases] }));
+const productNames = (p: ShopContext["products"][number]) => [p.name_bn, p.name_en ?? "", ...p.aliases];
+const productCandidates = (ctx: ShopContext) => ctx.products.map((p) => ({ id: p.id, names: productNames(p) }));
+
+// the owner's own "2 বোতল" beats an LLM unit copied from the pack size in the name
+function withSaidContainer<T extends Entry["items"][number]>(it: T, p: ShopContext["products"][number] | undefined, input: string): T {
+  const c = p ? saidContainer(input, productNames(p)) : null;
+  return c ? { ...it, quantity: c.quantity, unit: c.unit as T["unit"] } : it;
+}
 
 // "আজ সকালে গুনে দেখলাম চাল ৪০ কেজি" → counted 40 kg; change = counted − stock (preview; apply_stock_count recomputes)
-export function stockCountDraft(entry: Entry, ctx: ShopContext) {
-  const said = entry.items[0];
-  const product = said ? ctx.products.find((p) => p.id === matchProduct(said.product, productCandidates(ctx))) : undefined;
+export function stockCountDraft(entry: Entry, ctx: ShopContext, input = "") {
+  const first = entry.items[0];
+  const product = first ? ctx.products.find((p) => p.id === matchProduct(first.product, productCandidates(ctx))) : undefined;
+  const said = first && withSaidContainer(first, product, input);
   const r = product ? resolveUnit(said.quantity, said.unit, { unit: product.unit, names: [product.name_bn, product.name_en ?? ""] }) : null;
   const counted = r ? r.quantity : (said?.quantity ?? null);
   const stock_before = product ? Number(product.stock_qty) : null;
@@ -43,11 +51,12 @@ export function transactionDraft(entry: Entry & { type: Extraction["type"] }, ct
   const asks: ("bottle" | "packet" | null)[] = [];
   const x = {
     ...said,
-    items: said.items.map((it) => {
-      const p = ctx.products.find((q) => q.id === matchProduct(it.product, candidates));
+    items: said.items.map((raw) => {
+      const p = ctx.products.find((q) => q.id === matchProduct(raw.product, candidates));
+      const it = withSaidContainer(raw, p, input);
       const r = p ? resolveUnit(it.quantity, it.unit, { unit: p.unit, names: [p.name_bn, p.name_en ?? ""] }) : null;
       asks.push(r?.ask_count ?? null);
-      if (!r) return it;
+      if (!r) return it; // e.g. "2 প্যাকেট" of a per-kg dal: kept as said, the card asks
       return { ...it, quantity: r.quantity, unit: r.unit as typeof it.unit, unit_price_said: it.unit_price_said != null ? Math.round(it.unit_price_said * r.scale * 100) / 100 : null };
     }),
   };
@@ -102,7 +111,7 @@ export type TransactionDraft = ReturnType<typeof transactionDraft>["draft"];
 export type StockCountDraft = ReturnType<typeof stockCountDraft>;
 
 export function buildDraft(entry: Entry, ctx: ShopContext, input: string): { draft: TransactionDraft | StockCountDraft; extracted: Entry } {
-  if (entry.type === "stock_count") return { draft: stockCountDraft(entry, ctx), extracted: entry };
+  if (entry.type === "stock_count") return { draft: stockCountDraft(entry, ctx, input), extracted: entry };
   const r = transactionDraft({ ...entry, type: entry.type }, ctx, input);
   return { draft: r.draft, extracted: { ...entry, ...r.extracted } };
 }

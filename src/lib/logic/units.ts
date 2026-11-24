@@ -20,6 +20,26 @@ export function packSize(name: string): { dim: "kg" | "litre"; size: number } | 
   return { dim: u.dim, size: Number(m[1]) * u.factor };
 }
 
+const CONTAINER_UNIT: Record<string, string> = {
+  বোতল: "bottle", botol: "bottle", bottle: "bottle", প্যাকেট: "packet", packet: "packet",
+  পিস: "pcs", pis: "pcs", pcs: "pcs", টা: "pcs", টি: "pcs", ta: "pcs", ti: "pcs",
+};
+const CONTAINER_WORDS = Object.keys(CONTAINER_UNIT).join("|");
+const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+// Guard against the LLM copying a pack size ("২ লিটার" in the name) as the unit: a count + container word
+// next to the product in the owner's text wins. "2 বোতল সয়াবিন তেল" / "সয়াবিন তেল 2 বোতল" → 2 bottle.
+// input is normalizeInput()'d (ASCII digits).
+export function saidContainer(input: string, names: string[]): { quantity: number; unit: string } | null {
+  const text = input.toLowerCase();
+  const count = `(\\d+(?:\\.\\d+)?)\\s*(${CONTAINER_WORDS})(?=[\\s,।]|$)`; // "টাকা" is not "টা"
+  for (const name of names.filter(Boolean).map((n) => esc(n.toLowerCase()))) {
+    const m = text.match(new RegExp(`${count}\\s*${name}`)) ?? text.match(new RegExp(`${name}\\s*${count}`));
+    if (m) return { quantity: Number(m[1]), unit: CONTAINER_UNIT[m[2]] };
+  }
+  return null;
+}
+
 export type Resolved = { quantity: number | null; unit: string; scale: number; ask_count: "bottle" | "packet" | null };
 
 // scale = spoken units in one product unit: quantity ÷ scale, a said per-unit price × scale.

@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { normalizeInput, normalizePersonName } from "../src/lib/logic/normalize.ts";
 import { deriveAmounts } from "../src/lib/logic/amounts.ts";
 import { matchCustomer, matchProduct } from "../src/lib/logic/matchProduct.ts";
-import { resolveUnit } from "../src/lib/logic/units.ts";
+import { resolveUnit, saidContainer } from "../src/lib/logic/units.ts";
 import type { Extraction } from "../src/lib/schema.ts";
 
 const base: Extraction = {
@@ -621,6 +621,19 @@ test("stock_count: counted qty and change vs stock; unknown product or bottle qu
   assert.deepEqual([odd.counted, odd.ask_count, odd.missing], [null, "bottle", ["quantity"]]);
   const unknown = stockCountDraft(entry({ type: "stock_count", items: [item("ঘি", 3, { unit: "kg" })] }), shop);
   assert.deepEqual([unknown.product_id, unknown.missing], [null, ["items"]]);
+});
+
+test("said container wins over an LLM unit copied from the pack size in the name", () => {
+  const input = normalizeInput("রহিম ভাইকে ২ বোতল সয়াবিন তেল দিলাম");
+  // LLM wrongly returned 4 litre (from "২ লিটার" in the name) → owner said 2 bottles
+  const d = buildDraft(entry({ customer: "রহিম ভাই", items: [item("সয়াবিন তেল ২ লিটার", 4, { unit: "litre" })] }), shop, input).draft as TransactionDraft;
+  assert.deepEqual([d.items[0].quantity, d.items[0].unit], [2, "pcs"]);
+  const after = saidContainer(normalizeInput("তেল ৩টা আর চাল ৫ কেজি, ৬৮০ টাকা"), ["তেল"]);
+  assert.deepEqual(after, { quantity: 3, unit: "pcs" }); // name before count, টা glued to the number
+  assert.equal(saidContainer(normalizeInput("তেল ৬৮০ টাকা"), ["তেল"]), null); // টাকা is not টা
+  assert.equal(saidContainer(normalizeInput("৪ লিটার সয়াবিন তেল"), ["সয়াবিন তেল"]), null); // litre stays for resolveUnit
+  const sc = stockCountDraft(entry({ type: "stock_count", items: [item("তেল", 10, { unit: "litre" })] }), shop, normalizeInput("stock e 5 botol তেল"));
+  assert.deepEqual([sc.counted, sc.unit], [5, "pcs"]);
 });
 
 test("judge sentence: two customers yesterday + two counts today → four separate drafts", () => {

@@ -13,7 +13,7 @@ const said = (what: string) => z.number().nonnegative().nullable().describe(`${w
 export const ExtractedItem = z.object({
   product: z.string().min(1).describe("product name; use the exact name from the shop's product list when it clearly matches"),
   quantity: z.number().positive().nullable().describe("quantity as said, else null"),
-  unit: z.enum(UNITS).nullable().describe("unit word as said (ta/pis → pcs, botol → bottle), never converted, else null"),
+  unit: z.enum(UNITS).nullable().describe("unit word the owner said (ta/টা/pis → pcs, botol/বোতল → bottle, প্যাকেট → packet), never converted; a size in the product name (২ লিটার, 500g) is the pack size, never this unit; else null"),
   unit_price_said: said("price per one unit"),
   line_total_said: said("money for this item line"),
 });
