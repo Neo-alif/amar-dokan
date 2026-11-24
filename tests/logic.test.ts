@@ -728,3 +728,24 @@ test("judge sentence: two customers yesterday + two counts today → four separa
   const invented = buildDraft(entry({ customer: "করিম", items: [item("চিনি", 1)], total_said: 999 }), shop, input).draft as TransactionDraft;
   assert.equal(invented.total, null);
 });
+
+test("করে = per-unit price: ২ বোতল × ৳৩৪০ = ৳৬৮০; without করে the amount is the total", async () => {
+  const { perUnitSaid, perUnitNumbers } = await import("../src/lib/logic/amounts.ts");
+  const kore = "২ বোতল সয়াবিন তেল ৩৪০ টাকা করে";
+  // LLM misfiled the per-unit price as the sale total → guard moves it to unit_price_said
+  const fixed = deriveAmounts(perUnitSaid({ ...base, items: [item("সয়াবিন তেল", 2)], total_said: 340 }, kore));
+  assert.equal(fixed.items[0].unit_price, 340);
+  assert.equal(fixed.total, 680);
+  // misfiled as line total → same
+  assert.equal(deriveAmounts(perUnitSaid({ ...base, items: [item("সয়াবিন তেল", 2, { line_total_said: 340 })] }, kore)).total, 680);
+  // LLM already right → unchanged
+  assert.equal(deriveAmounts(perUnitSaid({ ...base, items: [item("সয়াবিন তেল", 2, { unit_price_said: 340 })] }, kore)).total, 680);
+  // no করে: ৬৮০ is the total → ৳340 each
+  const total = "২ বোতল তেল ৬৮০ টাকা";
+  const t = deriveAmounts(perUnitSaid({ ...base, items: [item("সয়াবিন তেল", 2)], total_said: 680 }, total));
+  assert.equal(t.items[0].unit_price, 340);
+  assert.equal(t.total, 680);
+  assert.deepEqual([...perUnitNumbers("2 kg chal 76 taka kore, 1 kg chini 130")], [76]);
+  assert.deepEqual([...perUnitNumbers("প্রতি বোতল ৩৪০ টাকা")], [340]);
+  assert.equal(perUnitNumbers(total).size, 0);
+});

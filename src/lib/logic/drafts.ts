@@ -1,7 +1,7 @@
 // One extracted entry → a draft for the confirm card. Pure: no AI, no DB. The LLM only said the
 // values; every amount, unit conversion and stock change here is computed, and the DB recomputes on save.
 import type { Entry, Extraction } from "../schema.ts";
-import { deriveAmounts, keepSaidMoney } from "./amounts.ts";
+import { deriveAmounts, keepSaidMoney, perUnitSaid } from "./amounts.ts";
 import { matchCustomer, matchProduct } from "./matchProduct.ts";
 import { resolveUnit, saidContainer } from "./units.ts";
 
@@ -45,7 +45,7 @@ export function stockCountDraft(entry: Entry, ctx: ShopContext, input = "") {
 }
 
 export function transactionDraft(entry: Entry & { type: Extraction["type"] }, ctx: ShopContext, input: string) {
-  const said = keepSaidMoney(entry, input); // the LLM may not invent money
+  const said = perUnitSaid(keepSaidMoney(entry, input), input); // the LLM may not invent money; "করে" = per unit
   const candidates = productCandidates(ctx);
   // spoken unit → product unit before the money math, so price = total ÷ the converted quantity
   const asks: ("bottle" | "packet" | null)[] = [];

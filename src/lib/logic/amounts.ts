@@ -76,6 +76,34 @@ export function deriveAmounts(x: Extraction): Amounts {
   return { items, total, paid, due, ask_paid, missing, warnings };
 }
 
+// Amounts said as per-unit: "৩৪০ টাকা করে", "340 taka kore", "76 each", "প্রতি বোতল ৩৪০", "per kg 76".
+export function perUnitNumbers(text: string): Set<number> {
+  const t = text.normalize("NFC").toLowerCase().replace(/[০-৯]/g, (d) => String("০১২৩৪৫৬৭৮৯".indexOf(d))).replace(/(\d),(?=\d)/g, "$1");
+  const out = new Set<number>();
+  for (const m of t.matchAll(/(\d+(?:\.\d+)?)\s*(?:টাকা|taka|tk|৳)?\s*(?:করে|kore|each|প্রতিটা|প্রতিটি)/gu)) out.add(Number(m[1]));
+  for (const m of t.matchAll(/(?:প্রতি|per)\s*[^\s\d]*\s*(\d+(?:\.\d+)?)/gu)) out.add(Number(m[1]));
+  return out;
+}
+
+// Guard: the LLM sometimes files a "করে" price as the line/sale total ("২ বোতল তেল ৩৪০ টাকা করে" → ৳170 × 2).
+// A number the owner said per unit always goes to unit_price_said; deriveAmounts then computes qty × price.
+export function perUnitSaid(x: Extraction, text: string): Extraction {
+  const per = perUnitNumbers(text);
+  if (per.size === 0) return x;
+  let total_said = x.total_said;
+  const items = x.items.map((it) => {
+    if (it.unit_price_said != null) return it;
+    if (it.line_total_said != null && per.has(it.line_total_said)) return { ...it, unit_price_said: it.line_total_said, line_total_said: null };
+    if (x.items.length === 1 && total_said != null && per.has(total_said)) {
+      const price = total_said;
+      total_said = null;
+      return { ...it, unit_price_said: price };
+    }
+    return it;
+  });
+  return { ...x, items, total_said };
+}
+
 // Guard: a price/amount the LLM returns but the owner never said (e.g. copied from the product list
 // in its context) is dropped, so the card asks "কত টাকায় দিলেন?" instead of trusting it. 0 = "puro baki".
 export function keepSaidMoney(x: Extraction, text: string): Extraction {
